@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { calculateDistance, calculateShippingPrice } from '@/lib/utils'
+import { calculateDistance, calculateShippingPrice } from '@/shared/lib/utils'
 
 /**
  * Hook pour calculer les frais de livraison selon le modèle Yango

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import BottomNav from '@/components/layout/BottomNav'
+import BottomNav from '@/frontend/components/layout/BottomNav'
 
 export const metadata: Metadata = {
   title: 'SIGNARE - Mode Sénégalaise de Luxe',

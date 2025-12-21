@@ -38,25 +38,35 @@ Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 ## 📁 Architecture
 
+**SIGNARE utilise une séparation claire Backend/Frontend pour faciliter l'export et la portabilité.**
+
 ```
 signare/
-├── app/                    # Pages Next.js (App Router)
-│   ├── page.tsx           # Flux social (accueil)
-│   ├── login/             # Authentification OTP
-│   ├── atelier/           # Gestion des mesures
-│   ├── inspiration/       # Génération IA
-│   ├── events/            # Billetterie événements
-│   └── profil/            # Paramètres utilisateur
-├── components/
-│   ├── layout/            # Navigation & Layout
-│   └── ui/                # Composants atomiques
-├── lib/
-│   ├── supabase.ts        # Client Supabase
-│   └── utils.ts           # Utilitaires (calcul livraison, etc.)
-├── types/
-│   └── database.types.ts  # Types TypeScript ML-ready
-└── hooks/                 # Logique métier réutilisable
+├── 📦 backend/              # Backend pur (exportable vers Node.js/Express)
+│   ├── api/                 # Configuration API
+│   ├── services/            # Logique métier
+│   ├── repositories/        # Accès aux données
+│   └── lib/                 # Config Supabase server
+├── 🎨 frontend/             # Frontend pur (portable vers React Native)
+│   ├── components/          # Composants UI
+│   ├── hooks/               # Hooks React
+│   └── lib/                 # Utils frontend
+├── 🔗 shared/               # Code partagé
+│   ├── types/               # Types TypeScript
+│   ├── constants/           # Constantes
+│   └── lib/                 # Utilitaires
+└── 📄 app/                  # Next.js App Router (glue)
 ```
+
+**📚 Documentation détaillée :** [`docs/BACKEND_FRONTEND_SEPARATION.md`](docs/BACKEND_FRONTEND_SEPARATION.md)
+
+### Avantages
+
+✅ **Backend exportable** → Node.js/Express/Serverless  
+✅ **Frontend portable** → React Native  
+✅ **Code partagé** → DRY (Don't Repeat Yourself)  
+✅ **Testabilité** → Tests isolés  
+✅ **Maintenance** → Responsabilités claires
 
 ## 🤖 Architecture Data-Ready
 

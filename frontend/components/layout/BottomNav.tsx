@@ -3,8 +3,8 @@
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Home, Phone, Ruler, Wand2, Ticket, User } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Home, Ruler, Wand2, Ticket, MessageCircle, User } from 'lucide-react'
+import { cn } from '@/shared/lib/utils'
 
 /**
  * Navigation Bottom Mobile-First
@@ -22,6 +22,7 @@ const navItems: NavItem[] = [
   { href: '/atelier', label: 'Atelier', icon: Ruler },
   { href: '/inspiration', label: 'IA', icon: Wand2 },
   { href: '/events', label: 'Events', icon: Ticket },
+  { href: '/messages', label: 'Messages', icon: MessageCircle },
   { href: '/profil', label: 'Profil', icon: User },
 ]
 

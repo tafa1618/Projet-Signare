@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/backend/lib/supabase'
 
 /**
  * Hook pour gérer les likes avec retour haptique visuel
