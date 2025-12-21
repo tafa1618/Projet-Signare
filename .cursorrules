@@ -1,0 +1,35 @@
+# SIGNARE - Charte de Développement & Design
+
+## 1. Identité & Design (Luxe Sénégalais)
+- **Couleurs Principales :** - Noir Profond (`#0A0A0A`) pour le fond.
+  - Or Raffiné (`#D4AF37`) pour les accents, boutons primaires et icônes actives.
+  - Blanc Pur (`#FFFFFF`) pour le texte principal sur fond noir.
+- **Typographie :** Privilégier des polices élégantes (Serif pour les titres, Sans-serif moderne pour le corps).
+- **Composants :** Utiliser `lucide-react` pour les icônes (toujours en Or ou Blanc). Utiliser `framer-motion` pour des animations fluides (effet "soie").
+- **UI :** Mobile-first absolu. Les cartes doivent avoir des bordures très fines ou des ombres dorées subtiles.
+
+## 2. Tech Stack & Architecture
+- **Framework :** Next.js (App Router), TypeScript, Tailwind CSS.
+- **Backend :** Supabase (Auth, Database, Storage, Realtime).
+- **Auth :** Authentification par **Numéro de Téléphone (OTP)** uniquement. Supprimer toute référence à Google Login.
+- **Organisation :** - `/components/ui` : Composants atomiques.
+  - `/hooks` : Logique métier (ex: `useLikes`, `useShipping`).
+  - `/lib` : Configurations (Supabase, Utils).
+
+## 3. Logistique & Livraison (Modèle Yango)
+- **Calcul de prix :** - Base : 500 FCFA.
+  - Kilométrage : 100 FCFA / km.
+  - Frais de service SIGNARE : 15% inclus dans le prix final.
+- **Sécurité :** Validation de livraison via `code_validation_client` obligatoire pour débloquer les fonds.
+- **Localisation :** Récupérer la latitude/longitude du user pour les adresses de livraison.
+
+## 4. Flux Social & Interactions
+- **Post :** Image plein écran, aspect ratio 4:5 ou 9:16.
+- **Interactions :** Système de Like avec retour haptique visuel (animation de l'icône Or).
+- **Performance :** Optimisation des images via `next/image`.
+
+## 5. Règles de Codage (Sonnet 4.5)
+- Toujours vérifier les types TypeScript.
+- Utiliser `shadcn/ui` comme base de composants si nécessaire, mais recolorer en Noir/Or.
+- Ne jamais coder de secrets en dur (utiliser `.env.local`).
+- Les messages d'erreur et succès doivent être élégants (Toasts personnalisés).

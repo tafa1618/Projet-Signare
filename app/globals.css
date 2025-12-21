@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-noir;
+  }
+  
+  body {
+    @apply bg-noir text-blanc font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif text-or;
+  }
+}
+
+@layer utilities {
+  /* Effet soie pour les animations */
+  .animate-silk {
+    animation: silk 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  @keyframes silk {
+    0% {
+      opacity: 0;
+      transform: translateY(10px) scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  /* Bordure dorée subtile */
+  .border-gold-subtle {
+    @apply border border-or/20;
+  }
+  
+  /* Ombre dorée */
+  .shadow-gold {
+    box-shadow: 0 4px 14px 0 rgba(212, 175, 55, 0.15);
+  }
+}
+
