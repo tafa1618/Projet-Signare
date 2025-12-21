@@ -1,95 +1,72 @@
-'use client'
+"use client";
 
-import { usePathname } from 'next/navigation'
-import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { Home, Ruler, Wand2, Ticket, MessageCircle, User } from 'lucide-react'
-import { cn } from '@/shared/lib/utils'
+import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Home, MessageCircle, Sparkles, Ticket, User } from 'lucide-react';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-/**
- * Navigation Bottom Mobile-First
- * @ai-context Barre de navigation fixe avec animation soie et retour haptique visuel
- */
-
-interface NavItem {
-  href: string
-  label: string
-  icon: React.ComponentType<{ className?: string }>
+// Fonction utilitaire pour Tailwind
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }
 
-const navItems: NavItem[] = [
-  { href: '/', label: 'Accueil', icon: Home },
-  { href: '/atelier', label: 'Atelier', icon: Ruler },
-  { href: '/inspiration', label: 'IA', icon: Wand2 },
-  { href: '/events', label: 'Events', icon: Ticket },
-  { href: '/messages', label: 'Messages', icon: MessageCircle },
-  { href: '/profil', label: 'Profil', icon: User },
-]
+const navItems = [
+  { label: 'ACCUEIL', icon: Home, href: '/' },
+  { label: 'MESSAGES', icon: MessageCircle, href: '/messages' },
+  { label: 'IA', icon: Sparkles, href: '/inspiration' },
+  { label: 'EVENTS', icon: Ticket, href: '/events' },
+  { label: 'PROFIL', icon: User, href: '/profil' },
+];
 
 export default function BottomNav() {
-  const pathname = usePathname()
-  
-  // Ne pas afficher la nav sur la page de login
-  if (pathname === '/login') return null
+  const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-noir border-t border-or/20 z-50">
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+    <nav className="fixed bottom-0 left-0 right-0 w-full z-50">
+      {/* Effet de flou et bordure dorée supérieure */}
+      <div className="flex justify-around items-center bg-[#0A0A0A]/95 backdrop-blur-lg border-t border-[#D4AF37]/30 h-20 px-4 w-full">
         {navItems.map((item) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href
-          
+          const isActive = pathname === item.href;
+          const Icon = item.icon;
+
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center justify-center w-full h-full relative',
-                'transition-colors duration-200',
-                isActive ? 'text-or' : 'text-blanc/50 hover:text-blanc/80'
+                "flex flex-col items-center justify-center flex-1 relative transition-all duration-300 py-2 rounded-lg",
+                isActive && "bg-[#D4AF37]/10"
               )}
             >
-              {/* Indicateur actif */}
-              {isActive && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-or rounded-b-full"
-                  transition={{
-                    type: 'spring',
-                    stiffness: 380,
-                    damping: 30,
-                  }}
-                />
-              )}
-              
-              {/* Icône avec animation */}
-              <motion.div
-                animate={{
-                  scale: isActive ? 1.1 : 1,
-                }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 400,
-                  damping: 17,
-                }}
-              >
-                <Icon className={cn('w-6 h-6', isActive && 'drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]')} />
-              </motion.div>
-              
-              {/* Label */}
-              <span
+              <Icon 
+                size={26} 
                 className={cn(
-                  'text-xs mt-1 font-medium',
-                  isActive ? 'text-or' : 'text-blanc/60'
-                )}
-              >
+                  "transition-all duration-300 mb-1",
+                  isActive 
+                    ? "text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" 
+                    : "text-[#D4AF37]/50"
+                )} 
+                strokeWidth={isActive ? 2.5 : 2}
+              />
+              <span className={cn(
+                "text-[10px] font-semibold tracking-wider uppercase transition-all duration-300",
+                isActive 
+                  ? "text-[#D4AF37]" 
+                  : "text-[#D4AF37]/50"
+              )}>
                 {item.label}
               </span>
+              
+              {/* Barre indicatrice en haut si actif */}
+              {isActive && (
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-[#D4AF37] rounded-b-full shadow-[0_0_12px_rgba(212,175,55,0.8)]" />
+              )}
             </Link>
-          )
+          );
         })}
       </div>
     </nav>
-  )
+  );
 }
-

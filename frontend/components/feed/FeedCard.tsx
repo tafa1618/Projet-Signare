@@ -122,51 +122,15 @@ export function FeedCard({
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="bg-noir border border-or/20 rounded-lg overflow-hidden shadow-gold-md mb-6"
     >
-      {/* Image */}
-      <div className="relative aspect-[4/5] bg-noir-profond">
-        <Image
-          src={post.image_url}
-          alt={post.caption || 'Post SIGNARE'}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 600px"
-          priority
-        />
-
-        {/* Badge complexité */}
-        <div className="absolute top-4 left-4 bg-noir/80 backdrop-blur-sm px-3 py-1 rounded-full border border-or/30">
-          <span className="text-or text-xs font-medium">{post.complexity}</span>
-        </div>
-
-        {/* Bouton Annotation (Admin seulement) */}
-        {showAnnotationButton && (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowAnnotationModal(true)}
-            className="absolute top-4 right-4 bg-or/90 backdrop-blur-sm p-2 rounded-full"
-          >
-            <Eye className="w-5 h-5 text-noir" />
-          </motion.button>
-        )}
-
-        {/* Indicateur de durée de vue (debug, à retirer en prod) */}
-        {viewDuration > 0 && (
-          <div className="absolute bottom-4 left-4 bg-noir/80 backdrop-blur-sm px-2 py-1 rounded text-or text-xs">
-            👁️ {viewDuration}s
-          </div>
-        )}
-      </div>
-
-      {/* Contenu */}
-      <div className="p-4">
+      {/* Header avec infos */}
+      <div className="p-4 pb-3">
         {/* Tags culturels */}
         {post.cultural_tags && post.cultural_tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-3">
-            {post.cultural_tags.map((tag) => (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {post.cultural_tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="text-xs text-or/80 border border-or/30 px-2 py-1 rounded-full"
+                className="text-xs text-or/80 border border-or/30 px-2 py-0.5 rounded-full"
               >
                 {tag}
               </span>
@@ -176,40 +140,70 @@ export function FeedCard({
 
         {/* Caption */}
         {post.caption && (
-          <p className="text-blanc text-sm mb-3 line-clamp-2">{post.caption}</p>
+          <p className="text-blanc text-sm mb-2 line-clamp-2">{post.caption}</p>
         )}
 
-        {/* Métadonnées ML */}
-        <div className="grid grid-cols-2 gap-2 mb-4 text-xs text-blanc/60">
-          <div>
-            <span className="text-blanc/40">Type :</span> {post.garment_type}
-          </div>
-          {post.fabric_type && (
-            <div>
-              <span className="text-blanc/40">Tissu :</span> {post.fabric_type}
+        {/* Prix et type */}
+        <div className="flex items-center justify-between">
+          {post.price && (
+            <div className="text-or font-serif text-lg">
+              {post.price.toLocaleString()} FCFA
             </div>
           )}
-        </div>
-
-        {/* Prix */}
-        {post.price && (
-          <div className="text-or font-serif text-xl mb-4">
-            {post.price.toLocaleString()} FCFA
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-blanc/40">{post.garment_type}</span>
+            <span className="text-xs px-2 py-0.5 bg-or/10 text-or rounded">
+              {post.complexity}
+            </span>
           </div>
+        </div>
+      </div>
+
+      {/* Image */}
+      <div className="relative aspect-[3/4] bg-noir-profond">
+        <Image
+          src={post.image_url}
+          alt={post.caption || 'Post SIGNARE'}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 600px"
+          priority
+        />
+
+        {/* Bouton Annotation (Admin seulement) */}
+        {showAnnotationButton && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowAnnotationModal(true)}
+            className="absolute top-3 right-3 bg-or/90 backdrop-blur-sm p-2 rounded-full"
+          >
+            <Eye className="w-4 h-4 text-noir" />
+          </motion.button>
         )}
 
+        {/* Indicateur de durée de vue (debug) */}
+        {viewDuration > 0 && (
+          <div className="absolute bottom-3 left-3 bg-noir/80 backdrop-blur-sm px-2 py-1 rounded text-or text-xs">
+            👁️ {viewDuration}s
+          </div>
+        )}
+      </div>
+
+      {/* Footer avec actions */}
+      <div className="p-4 pt-3">
         {/* Actions */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-4">
             {/* Like */}
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={handleLike}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5"
             >
               <Heart
                 className={cn(
-                  'w-6 h-6 transition-colors',
+                  'w-5 h-5 transition-colors',
                   isLiked
                     ? 'fill-or text-or drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]'
                     : 'text-blanc/70 hover:text-or'
@@ -221,9 +215,9 @@ export function FeedCard({
             {/* Commentaires */}
             <button
               onClick={handleInquiry}
-              className="flex items-center gap-2 text-blanc/70 hover:text-or transition-colors"
+              className="flex items-center gap-1.5 text-blanc/70 hover:text-or transition-colors"
             >
-              <MessageCircle className="w-6 h-6" />
+              <MessageCircle className="w-5 h-5" />
               <span className="text-sm">{post.comments_count}</span>
             </button>
 
@@ -232,7 +226,7 @@ export function FeedCard({
               onClick={handleShare}
               className="text-blanc/70 hover:text-or transition-colors"
             >
-              <Share2 className="w-6 h-6" />
+              <Share2 className="w-5 h-5" />
             </button>
           </div>
 
@@ -240,19 +234,19 @@ export function FeedCard({
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleSave}
-            className="p-2"
+            className="p-1.5"
           >
             <Bookmark
               className={cn(
-                'w-6 h-6 transition-colors',
+                'w-5 h-5 transition-colors',
                 isSaved ? 'fill-or text-or' : 'text-blanc/70 hover:text-or'
               )}
             />
           </motion.button>
         </div>
 
-        {/* Vues */}
-        <div className="mt-3 pt-3 border-t border-or/10 flex items-center justify-between text-xs text-blanc/40">
+        {/* Stats */}
+        <div className="flex items-center justify-between text-xs text-blanc/40">
           <span>{post.views_count} vues</span>
           {post.conversion_rate && post.conversion_rate > 0 && (
             <span className="text-or/60">

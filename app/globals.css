@@ -42,5 +42,9 @@
   .shadow-gold {
     box-shadow: 0 4px 14px 0 rgba(212, 175, 55, 0.15);
   }
+  
+  .shadow-gold-md {
+    box-shadow: 0 4px 6px -1px rgba(212, 175, 55, 0.2);
+  }
 }
 
