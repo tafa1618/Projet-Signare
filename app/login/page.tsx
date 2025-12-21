@@ -1,37 +1,185 @@
 'use client'
 
-import { Phone } from 'lucide-react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
+import { Phone, Mail, ArrowRight, Sparkles } from 'lucide-react'
 
-/**
- * Page de connexion - Authentification OTP
- * @ai-context Auth uniquement par numéro de téléphone (pas de Google)
- */
 export default function LoginPage() {
+  const [phoneOrEmail, setPhoneOrEmail] = useState('')
+  const [isFocused, setIsFocused] = useState(false)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    // TODO: Implémenter la logique de connexion avec Supabase
+    console.log('Connexion avec:', phoneOrEmail)
+  }
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen w-full bg-[#0A0A0A] flex flex-col items-center justify-center px-6 py-12">
+      {/* Retour */}
+      <Link href="/" className="absolute top-8 left-6">
+        <motion.div
+          whileHover={{ x: -5 }}
+          className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors duration-300 flex items-center gap-2"
+        >
+          <ArrowRight className="w-5 h-5 rotate-180" />
+          <span className="text-sm tracking-wide">Retour</span>
+        </motion.div>
+      </Link>
+
+      {/* Contenu principal */}
+      <div className="max-w-md w-full">
+        {/* En-tête */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <Sparkles className="w-10 h-10 text-[#D4AF37] mx-auto mb-6 drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]" />
+          
+          <h1 className="text-4xl font-serif text-[#D4AF37] tracking-[0.15em] mb-3">
+            BIENVENUE
+          </h1>
+          
+          <p className="text-white/60 text-sm tracking-wide">
+            Connectez-vous pour continuer
+          </p>
+        </motion.div>
+
+        {/* Formulaire */}
+        <motion.form
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          onSubmit={handleSubmit}
+          className="space-y-8"
+        >
+          {/* Input Téléphone/Email */}
+          <div className="relative">
+            <label className="block text-white/70 text-xs tracking-widest uppercase mb-3">
+              Téléphone ou Email
+            </label>
+            
+            <div className="relative">
+              <input
+                type="text"
+                value={phoneOrEmail}
+                onChange={(e) => setPhoneOrEmail(e.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                placeholder="+221 77 123 45 67"
+                className="w-full bg-transparent text-white text-lg py-3 px-1 border-b-2 border-white/20 focus:border-[#D4AF37] outline-none transition-all duration-300 placeholder:text-white/30"
+              />
+              
+              {/* Icône dynamique */}
+              <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                {phoneOrEmail.includes('@') ? (
+                  <Mail className="w-5 h-5 text-[#D4AF37]/50" />
+                ) : (
+                  <Phone className="w-5 h-5 text-[#D4AF37]/50" />
+                )}
+              </div>
+            </div>
+
+            {/* Ligne animée */}
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: isFocused ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37]/0 via-[#D4AF37] to-[#D4AF37]/0 origin-center"
+            />
+          </div>
+
+          {/* Bouton Continuer */}
+          <motion.button
+            type="submit"
+            whileHover={{ 
+              scale: 1.02,
+              boxShadow: '0 0 40px rgba(212,175,55,0.6)',
+            }}
+            whileTap={{ scale: 0.98 }}
+            disabled={!phoneOrEmail}
+            className="w-full bg-[#D4AF37] text-[#0A0A0A] font-bold text-sm tracking-widest uppercase py-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
+          >
+            {/* Effet de brillance */}
+            <span className="relative z-10 flex items-center justify-center gap-3">
+              CONTINUER
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+            </span>
+            
+            {/* Effet glow animé */}
+            <motion.div
+              animate={{
+                x: ['0%', '200%'],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatDelay: 1,
+                ease: 'easeInOut',
+              }}
+              className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
+            />
+          </motion.button>
+        </motion.form>
+
+        {/* Séparateur */}
+        <div className="flex items-center gap-4 my-8">
+          <div className="flex-1 h-[1px] bg-white/10" />
+          <span className="text-white/40 text-xs tracking-widest">OU</span>
+          <div className="flex-1 h-[1px] bg-white/10" />
+        </div>
+
+        {/* Lien vers création de compte */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="text-center"
+        >
+          <p className="text-white/60 text-sm mb-2">
+            Vous n'avez pas de compte ?
+          </p>
+          <Link href="/register">
+            <span className="text-[#D4AF37] text-sm tracking-wide hover:text-[#D4AF37]/80 transition-colors duration-300 border-b border-[#D4AF37]/30 hover:border-[#D4AF37] pb-1 cursor-pointer">
+              Créer un compte SIGNARE
+            </span>
+          </Link>
+        </motion.div>
+
+        {/* Politique de confidentialité */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="mt-12 text-center"
+        >
+          <p className="text-white/30 text-xs leading-relaxed">
+            En continuant, vous acceptez nos{' '}
+            <Link href="/terms" className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors">
+              Conditions d'utilisation
+            </Link>
+            {' '}et notre{' '}
+            <Link href="/privacy" className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors">
+              Politique de confidentialité
+            </Link>
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Ornement décoratif bas */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="text-center"
+        transition={{ duration: 0.8, delay: 0.8 }}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2"
       >
-        <Phone className="w-16 h-16 mx-auto mb-6 text-or" />
-        <h1 className="text-4xl font-serif mb-4">Connexion</h1>
-        <p className="text-blanc/70 text-lg mb-2">Authentification par téléphone</p>
-        <p className="text-or text-sm">Hello World - Login</p>
-      </motion.div>
-      
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.6 }}
-        className="mt-12 text-center text-blanc/50 text-sm"
-      >
-        <p>📱 Connexion sécurisée par OTP</p>
-        <p className="mt-2">🚫 Pas de Google Login</p>
+        <div className="w-8 h-[1px] bg-gradient-to-r from-transparent to-[#D4AF37]/20" />
+        <Sparkles className="w-3 h-3 text-[#D4AF37]/30" />
+        <div className="w-8 h-[1px] bg-gradient-to-l from-transparent to-[#D4AF37]/20" />
       </motion.div>
     </div>
   )
 }
-
