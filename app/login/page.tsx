@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Phone, Mail, ArrowRight, Sparkles } from 'lucide-react'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [phoneOrEmail, setPhoneOrEmail] = useState('')
   const [isFocused, setIsFocused] = useState(false)
 
@@ -14,6 +16,9 @@ export default function LoginPage() {
     e.preventDefault()
     // TODO: Implémenter la logique de connexion avec Supabase
     console.log('Connexion avec:', phoneOrEmail)
+    
+    // Redirection vers l'accueil
+    router.push('/')
   }
 
   return (

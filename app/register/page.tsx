@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Phone, Mail, User as UserIcon, ArrowRight, Sparkles, Check } from 'lucide-react'
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [phoneOrEmail, setPhoneOrEmail] = useState('')
   const [fullName, setFullName] = useState('')
   const [acceptTerms, setAcceptTerms] = useState(false)
@@ -17,6 +19,9 @@ export default function RegisterPage() {
     e.preventDefault()
     // TODO: Implémenter la logique d'inscription avec Supabase
     console.log('Inscription:', { phoneOrEmail, fullName })
+    
+    // Redirection vers l'accueil
+    router.push('/')
   }
 
   return (
