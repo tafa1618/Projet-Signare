@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Phone, Mail, User as UserIcon, ArrowRight, Sparkles, Check } from 'lucide-react'
 
 export default function RegisterPage() {
@@ -19,9 +20,23 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0A0A0A] flex flex-col items-center justify-center px-6 py-12">
+    <div className="relative min-h-screen w-full bg-[#0A0A0A] flex flex-col items-center justify-center px-6 py-12 pb-24 overflow-hidden">
+      {/* Image de fond avec overlay */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&h=1600&fit=crop"
+          alt="SIGNARE - Haute Couture Sénégalaise"
+          fill
+          className="object-cover"
+          priority
+          quality={100}
+        />
+        {/* Gradient overlay pour meilleure lisibilité */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/60 via-[#0A0A0A]/75 to-[#0A0A0A]/90" />
+      </div>
+
       {/* Retour */}
-      <Link href="/" className="absolute top-8 left-6">
+      <Link href="/" className="absolute top-8 left-6 z-20">
         <motion.div
           whileHover={{ x: -5 }}
           className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors duration-300 flex items-center gap-2"
@@ -32,7 +47,7 @@ export default function RegisterPage() {
       </Link>
 
       {/* Contenu principal */}
-      <div className="max-w-md w-full">
+      <div className="max-w-md w-full relative z-10">
         {/* En-tête */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -250,7 +265,7 @@ export default function RegisterPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 1 }}
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2"
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10"
       >
         <div className="w-8 h-[1px] bg-gradient-to-r from-transparent to-[#D4AF37]/20" />
         <Sparkles className="w-3 h-3 text-[#D4AF37]/30" />

@@ -11,15 +11,15 @@ export default function WelcomePage() {
       {/* Image de fond avec overlay */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=1200&h=1600&fit=crop"
+          src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&h=1600&fit=crop"
           alt="SIGNARE - Haute Couture Sénégalaise"
           fill
           className="object-cover"
           priority
           quality={100}
         />
-        {/* Gradient overlay léger pour meilleure lisibilité */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/40 via-[#0A0A0A]/60 to-[#0A0A0A]/85" />
+        {/* Gradient overlay pour meilleure lisibilité */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/60 via-[#0A0A0A]/75 to-[#0A0A0A]/90" />
       </div>
 
       {/* Contenu principal */}
