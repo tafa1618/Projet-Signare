@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { 
   User, 
@@ -15,7 +16,8 @@ import {
   TrendingUp,
   ChevronRight,
   Sparkles,
-  Scissors
+  Scissors,
+  LogOut
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { supabase } from '@/backend/lib/supabase'
@@ -68,6 +70,7 @@ const MOCK_PROFILES: Record<UserRole, ProfileData> = {
 }
 
 export default function ProfilPage() {
+  const router = useRouter()
   const [role, setRole] = useState<UserRole>('client')
   const [profile, setProfile] = useState<ProfileData>(MOCK_PROFILES['client'])
 
@@ -76,6 +79,11 @@ export default function ProfilPage() {
     const newRole = role === 'client' ? 'tailleur' : 'client'
     setRole(newRole)
     setProfile(MOCK_PROFILES[newRole])
+  }
+
+  const handleLogout = () => {
+    // TODO: Implémenter la déconnexion Supabase
+    router.push('/welcome')
   }
 
   /**
@@ -107,7 +115,15 @@ export default function ProfilPage() {
         >
           Mode {role}
         </button>
-        <Settings className="w-5 h-5 text-[#D4AF37]/60" />
+        <div className="flex items-center gap-4">
+          <Settings className="w-5 h-5 text-[#D4AF37]/60 cursor-pointer" />
+          <button 
+            onClick={handleLogout}
+            className="flex items-center justify-center p-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/20 transition-all"
+          >
+            <LogOut className="w-4 h-4 text-[#D4AF37]" />
+          </button>
+        </div>
       </div>
 
       <AnimatePresence mode="wait">
