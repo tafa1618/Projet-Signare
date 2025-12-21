@@ -17,7 +17,7 @@ export default function LoginPage() {
     // TODO: Implémenter la logique de connexion avec Supabase
     console.log('Connexion avec:', phoneOrEmail)
     
-    // Redirection vers l'accueil
+    // Redirection vers le feed
     router.push('/')
   }
 

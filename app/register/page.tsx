@@ -20,7 +20,7 @@ export default function RegisterPage() {
     // TODO: Implémenter la logique d'inscription avec Supabase
     console.log('Inscription:', { phoneOrEmail, fullName })
     
-    // Redirection vers l'accueil
+    // Redirection vers le feed
     router.push('/')
   }
 
