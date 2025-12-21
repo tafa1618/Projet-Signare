@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { Home, MessageCircle, Sparkles, Ticket, User } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -23,10 +24,13 @@ const navItems = [
 export default function BottomNav() {
   const pathname = usePathname();
 
+  // Ne pas afficher la barre sur les pages de bienvenue et d'authentification
+  const hideNav = pathname === '/welcome' || pathname === '/login' || pathname === '/register' || pathname === '/onboarding' || pathname === '/publish';
+  if (hideNav) return null;
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 w-full z-50">
-      {/* Effet de flou et bordure dorée supérieure */}
-      <div className="flex justify-around items-center bg-[#0A0A0A]/95 backdrop-blur-lg border-t border-[#D4AF37]/30 h-20 px-4 w-full">
+    <nav className="fixed bottom-0 left-0 right-0 w-full z-[100] h-20 bg-[#0A0A0A]/95 backdrop-blur-lg border-t border-[#D4AF37]/30 pb-safe">
+      <div className="flex justify-around items-center h-full px-4 max-w-2xl mx-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -36,32 +40,35 @@ export default function BottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 relative transition-all duration-300 py-2 rounded-lg",
+                "flex flex-col items-center justify-center flex-1 relative transition-all duration-300 py-2 rounded-xl h-16",
                 isActive && "bg-[#D4AF37]/10"
               )}
             >
               <Icon 
-                size={26} 
+                size={24} 
                 className={cn(
                   "transition-all duration-300 mb-1",
                   isActive 
                     ? "text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" 
-                    : "text-[#D4AF37]/50"
+                    : "text-[#D4AF37]/40"
                 )} 
                 strokeWidth={isActive ? 2.5 : 2}
               />
               <span className={cn(
-                "text-[10px] font-semibold tracking-wider uppercase transition-all duration-300",
+                "text-[9px] font-bold tracking-widest uppercase transition-all duration-300",
                 isActive 
                   ? "text-[#D4AF37]" 
-                  : "text-[#D4AF37]/50"
+                  : "text-[#D4AF37]/40"
               )}>
                 {item.label}
               </span>
               
-              {/* Barre indicatrice en haut si actif */}
+              {/* Barre indicatrice luxe en haut si actif */}
               {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-[#D4AF37] rounded-b-full shadow-[0_0_12px_rgba(212,175,55,0.8)]" />
+                <motion.div 
+                  layoutId="nav-indicator"
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-[#D4AF37] rounded-b-full shadow-[0_0_12px_rgba(212,175,55,0.8)]" 
+                />
               )}
             </Link>
           );
