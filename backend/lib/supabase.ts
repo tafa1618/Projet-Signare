@@ -6,7 +6,10 @@ import type { Database } from '@/shared/types/database.types'
  * Client Supabase pour les composants côté client
  * @ai-context Utilisé dans les composants React pour l'authentification et les requêtes temps réel
  */
-export const supabase = createClientComponentClient<Database>()
+export const supabase = createClient<Database>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 /**
  * Client Supabase avec service role (côté serveur uniquement)
