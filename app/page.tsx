@@ -256,7 +256,12 @@ const TailorCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="font-serif font-bold text-sm text-[#D4AF37] truncate">{post.user.name}</span>
+              <Link
+                href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.user.name)}`}
+                className="font-serif font-bold text-sm text-[#D4AF37] truncate hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
+              >
+                {post.user.name}
+              </Link>
               {post.user.isVerified && <CheckCircle2 className="w-3 h-3 text-[#D4AF37] flex-shrink-0" />}
             </div>
             <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] font-bold truncate">{post.user.role}</p>
@@ -352,7 +357,17 @@ const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
               {post.user.isVerified && <CheckCircle2 className="w-3 h-3 text-[#D4AF37] flex-shrink-0" />}
             </div>
             <p className="text-[9px] text-[#D4AF37]/80 uppercase tracking-[0.2em] font-black truncate">
-              Réalisé par {post.taggedTailor?.name}
+              Réalisé par{' '}
+              {post.taggedTailor?.name ? (
+                <Link
+                  href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.taggedTailor.name)}`}
+                  className="hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
+                >
+                  {post.taggedTailor.name}
+                </Link>
+              ) : (
+                '—'
+              )}
             </p>
           </div>
           <div className="flex-shrink-0">

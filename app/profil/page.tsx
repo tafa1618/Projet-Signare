@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { 
   Settings, 
@@ -11,7 +11,8 @@ import {
   Sparkles,
   LogOut,
   Star,
-  Scissors
+  Scissors,
+  MessageCircle
 } from 'lucide-react'
 import type { Database, Mesure } from '@/shared/types/database.types'
 
@@ -112,10 +113,18 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function ProfilPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const sessionId = 'session-demo'
   const [mode, setMode] = useState<ProfileMode>('client')
+  const [tailorOverride, setTailorOverride] = useState<{ name: string; avatar: string } | null>(null)
 
-  const profile = mode === 'client' ? MOCK_CLIENT_PROFILE : MOCK_TAILOR_PROFILE
+  const profile = mode === 'client'
+    ? MOCK_CLIENT_PROFILE
+    : {
+        ...MOCK_TAILOR_PROFILE,
+        name: tailorOverride?.name ?? MOCK_TAILOR_PROFILE.name,
+        avatar: tailorOverride?.avatar ?? MOCK_TAILOR_PROFILE.avatar,
+      }
   const currentUserId = profile.id
 
   const gallery = useMemo(() => (
@@ -124,6 +133,26 @@ export default function ProfilPage() {
       src: `https://images.unsplash.com/photo-15${i + 1}5372039744-b8f02a3ae446?w=400&h=400&fit=crop`,
     }))
   ), [])
+
+  useEffect(() => {
+    const urlMode = searchParams.get('mode')
+    const urlTailor = searchParams.get('tailor')
+
+    if (urlMode === 'tailleur') {
+      setMode('tailleur')
+    } else if (urlMode === 'client') {
+      setMode('client')
+    }
+
+    if (urlTailor) {
+      setTailorOverride({
+        name: urlTailor,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(urlTailor)}`,
+      })
+    } else {
+      setTailorOverride(null)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     // @ai-context Consultation de profil = signal d’intérêt / engagement
@@ -295,6 +324,30 @@ export default function ProfilPage() {
           </>
         ) : (
           <>
+            {/* CTA : Démarrer une discussion */}
+            <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
+              <button
+                onClick={() => {
+                  trackProfileInteraction({
+                    user_id: currentUserId,
+                    post_id: null,
+                    interaction_type: 'click',
+                    session_id: sessionId,
+                    duration_seconds: null,
+                    scroll_depth: null,
+                    came_from: `profil:tailor_message:${profile.name}`,
+                    device_type: 'web',
+                    user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                  })
+                  router.push(`/messages?tailor=${encodeURIComponent(profile.name)}`)
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-[#0A0A0A] border border-[#D4AF37]/30 text-[#D4AF37] py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.22em] hover:bg-[#D4AF37]/10 transition-all active:scale-[0.98]"
+              >
+                <MessageCircle size={18} />
+                Lancer la discussion
+              </button>
+            </section>
+
             {/* Stats Atelier (compact) */}
             <section className="grid grid-cols-2 gap-3">
               <div className="bg-[#D4AF37] text-[#0A0A0A] rounded-xl p-4">

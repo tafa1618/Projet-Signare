@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { 
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { Database } from '@/shared/types/database.types'
+import { useSearchParams } from 'next/navigation'
 
 /**
  * PAGE - Messagerie SIGNARE
@@ -141,9 +142,11 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function MessagesPage() {
+  const searchParams = useSearchParams()
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null)
   const [inputText, setInputText] = useState('')
   const [showQuickMenu, setShowQuickMenu] = useState(false)
+  const [conversations, setConversations] = useState<Conversation[]>(MOCK_CONVERSATIONS)
   const currentUserId = 'user-123'
   const sessionId = 'session-demo'
 
@@ -153,6 +156,74 @@ export default function MessagesPage() {
     { id: 'ref', label: 'Modèle de référence', icon: Sparkles },
     { id: 'mes', label: 'Fiche de mesures', icon: Ruler },
   ]), [])
+
+  useEffect(() => {
+    const tailorName = searchParams.get('tailor')
+    if (!tailorName) return
+
+    const normalized = tailorName.trim().toLowerCase()
+    if (!normalized) return
+
+    // Si déjà sélectionnée, ne rien faire
+    if (selectedConv && selectedConv.user.name.toLowerCase() === normalized) return
+
+    const existing = conversations.find((c) => c.user.name.toLowerCase() === normalized)
+    if (existing) {
+      setSelectedConv(existing)
+      trackInteraction({
+        user_id: currentUserId,
+        post_id: null,
+        interaction_type: 'click',
+        session_id: sessionId,
+        duration_seconds: null,
+        scroll_depth: null,
+        came_from: 'messages:deeplink_tailor_existing',
+        device_type: 'web',
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      })
+      return
+    }
+
+    const newConv: Conversation = {
+      id: `conv-${Date.now()}`,
+      user: {
+        name: tailorName,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(tailorName)}`,
+        role: 'tailleur',
+        rankLabel: 'Atelier',
+        rating: 4.8,
+        isMasterTailor: true,
+        status: 'offline',
+      },
+      lastMessage: 'Bonjour, je souhaite discuter d’un modèle.',
+      unreadCount: 0,
+      updatedAt: 'Maintenant',
+      messages: [
+        {
+          id: `m-${Date.now()}`,
+          senderId: currentUserId,
+          text: 'Bonjour, je souhaite discuter d’un modèle.',
+          timestamp: 'Maintenant',
+          type: 'text',
+          status: 'sent',
+        },
+      ],
+    }
+
+    setConversations((prev) => [newConv, ...prev])
+    setSelectedConv(newConv)
+    trackInteraction({
+      user_id: currentUserId,
+      post_id: null,
+      interaction_type: 'click',
+      session_id: sessionId,
+      duration_seconds: null,
+      scroll_depth: null,
+      came_from: 'messages:deeplink_tailor_new',
+      device_type: 'web',
+      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+    })
+  }, [searchParams, conversations, currentUserId, sessionId, selectedConv])
 
   return (
     <div className={cn("bg-[#0A0A0A] text-white overflow-hidden", containerHeightClass)}>
@@ -180,7 +251,7 @@ export default function MessagesPage() {
         </header>
 
         <div className="flex-1 overflow-y-auto px-2 py-2">
-          {MOCK_CONVERSATIONS.map((conv, idx) => (
+          {conversations.map((conv, idx) => (
             <motion.button
               key={conv.id}
               initial={{ opacity: 0, y: 8 }}
