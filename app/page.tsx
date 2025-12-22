@@ -227,8 +227,12 @@ const TailorCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="mx-3 mb-6 bg-[#0A0A0A] border border-[#D4AF37]/15 rounded-xl overflow-hidden shadow-xl max-h-[80vh]"
     >
-      {/* Image : max 50vh + object-cover */}
-      <div className="relative w-full aspect-[4/5] max-h-[50vh] bg-neutral-900">
+      {/* Image : max 50vh + object-cover (clic => détail produit) */}
+      <Link
+        href={`/product/${post.id}`}
+        className="relative block w-full aspect-[4/5] max-h-[50vh] bg-neutral-900"
+        aria-label="Voir le détail du produit"
+      >
         <Image
           src={post.image}
           alt={post.caption}
@@ -245,7 +249,7 @@ const TailorCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
             Atelier
           </span>
         </div>
-      </div>
+      </Link>
 
       {/* Bloc compact sous image (Z-pattern) */}
       <div className="px-3 py-3 space-y-2">
@@ -323,8 +327,12 @@ const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="mx-3 mb-6 bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden shadow-xl max-h-[80vh]"
     >
-      {/* Image : max 50vh + object-cover */}
-      <div className="relative w-full aspect-[4/5] max-h-[50vh] bg-neutral-900">
+      {/* Image : max 50vh + object-cover (clic => détail produit) */}
+      <Link
+        href={`/product/${post.id}`}
+        className="relative block w-full aspect-[4/5] max-h-[50vh] bg-neutral-900"
+        aria-label="Voir le détail du produit"
+      >
         <Image
           src={post.image}
           alt={post.caption}
@@ -333,7 +341,7 @@ const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
           sizes="(max-width: 768px) 100vw, 560px"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/55 to-transparent pointer-events-none" />
-      </div>
+      </Link>
 
       {/* Bloc compact sous image (Z-pattern) */}
       <div className="px-3 py-3 space-y-2">
