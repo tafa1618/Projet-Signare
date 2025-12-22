@@ -12,7 +12,8 @@ import {
   LogOut,
   Star,
   Scissors,
-  MessageCircle
+  MessageCircle,
+  Package
 } from 'lucide-react'
 import type { Database, Mesure } from '@/shared/types/database.types'
 
@@ -401,6 +402,30 @@ export default function ProfilPage() {
               >
                 <MessageCircle size={18} />
                 Lancer la discussion
+              </button>
+            </section>
+
+            {/* CTA : Voir les commandes (tailleur) */}
+            <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
+              <button
+                onClick={() => {
+                  trackProfileInteraction({
+                    user_id: actorUserId,
+                    post_id: null,
+                    interaction_type: 'click',
+                    session_id: sessionId,
+                    duration_seconds: null,
+                    scroll_depth: null,
+                    came_from: 'profil:tailor_orders',
+                    device_type: 'web',
+                    user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                  })
+                  router.push('/orders')
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-[#D4AF37] text-[#0A0A0A] py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.22em] shadow-[0_0_14px_rgba(212,175,55,0.25)] active:scale-[0.98] transition-all"
+              >
+                <Package size={18} />
+                Mes commandes
               </button>
             </section>
 
