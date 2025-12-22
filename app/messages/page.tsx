@@ -16,6 +16,7 @@ import {
   Sparkles,
   MessageCircle,
   Camera,
+  Mic,
   Star
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
@@ -227,13 +228,13 @@ export default function MessagesPage() {
 
   return (
     <div className={cn("bg-[#0A0A0A] text-white overflow-hidden", containerHeightClass)}>
-      <div className="flex h-full">
+      <div className="h-full w-full max-w-2xl mx-auto flex">
       {/* 1. LISTE DES CONVERSATIONS */}
       <aside className={cn(
-        "w-full md:w-[360px] border-r border-[#D4AF37]/20 flex flex-col bg-[#0A0A0A]",
+        "w-full md:w-[340px] border-r border-[#D4AF37]/20 flex flex-col bg-[#0A0A0A]",
         selectedConv ? "hidden md:flex" : "flex"
       )}>
-        <header className="px-5 pt-5 pb-4 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-[#D4AF37]/20">
+        <header className="px-6 pt-6 pb-4 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-[#D4AF37]/20">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-serif text-[#D4AF37] tracking-[0.2em] uppercase">MESSAGES</h1>
             <button className="p-2 text-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors">
@@ -250,7 +251,7 @@ export default function MessagesPage() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-2 py-2">
+        <div className="flex-1 overflow-y-auto px-3 py-2">
           {conversations.map((conv, idx) => (
             <motion.button
               key={conv.id}
@@ -332,7 +333,7 @@ export default function MessagesPage() {
               className="flex flex-col h-full"
             >
               {/* Header Chat (Feed-like) */}
-              <header className="px-4 py-3 border-b border-[#D4AF37]/20 bg-[#0A0A0A]/90 backdrop-blur-xl flex items-center justify-between">
+              <header className="px-6 py-4 border-b border-[#D4AF37]/20 bg-[#0A0A0A]/90 backdrop-blur-xl flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   <button
                     onClick={() => setSelectedConv(null)}
@@ -377,7 +378,7 @@ export default function MessagesPage() {
               </header>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
                 {selectedConv.messages.map((msg) => {
                   const isMe = msg.senderId === currentUserId
                   return (
@@ -417,7 +418,7 @@ export default function MessagesPage() {
               </div>
 
               {/* Input compact (no-scroll global) */}
-              <div className="border-t border-[#D4AF37]/20 bg-[#0A0A0A]/95 backdrop-blur-xl px-4 py-3">
+              <div className="sticky bottom-0 border-t border-[#D4AF37]/20 bg-[#0A0A0A]/95 backdrop-blur-xl px-6 py-3">
                 <div className="relative">
                   <div className="flex items-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl px-3 py-2">
                     <button
@@ -448,6 +449,27 @@ export default function MessagesPage() {
                       placeholder="VOTRE MESSAGE..."
                       className="flex-1 bg-transparent text-[11px] font-black tracking-[0.22em] uppercase outline-none placeholder:text-white/15"
                     />
+
+                    <button
+                      className="p-2 text-white/20 hover:text-[#D4AF37] transition-colors"
+                      aria-label="Message vocal"
+                      onClick={() => {
+                        trackInteraction({
+                          user_id: currentUserId,
+                          post_id: null,
+                          interaction_type: 'click',
+                          session_id: sessionId,
+                          duration_seconds: null,
+                          scroll_depth: null,
+                          came_from: 'messages:voice_mic',
+                          device_type: 'web',
+                          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                        })
+                        // TODO: implémenter enregistrement audio (MediaRecorder) + upload Supabase Storage
+                      }}
+                    >
+                      <Mic size={18} />
+                    </button>
 
                     <button className="p-2 text-white/20 hover:text-[#D4AF37] transition-colors" aria-label="Photo">
                       <Camera size={18} />
