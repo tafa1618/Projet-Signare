@@ -359,6 +359,7 @@ export default function ProductDetailPage() {
           <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-2xl p-3 flex items-center gap-2 max-w-lg mx-auto">
             <motion.button
               whileTap={{ scale: 0.97 }}
+              onClick={() => router.push(`/order/${product.id}`)}
               className="flex-1 bg-[#D4AF37] text-[#0A0A0A] py-3 rounded-xl font-black uppercase tracking-[0.18em] text-[10px] shadow-[0_0_18px_rgba(212,175,55,0.35)] flex items-center justify-center gap-2"
             >
               <ShoppingBag size={16} />

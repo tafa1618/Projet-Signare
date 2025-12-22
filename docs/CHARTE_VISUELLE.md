@@ -36,8 +36,17 @@
 
 ### Polices
 ```css
-font-serif: 'Georgia', 'Times New Roman', serif  /* Titres élégants */
-font-sans: 'Inter', 'system-ui', sans-serif      /* Corps de texte */
+/* Polices (verrouillées via next/font pour un rendu constant Windows/macOS) */
+font-sans: 'Inter', 'system-ui', sans-serif                 /* Corps de texte */
+font-serif: 'Playfair Display', 'Georgia', serif            /* Titres élégants */
+```
+
+### Implémentation (Next.js)
+```ts
+// app/layout.tsx
+// @ai-context Les variables CSS évitent les variations de rendu typographique entre OS.
+Inter({ variable: '--font-sans' })
+Playfair_Display({ variable: '--font-serif' })
 ```
 
 ### Hiérarchie
@@ -261,6 +270,33 @@ pb-24 (96px)
 - Tout doit être pensé pour mobile d'abord
 - Max-width: 448px (max-w-md) pour les conteneurs centraux
 - Largeur pleine (w-full) pour les éléments principaux
+
+### Gabarit "One-View" (SIGNARE)
+- **Objectif**: éviter le scroll global, privilégier les scrolls internes (feed, messages, carrousels).
+- **Hauteur utile**: utiliser `h-[calc(100dvh-80px)]` (80px = BottomNav) pour les pages immersives (Messages, Publish, Product, Order).
+- **Padding bottom**: garder `pb-24` sur les pages scrollables (feed/profil) pour laisser respirer la BottomNav.
+- **Largeur**: contenir le contenu principal avec `max-w-md` (ou `max-w-lg` si besoin), centré `mx-auto`.
+
+### Images (compact & premium)
+- **Feed / Product**: `aspect-[4/5]` + `max-h-[50vh]` (ou `55vh` si nécessaire) + `object-cover`.
+- **Preview Publish**: `aspect-[4/5]` + `max-h-[40vh]` pour laisser de la place au formulaire.
+- **Grilles (profil)**: `aspect-square`, hover bordure or `hover:border-[#D4AF37]/40`.
+
+### CTAs fixes (conversion)
+- **Barre fixe**: positionner au-dessus de la BottomNav (ex: `fixed bottom-20 left-0 right-0`) avec un dégradé `from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent`.
+- **Bouton primaire**: plein or, texte noir, tracking uppercase serré.
+
+### Messagerie (Salon Privé)
+- **Séparateurs**: `border-[#D4AF37]/20`
+- **Bulles**:
+  - Reçu: `bg-[#0A0A0A] border-[#D4AF37]/20`
+  - Envoyé: `bg-[#141414] border-white/10`
+- **Actions**: icônes or/blanc, + menu rapide, micro (vocal) à côté de l’icône photo.
+
+### ML Ready (UX → dataset)
+- Toute action importante doit être traçable (`user_interactions`) via un `came_from` explicite.
+- Exemples `came_from`:
+  - `feed:post_view`, `product:product_detail_view:score2`, `order:order_view:score2`, `messages:conversation_select`, `messages:voice_mic`
 
 ### Contraste
 - Toujours assurer un ratio de contraste minimum de 4.5:1

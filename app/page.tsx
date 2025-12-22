@@ -139,6 +139,135 @@ const mockPosts: Post[] = [
     garment_type: 'Kaftan de Soirée',
     quality_rating: 5,
   },
+  {
+    id: 5,
+    type: 'tailor',
+    user: {
+      name: 'Maison Ndèye',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ndeye',
+      isVerified: true,
+      role: 'Atelier Vérifié',
+      specialty: 'Wax Premium & Coupe Ajustée',
+    },
+    image: 'https://images.unsplash.com/photo-1520975916090-3105956dac38?w=800&h=1000&fit=crop',
+    caption: 'Robe wax couture : tombé parfait, finitions main et ceinture signature. Élégance sobre. ✨',
+    price: '75 000 FCFA',
+    likes: 642,
+    comments: 31,
+    isLiked: false,
+    isSaved: false,
+    garment_type: 'Robe Wax',
+    fabric_type: 'Wax Premium',
+    complexity_score: 4,
+  },
+  {
+    id: 6,
+    type: 'client',
+    user: {
+      name: 'Awa Ndiaye',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Awa',
+      isVerified: false,
+      role: 'Membre SIGNARE',
+    },
+    taggedTailor: {
+      name: 'Couture Aminata',
+      id: 'tailor-aminata',
+    },
+    image: 'https://images.unsplash.com/photo-1520975892776-3f7c5b37c5b2?w=800&h=1000&fit=crop',
+    caption: 'Tenue parfaite pour la Tabaski. Broderies fines, coupe impeccable. Merci ! 🇸🇳',
+    likes: 982,
+    comments: 64,
+    isLiked: false,
+    isSaved: true,
+    garment_type: 'Boubou',
+    quality_rating: 5,
+  },
+  {
+    id: 7,
+    type: 'tailor',
+    user: {
+      name: 'Atelier Téranga',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Teranga',
+      isVerified: true,
+      role: 'Maître Tailleur',
+      specialty: 'Kaftans premium & Soie',
+    },
+    image: 'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=800&h=1000&fit=crop',
+    caption: 'Kaftan de soirée en soie : lumière, fluidité, détails couture. Une pièce premium. ✨',
+    price: '98 000 FCFA',
+    likes: 1240,
+    comments: 77,
+    isLiked: true,
+    isSaved: false,
+    garment_type: 'Kaftan',
+    fabric_type: 'Soie',
+    complexity_score: 4,
+  },
+  {
+    id: 8,
+    type: 'client',
+    user: {
+      name: 'Sokhna Fall',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sokhna',
+      isVerified: true,
+      role: 'Membre SIGNARE',
+    },
+    taggedTailor: {
+      name: 'Atelier Fatou',
+      id: 'tailor-fatou',
+    },
+    image: 'https://images.unsplash.com/photo-1496747611180-206a5c8c26af?w=800&h=1000&fit=crop',
+    caption: 'Minimaliste mais royal. Le tissu est incroyable et les finitions sont nettes.',
+    likes: 2103,
+    comments: 102,
+    isLiked: false,
+    isSaved: false,
+    garment_type: 'Ensemble',
+    quality_rating: 4,
+  },
+  {
+    id: 9,
+    type: 'tailor',
+    user: {
+      name: 'Studio Dakar Luxe',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=DakarLuxe',
+      isVerified: true,
+      role: 'Designer Mode',
+      specialty: 'Prêt-à-porter luxe & Lin',
+    },
+    image: 'https://images.unsplash.com/photo-1520975868797-1c3e0e012a4c?w=800&h=1000&fit=crop',
+    caption: 'Ensemble en lin texturé : coupe moderne, confort premium, détails discrets en or.',
+    price: '55 000 FCFA',
+    likes: 518,
+    comments: 22,
+    isLiked: false,
+    isSaved: true,
+    garment_type: 'Ensemble',
+    fabric_type: 'Lin',
+    complexity_score: 3,
+  },
+  {
+    id: 10,
+    type: 'client',
+    user: {
+      name: 'Fatou Dia',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=FatouDia',
+      isVerified: false,
+      role: 'Membre SIGNARE',
+    },
+    taggedTailor: {
+      name: 'Maison Ndèye',
+      id: 'tailor-ndeye',
+    },
+    image: 'https://images.unsplash.com/photo-1520975741466-4a62dfb2d3d9?w=800&h=1000&fit=crop',
+    caption: 'Un look quotidien chic. J’adore le tombé et le confort.',
+    likes: 721,
+    comments: 38,
+    isLiked: false,
+    isSaved: false,
+    garment_type: 'Robe',
+    quality_rating: 4,
+  },
 ]
 
 // Helper component for Ratings (Stars)
@@ -305,9 +434,19 @@ const TailorCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
             </button>
           </div>
 
-          <button className="bg-[#D4AF37] text-[#0A0A0A] px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(212,175,55,0.35)] active:scale-95">
-            Devis
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/messages?tailor=${encodeURIComponent(post.user.name)}`}
+              className="bg-white/5 border border-[#D4AF37]/25 text-[#D4AF37] px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-95 flex items-center gap-2"
+              aria-label="Discuter avec le tailleur"
+            >
+              <MessageCircle size={16} />
+              Discuter
+            </Link>
+            <button className="bg-[#D4AF37] text-[#0A0A0A] px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(212,175,55,0.35)] active:scale-95">
+              Devis
+            </button>
+          </div>
         </div>
       </div>
     </motion.article>
@@ -353,7 +492,12 @@ const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="font-bold text-sm text-white/90 truncate">{post.user.name}</span>
+              <Link
+                href={`/profil?mode=client&client=${encodeURIComponent(post.user.name)}`}
+                className="font-bold text-sm text-white/90 truncate hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
+              >
+                {post.user.name}
+              </Link>
               {post.user.isVerified && <CheckCircle2 className="w-3 h-3 text-[#D4AF37] flex-shrink-0" />}
             </div>
             <p className="text-[9px] text-[#D4AF37]/80 uppercase tracking-[0.2em] font-black truncate">
@@ -401,12 +545,22 @@ const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
             </div>
           </div>
 
-          <button
-            onClick={() => onLike(post.id)}
-            className="bg-white/5 border border-white/10 text-white/80 px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] hover:border-[#D4AF37]/30 hover:text-[#D4AF37] transition-all active:scale-95"
-          >
-            Liker
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/messages?user=${encodeURIComponent(post.user.name)}`}
+              className="bg-white/5 border border-[#D4AF37]/25 text-[#D4AF37] px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-95 flex items-center gap-2"
+              aria-label="Discuter avec ce membre"
+            >
+              <MessageCircle size={16} />
+              Discuter
+            </Link>
+            <button
+              onClick={() => onLike(post.id)}
+              className="bg-white/5 border border-white/10 text-white/80 px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] hover:border-[#D4AF37]/30 hover:text-[#D4AF37] transition-all active:scale-95"
+            >
+              Liker
+            </button>
+          </div>
         </div>
       </div>
     </motion.article>

@@ -25,8 +25,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
+        serif: ['var(--font-serif)', 'Georgia', 'Cambria', 'Times New Roman', 'serif'],
         sans: [
+          'var(--font-sans)',
           'system-ui',
           '-apple-system',
           'BlinkMacSystemFont',

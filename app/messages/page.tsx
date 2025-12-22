@@ -160,9 +160,11 @@ export default function MessagesPage() {
 
   useEffect(() => {
     const tailorName = searchParams.get('tailor')
-    if (!tailorName) return
+    const userName = searchParams.get('user')
+    const targetName = tailorName ?? userName
+    if (!targetName) return
 
-    const normalized = tailorName.trim().toLowerCase()
+    const normalized = targetName.trim().toLowerCase()
     if (!normalized) return
 
     // Si déjà sélectionnée, ne rien faire
@@ -178,22 +180,23 @@ export default function MessagesPage() {
         session_id: sessionId,
         duration_seconds: null,
         scroll_depth: null,
-        came_from: 'messages:deeplink_tailor_existing',
+        came_from: tailorName ? 'messages:deeplink_tailor_existing' : 'messages:deeplink_user_existing',
         device_type: 'web',
         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
       })
       return
     }
 
+    const isTailor = Boolean(tailorName)
     const newConv: Conversation = {
       id: `conv-${Date.now()}`,
       user: {
-        name: tailorName,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(tailorName)}`,
-        role: 'tailleur',
-        rankLabel: 'Atelier',
-        rating: 4.8,
-        isMasterTailor: true,
+        name: targetName,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(targetName)}`,
+        role: isTailor ? 'tailleur' : 'client',
+        rankLabel: isTailor ? 'Atelier' : 'Client SIGNARE',
+        rating: isTailor ? 4.8 : undefined,
+        isMasterTailor: isTailor ? true : false,
         status: 'offline',
       },
       lastMessage: 'Bonjour, je souhaite discuter d’un modèle.',
@@ -220,7 +223,7 @@ export default function MessagesPage() {
       session_id: sessionId,
       duration_seconds: null,
       scroll_depth: null,
-      came_from: 'messages:deeplink_tailor_new',
+      came_from: tailorName ? 'messages:deeplink_tailor_new' : 'messages:deeplink_user_new',
       device_type: 'web',
       user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
     })
