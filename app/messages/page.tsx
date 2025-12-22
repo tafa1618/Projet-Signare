@@ -1,14 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { 
   Search, 
-  Plus, 
+  Plus,
   MoreVertical, 
   Send, 
-  Image as ImageIcon, 
   Ruler, 
   FileText, 
   ChevronLeft,
@@ -16,9 +15,11 @@ import {
   CheckCheck,
   Sparkles,
   MessageCircle,
-  Camera
+  Camera,
+  Star
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import type { Database } from '@/shared/types/database.types'
 
 /**
  * PAGE - Messagerie SIGNARE
@@ -47,6 +48,9 @@ interface Conversation {
     name: string
     avatar: string
     role: 'client' | 'tailleur'
+    rankLabel: string
+    rating?: number
+    isMasterTailor?: boolean
     status: 'online' | 'atelier' | 'offline'
   }
   lastMessage: string
@@ -63,6 +67,9 @@ const MOCK_CONVERSATIONS: Conversation[] = [
       name: 'Atelier Fatou',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fatou',
       role: 'tailleur',
+      rankLabel: 'Maître Tailleur',
+      rating: 4.9,
+      isMasterTailor: true,
       status: 'atelier'
     },
     lastMessage: 'Votre boubou sera prêt pour l\'essayage demain.',
@@ -80,6 +87,7 @@ const MOCK_CONVERSATIONS: Conversation[] = [
       name: 'Moussa Sy',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Moussa',
       role: 'client',
+      rankLabel: 'Client SIGNARE',
       status: 'online'
     },
     lastMessage: 'J\'aime beaucoup ce modèle en basin.',
@@ -103,233 +111,362 @@ const MOCK_CONVERSATIONS: Conversation[] = [
   }
 ]
 
+type UserInteractionInsert = Database['public']['Tables']['user_interactions']['Insert']
+
+/**
+ * Tracking d'interactions (ML Ready)
+ * @ai-context Utilise le schéma `user_interactions` pour capturer l'engagement dans la messagerie
+ * (ex: sélection conversation, actions rapides, envoi).
+ */
+function trackInteraction(payload: UserInteractionInsert) {
+  // TODO: Brancher sur Supabase (insert) quand l'auth est active.
+  // Respect du schéma: pas de metadata arbitraire ici; on encode le contexte dans `came_from`.
+  console.log('[ML] user_interactions.insert', payload)
+}
+
+function StarRating({ rating }: { rating: number }) {
+  const rounded = Math.round(rating)
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star
+          key={s}
+          size={10}
+          className={s <= rounded ? "fill-current" : "text-white/20"}
+          style={{ color: s <= rounded ? "#D4AF37" : undefined }}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function MessagesPage() {
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null)
   const [inputText, setInputText] = useState('')
+  const [showQuickMenu, setShowQuickMenu] = useState(false)
   const currentUserId = 'user-123'
+  const sessionId = 'session-demo'
+
+  const containerHeightClass = 'h-[calc(100dvh-80px)] md:h-[calc(100vh-80px)] -mb-24'
+
+  const quickActions = useMemo(() => ([
+    { id: 'ref', label: 'Modèle de référence', icon: Sparkles },
+    { id: 'mes', label: 'Fiche de mesures', icon: Ruler },
+  ]), [])
 
   return (
-    <div className="flex h-[100dvh] bg-[#0A0A0A] overflow-hidden text-white pb-20 md:pb-0">
+    <div className={cn("bg-[#0A0A0A] text-white overflow-hidden", containerHeightClass)}>
+      <div className="flex h-full">
       {/* 1. LISTE DES CONVERSATIONS */}
       <aside className={cn(
-        "w-full md:w-[380px] border-r border-[#D4AF37]/10 flex flex-col transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] bg-[#0A0A0A]",
-        selectedConv ? "fixed inset-0 z-30 md:relative translate-x-[-100%] md:translate-x-0" : "flex translate-x-0"
+        "w-full md:w-[360px] border-r border-[#D4AF37]/20 flex flex-col bg-[#0A0A0A]",
+        selectedConv ? "hidden md:flex" : "flex"
       )}>
-        <header className="p-6 pt-8 bg-[#0A0A0A]/80 backdrop-blur-md sticky top-0 z-10">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-serif text-[#D4AF37] tracking-[0.1em] uppercase italic">Messages</h1>
-            <motion.button 
-              whileTap={{ scale: 0.9 }}
-              className="bg-[#D4AF37]/10 p-2.5 rounded-full text-[#D4AF37] border border-[#D4AF37]/20 shadow-[0_0_15px_rgba(212,175,55,0.1)]"
-            >
+        <header className="px-5 pt-5 pb-4 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-[#D4AF37]/20">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-serif text-[#D4AF37] tracking-[0.2em] uppercase">MESSAGES</h1>
+            <button className="p-2 text-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors">
               <Plus size={20} />
-            </motion.button>
+            </button>
           </div>
-          
-          <div className="relative group">
-            <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 group-focus-within:text-[#D4AF37] transition-colors" size={16} />
-            <input 
-              type="text" 
-              placeholder="RECHERCHER UN ARTISAN..." 
-              className="w-full bg-transparent border-b border-[#D4AF37]/20 py-3 pl-8 pr-4 text-[10px] font-black tracking-[0.2em] uppercase outline-none focus:border-[#D4AF37] transition-all placeholder:text-white/20"
+          <div className="relative mt-4">
+            <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-[#D4AF37]/40" size={16} />
+            <input
+              type="text"
+              placeholder="RECHERCHER..."
+              className="w-full bg-transparent border-b border-[#D4AF37]/20 py-2.5 pl-7 pr-3 text-[10px] font-black tracking-[0.22em] uppercase outline-none focus:border-[#D4AF37] placeholder:text-white/20"
             />
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto pb-32 px-3 space-y-1">
+        <div className="flex-1 overflow-y-auto px-2 py-2">
           {MOCK_CONVERSATIONS.map((conv, idx) => (
-            <motion.div
+            <motion.button
               key={conv.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              onClick={() => setSelectedConv(conv)}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.03, duration: 0.35 }}
+              onClick={() => {
+                setSelectedConv(conv)
+                trackInteraction({
+                  user_id: currentUserId,
+                  post_id: null,
+                  interaction_type: 'click',
+                  session_id: sessionId,
+                  duration_seconds: null,
+                  scroll_depth: null,
+                  came_from: 'messages:conversation_select',
+                  device_type: 'web',
+                  user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                })
+              }}
               className={cn(
-                "flex items-center gap-4 px-4 py-5 cursor-pointer rounded-2xl transition-all duration-300",
-                selectedConv?.id === conv.id 
-                  ? "bg-[#D4AF37]/10 border border-[#D4AF37]/20" 
-                  : "hover:bg-white/[0.02] border border-transparent active:bg-white/[0.05]"
+                "w-full text-left flex items-center gap-3 px-3 py-3 rounded-xl border transition-all duration-300",
+                "border-transparent hover:border-[#D4AF37]/15",
+                "hover:bg-gradient-to-r hover:from-[#D4AF37]/10 hover:to-transparent",
+                "active:scale-[0.99]"
               )}
             >
-              {/* Avatar avec cercle d'activité */}
               <div className="relative flex-shrink-0">
-                <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#D4AF37]/20 p-0.5 shadow-lg">
-                  <div className="w-full h-full rounded-full overflow-hidden relative">
+                <div className={cn(
+                  "w-11 h-11 rounded-full overflow-hidden border p-0.5",
+                  conv.user.isMasterTailor ? "border-[#D4AF37]/50" : "border-white/10"
+                )}>
+                  <div className="w-full h-full rounded-full overflow-hidden relative bg-neutral-900">
                     <Image src={conv.user.avatar} alt={conv.user.name} fill className="object-cover" />
                   </div>
                 </div>
-                {conv.user.status === 'atelier' && (
-                  <div className="absolute -bottom-0.5 -right-0.5 bg-[#D4AF37] rounded-full p-1.5 border-2 border-[#0A0A0A] shadow-[0_0_10px_rgba(212,175,55,0.5)]">
-                    <Scissors size={10} className="text-[#0A0A0A]" />
-                  </div>
-                )}
               </div>
               
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline mb-1">
-                  <h3 className="font-serif font-bold text-sm tracking-wide text-white/90 truncate">{conv.user.name}</h3>
-                  <span className="text-[9px] text-[#D4AF37]/60 font-black uppercase tracking-tighter">{conv.updatedAt}</span>
+                  <div className="min-w-0">
+                    <h3 className="font-serif font-bold text-sm tracking-wide text-white/90 truncate">{conv.user.name}</h3>
+                    <p className="text-[8px] text-[#D4AF37]/70 uppercase tracking-[0.2em] font-black truncate">
+                      {conv.user.rankLabel}
+                    </p>
+                  </div>
+                  <span className="text-[9px] text-white/30 font-bold uppercase tracking-[0.15em]">{conv.updatedAt}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <p className="text-xs text-white/40 truncate font-light italic pr-4">{conv.lastMessage}</p>
+                  <p className="text-xs text-white/40 truncate pr-4 italic">{conv.lastMessage}</p>
                   {conv.unreadCount > 0 && (
-                    <div className="bg-[#D4AF37] w-2 h-2 rounded-full shadow-[0_0_10px_#D4AF37] flex-shrink-0" />
+                    <div className="bg-[#D4AF37] w-2 h-2 rounded-full shadow-[0_0_12px_rgba(212,175,55,0.7)] flex-shrink-0" />
                   )}
                 </div>
+                {typeof conv.user.rating === 'number' && (
+                  <div className="mt-1">
+                    <StarRating rating={conv.user.rating} />
+                  </div>
+                )}
               </div>
-            </motion.div>
+            </motion.button>
           ))}
         </div>
       </aside>
 
       {/* 2. FENÊTRE DE CHAT */}
       <main className={cn(
-        "flex-1 flex flex-col bg-[#0A0A0A] relative transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] z-40",
-        selectedConv ? "fixed inset-0 md:relative translate-x-0" : "hidden md:flex translate-x-full md:translate-x-0"
+        "flex-1 flex flex-col bg-[#0A0A0A] relative",
+        !selectedConv && "hidden md:flex"
       )}>
-        {selectedConv ? (
-          <div className="flex flex-col h-full w-full max-w-4xl mx-auto bg-[#0A0A0A]">
-            {/* Header Chat Mobile-Optimized */}
-            <header className="px-4 py-4 border-b border-[#D4AF37]/10 bg-[#0A0A0A]/90 backdrop-blur-xl flex items-center justify-between sticky top-0 z-50">
-              <div className="flex items-center gap-3">
-                <motion.button 
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setSelectedConv(null)} 
-                  className="md:hidden text-[#D4AF37] p-1 -ml-1 active:bg-[#D4AF37]/10 rounded-full transition-colors"
-                >
-                  <ChevronLeft size={32} />
-                </motion.button>
-                
-                <div className="relative">
-                  <div className="w-10 h-10 rounded-full overflow-hidden border border-[#D4AF37]/30 shadow-md">
-                    <Image src={selectedConv.user.avatar} alt={selectedConv.user.name} fill className="object-cover" />
-                  </div>
+        <AnimatePresence mode="wait">
+          {selectedConv ? (
+            <motion.div
+              key={selectedConv.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="flex flex-col h-full"
+            >
+              {/* Header Chat (Feed-like) */}
+              <header className="px-4 py-3 border-b border-[#D4AF37]/20 bg-[#0A0A0A]/90 backdrop-blur-xl flex items-center justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <button
+                    onClick={() => setSelectedConv(null)}
+                    className="md:hidden p-2 -ml-2 text-[#D4AF37] active:bg-[#D4AF37]/10 rounded-full"
+                    aria-label="Retour"
+                  >
+                    <ChevronLeft size={26} />
+                  </button>
+
                   <div className={cn(
-                    "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#0A0A0A]",
-                    selectedConv.user.status === 'online' ? "bg-green-500 shadow-[0_0_8px_#22c55e]" : "bg-[#D4AF37] shadow-[0_0_8px_#D4AF37]"
-                  )} />
+                    "w-9 h-9 rounded-full overflow-hidden border p-0.5 flex-shrink-0",
+                    selectedConv.user.isMasterTailor ? "border-[#D4AF37]/50" : "border-white/10"
+                  )}>
+                    <div className="w-full h-full rounded-full overflow-hidden relative bg-neutral-900">
+                      <Image src={selectedConv.user.avatar} alt={selectedConv.user.name} fill className="object-cover" />
+                    </div>
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <h2 className="font-serif font-bold text-sm text-[#D4AF37] tracking-[0.18em] uppercase truncate">
+                        {selectedConv.user.name}
+                      </h2>
+                      {selectedConv.user.status === 'atelier' && (
+                        <div className="flex items-center gap-1 text-[#D4AF37]">
+                          <Scissors size={12} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[9px] text-white/40 uppercase tracking-[0.22em] font-black truncate">
+                        {selectedConv.user.rankLabel}
+                      </p>
+                      {typeof selectedConv.user.rating === 'number' && <StarRating rating={selectedConv.user.rating} />}
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="min-w-0">
-                  <h2 className="font-serif font-bold text-sm tracking-widest text-[#D4AF37] uppercase truncate pr-2">{selectedConv.user.name}</h2>
-                  <p className="text-[8px] text-white/40 uppercase tracking-[0.2em] font-black">
-                    {selectedConv.user.status === 'atelier' ? '🧵 En Atelier' : 'Disponible'}
+
+                <button className="p-2 text-white/30 hover:text-[#D4AF37] transition-colors">
+                  <MoreVertical size={18} />
+                </button>
+              </header>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+                {selectedConv.messages.map((msg) => {
+                  const isMe = msg.senderId === currentUserId
+                  return (
+                    <motion.div
+                      key={msg.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className={cn("flex", isMe ? "justify-end" : "justify-start")}
+                    >
+                      <div className={cn(
+                        "max-w-[78%] md:max-w-[60%] px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed border",
+                        isMe
+                          ? "bg-[#141414] text-white/90 border-white/10 rounded-tr-none"
+                          : "bg-[#0A0A0A] text-white/90 border-[#D4AF37]/20 rounded-tl-none"
+                      )}>
+                        {msg.type === 'post_share' && msg.postData ? (
+                          <div className="space-y-2">
+                            <p className="text-[9px] uppercase tracking-[0.22em] font-black text-[#D4AF37]/80">
+                              Modèle de référence
+                            </p>
+                            <div className="relative aspect-[4/5] w-full max-h-[180px] rounded-xl overflow-hidden border border-[#D4AF37]/20">
+                              <Image src={msg.postData.image} alt={msg.postData.title} fill className="object-cover" />
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-sm font-bold truncate">{msg.postData.title}</p>
+                              <p className="text-sm font-serif text-[#D4AF37] flex-shrink-0">{msg.postData.price}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          msg.text
+                        )}
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+
+              {/* Input compact (no-scroll global) */}
+              <div className="border-t border-[#D4AF37]/20 bg-[#0A0A0A]/95 backdrop-blur-xl px-4 py-3">
+                <div className="relative">
+                  <div className="flex items-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl px-3 py-2">
+                    <button
+                      onClick={() => {
+                        setShowQuickMenu((v) => !v)
+                        trackInteraction({
+                          user_id: currentUserId,
+                          post_id: null,
+                          interaction_type: 'click',
+                          session_id: sessionId,
+                          duration_seconds: null,
+                          scroll_depth: null,
+                          came_from: 'messages:quick_plus_toggle',
+                          device_type: 'web',
+                          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                        })
+                      }}
+                      className="p-2 rounded-xl text-[#D4AF37]/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all"
+                      aria-label="Actions rapides"
+                    >
+                      <Plus size={18} />
+                    </button>
+
+                    <input
+                      type="text"
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      placeholder="VOTRE MESSAGE..."
+                      className="flex-1 bg-transparent text-[11px] font-black tracking-[0.22em] uppercase outline-none placeholder:text-white/15"
+                    />
+
+                    <button className="p-2 text-white/20 hover:text-[#D4AF37] transition-colors" aria-label="Photo">
+                      <Camera size={18} />
+                    </button>
+
+                    <motion.button
+                      whileTap={{ scale: 0.94 }}
+                      onClick={() => {
+                        if (!inputText.trim()) return
+                        trackInteraction({
+                          user_id: currentUserId,
+                          post_id: null,
+                          interaction_type: 'click',
+                          session_id: sessionId,
+                          duration_seconds: null,
+                          scroll_depth: null,
+                          came_from: 'messages:send',
+                          device_type: 'web',
+                          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                        })
+                        setInputText('')
+                      }}
+                      className="bg-[#D4AF37] text-[#0A0A0A] p-2.5 rounded-xl shadow-[0_0_18px_rgba(212,175,55,0.35)]"
+                      aria-label="Envoyer"
+                    >
+                      <Send size={18} />
+                    </motion.button>
+                  </div>
+
+                  <AnimatePresence>
+                    {showQuickMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute bottom-[56px] left-0 w-[240px] bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl overflow-hidden shadow-2xl"
+                      >
+                        {quickActions.map((action) => {
+                          const Icon = action.icon
+                          return (
+                            <button
+                              key={action.id}
+                              onClick={() => {
+                                setShowQuickMenu(false)
+                                trackInteraction({
+                                  user_id: currentUserId,
+                                  post_id: null,
+                                  interaction_type: 'click',
+                                  session_id: sessionId,
+                                  duration_seconds: null,
+                                  scroll_depth: null,
+                                  came_from: `messages:quick_${action.id}`,
+                                  device_type: 'web',
+                                  user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                                })
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#D4AF37]/10 transition-colors"
+                            >
+                              <Icon size={16} className="text-[#D4AF37]" />
+                              <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/80">
+                                {action.label}
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <div className="hidden md:flex h-full items-center justify-center text-center px-10">
+              <div className="space-y-4">
+                <div className="bg-[#D4AF37]/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto border border-[#D4AF37]/20">
+                  <MessageCircle size={32} className="text-[#D4AF37]" />
+                </div>
+                <div className="space-y-1">
+                  <h2 className="text-xl font-serif text-[#D4AF37] tracking-[0.2em] uppercase">Salon Privé</h2>
+                  <p className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black">
+                    Sélectionnez une conversation
                   </p>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <button className="hidden sm:flex items-center gap-2 bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10 text-[#D4AF37] px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-[#D4AF37]/20 transition-all active:scale-95">
-                  <Ruler size={14} /> Fiche
-                </button>
-                <button className="p-2 text-white/30 active:text-[#D4AF37] transition-colors">
-                  <MoreVertical size={20} />
-                </button>
-              </div>
-            </header>
-
-            {/* Zone Messages (Scrollable) */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8 custom-scrollbar pb-40">
-              {selectedConv.messages.map((msg, idx) => {
-                const isMe = msg.senderId === currentUserId
-                return (
-                  <motion.div
-                    key={msg.id}
-                    initial={{ opacity: 0, y: 15, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    className={cn(
-                      "flex flex-col max-w-[88%] sm:max-w-[75%]",
-                      isMe ? "ml-auto items-end" : "mr-auto items-start"
-                    )}
-                  >
-                    {msg.type === 'text' && (
-                      <div className={cn(
-                        "px-5 py-3 rounded-2xl text-[13px] leading-relaxed relative shadow-xl border",
-                        isMe 
-                          ? "bg-white/[0.04] text-white/95 rounded-tr-none border-white/10" 
-                          : "bg-[#0A0A0A] text-white/95 rounded-tl-none border-[#D4AF37]/20 shadow-[0_0_20px_rgba(212,175,55,0.03)]"
-                      )}>
-                        {msg.text}
-                      </div>
-                    )}
-
-                    {msg.type === 'post_share' && msg.postData && (
-                      <div className="bg-white/[0.03] border border-[#D4AF37]/20 rounded-2xl overflow-hidden shadow-2xl w-full sm:w-64 group cursor-pointer active:scale-[0.98] transition-transform">
-                        <div className="relative aspect-square w-full">
-                          <Image src={msg.postData.image} alt={msg.postData.title} fill className="object-cover" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Sparkles size={24} className="text-[#D4AF37]" />
-                          </div>
-                        </div>
-                        <div className="p-4 space-y-1 bg-[#0A0A0A]/90 backdrop-blur-md">
-                          <p className="text-[8px] text-[#D4AF37] uppercase tracking-[0.2em] font-black">Référence Style</p>
-                          <p className="text-xs font-bold text-white/90 tracking-wide">{msg.postData.title}</p>
-                          <p className="text-sm font-serif text-[#D4AF37]">{msg.postData.price}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-2 mt-2 px-1">
-                      <span className="text-[8px] text-white/20 font-black uppercase tracking-widest leading-none">{msg.timestamp}</span>
-                      {isMe && <CheckCheck size={12} className={cn(msg.status === 'read' ? "text-[#D4AF37]" : "text-white/10")} />}
-                    </div>
-                  </motion.div>
-                )
-              })}
             </div>
-
-            {/* Zone Input - Sticky above BottomNav on mobile */}
-            <div className="p-4 sm:p-6 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent fixed bottom-20 md:relative md:bottom-0 left-0 right-0 z-50">
-              <div className="flex gap-2 mb-4 overflow-x-auto pb-2 no-scrollbar px-1">
-                {['Envoyer un Devis', 'Valider Mesures', 'Essayage'].map((action) => (
-                  <button key={action} className="flex-shrink-0 bg-[#D4AF37]/5 border border-[#D4AF37]/20 text-[#D4AF37] px-4 py-2 rounded-full text-[8px] font-black uppercase tracking-[0.15em] hover:bg-[#D4AF37] hover:text-[#0A0A0A] transition-all active:scale-90">
-                    {action}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-3 bg-white/[0.04] border border-white/10 rounded-2xl p-1.5 pl-5 shadow-2xl focus-within:border-[#D4AF37]/30 transition-all ring-1 ring-transparent focus-within:ring-[#D4AF37]/10">
-                <input 
-                  type="text" 
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  placeholder="VOTRE MESSAGE..." 
-                  className="flex-1 bg-transparent text-[10px] font-bold tracking-widest outline-none placeholder:text-white/10 text-white uppercase py-3"
-                />
-                <div className="flex items-center gap-1 pr-1">
-                  <button className="p-2.5 text-white/20 hover:text-[#D4AF37] active:scale-90 transition-all"><Camera size={22} /></button>
-                  <motion.button 
-                    whileTap={{ scale: 0.9 }}
-                    className="bg-[#D4AF37] p-3 rounded-xl text-[#0A0A0A] shadow-[0_0_20px_rgba(212,175,55,0.3)] ml-1"
-                  >
-                    <Send size={20} strokeWidth={2.5} />
-                  </motion.button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center space-y-8 text-center px-10 h-full"
-          >
-            <div className="relative">
-              <div className="bg-[#D4AF37]/5 w-32 h-32 rounded-full flex items-center justify-center border border-[#D4AF37]/10 shadow-[0_0_50px_rgba(212,175,55,0.05)]">
-                <MessageCircle size={48} className="text-[#D4AF37]/40" />
-              </div>
-              <Sparkles className="absolute -top-2 -right-2 text-[#D4AF37]/30 animate-pulse" size={24} />
-            </div>
-            <div className="space-y-3">
-              <h2 className="text-3xl font-serif text-[#D4AF37] tracking-[0.2em] uppercase italic">Salon Privé</h2>
-              <p className="text-white/30 text-[9px] font-black tracking-[0.25em] leading-relaxed max-w-[240px] mx-auto italic uppercase">
-                Choisissez un atelier pour initier votre prochaine création.
-              </p>
-            </div>
-          </motion.div>
-        )}
+          )}
+        </AnimatePresence>
       </main>
+      </div>
     </div>
   )
 }

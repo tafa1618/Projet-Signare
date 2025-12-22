@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -155,171 +155,240 @@ const StarRating = ({ rating, color = "#D4AF37" }: { rating: number, color?: str
   </div>
 )
 
-// Card Tailleur Révisée
-const TailorCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number) => void, onSave: (id: number) => void }) => (
-  <motion.article
-    initial={{ opacity: 0, y: 40 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-60px" }}
-    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-    className="mb-6 bg-[#0A0A0A] border border-[#D4AF37]/15 rounded-lg overflow-hidden shadow-xl transition-all hover:border-[#D4AF37]/30 mx-3 max-w-xl"
-  >
-    {/* Header Tailleur Compact */}
-    <div className="flex items-center justify-between px-3 py-2 bg-[#D4AF37]/5">
-      <div className="flex items-center gap-2">
-        <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[#D4AF37]/30">
-          <Image src={post.user.avatar} alt={post.user.name} fill className="object-cover" />
+type InteractionPayload = {
+  post_id: number
+  interaction_type: 'post_view'
+  interaction_score: number
+  metadata?: Record<string, unknown>
+}
+
+/**
+ * Tracking de visibilité (vue > 3s)
+ * @ai-context Alimente le dataset de recommandation via interaction_score.
+ */
+function useTrackPostVisibility(payload: InteractionPayload) {
+  const ref = useRef<HTMLDivElement | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hasTrackedRef = useRef(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0]
+        if (!entry) return
+
+        if (entry.isIntersecting) {
+          if (hasTrackedRef.current) return
+          timerRef.current = setTimeout(() => {
+            if (hasTrackedRef.current) return
+            hasTrackedRef.current = true
+            // Placeholder ML tracking (à connecter à Supabase user_interactions)
+            console.log('[ML] trackInteraction', {
+              ...payload,
+              timestamp: new Date().toISOString(),
+            })
+          }, 3000)
+        } else {
+          if (timerRef.current) clearTimeout(timerRef.current)
+          timerRef.current = null
+        }
+      },
+      { threshold: 0.6 }
+    )
+
+    observer.observe(el)
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      observer.disconnect()
+    }
+  }, [payload])
+
+  return ref
+}
+
+// Card Tailleur (viewport-friendly, Z-pattern, CTA + Like sur la même ligne)
+const TailorCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number) => void, onSave: (id: number) => void }) => {
+  const trackRef = useTrackPostVisibility({
+    post_id: post.id,
+    interaction_type: 'post_view',
+    interaction_score: 2,
+    metadata: { role: 'tailleur', garment_type: post.garment_type, fabric_type: post.fabric_type },
+  })
+
+  return (
+    <motion.article
+      ref={trackRef as unknown as React.RefObject<HTMLElement>}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="mx-3 mb-6 bg-[#0A0A0A] border border-[#D4AF37]/15 rounded-xl overflow-hidden shadow-xl max-h-[80vh]"
+    >
+      {/* Image : max 50vh + object-cover */}
+      <div className="relative w-full aspect-[4/5] max-h-[50vh] bg-neutral-900">
+        <Image
+          src={post.image}
+          alt={post.caption}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 560px"
+          priority={post.id === 1}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/60 to-transparent pointer-events-none" />
+
+        {/* Badge Tailleur */}
+        <div className="absolute top-3 left-3">
+          <span className="bg-[#D4AF37] text-[#0A0A0A] px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(212,175,55,0.35)]">
+            Atelier
+          </span>
         </div>
-        <div>
-          <div className="flex items-center gap-1">
-            <span className="font-serif font-bold text-xs text-[#D4AF37] tracking-wide">{post.user.name}</span>
-            {post.user.isVerified && <CheckCircle2 className="w-2.5 h-2.5 text-[#D4AF37]" />}
+      </div>
+
+      {/* Bloc compact sous image (Z-pattern) */}
+      <div className="px-3 py-3 space-y-2">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="font-serif font-bold text-sm text-[#D4AF37] truncate">{post.user.name}</span>
+              {post.user.isVerified && <CheckCircle2 className="w-3 h-3 text-[#D4AF37] flex-shrink-0" />}
+            </div>
+            <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] font-bold truncate">{post.user.role}</p>
           </div>
-          <p className="text-[8px] text-white/40 uppercase tracking-widest leading-none">{post.user.role}</p>
-        </div>
-      </div>
-      <div className="flex flex-col items-end">
-        <StarRating rating={post.complexity_score || 0} />
-      </div>
-    </div>
-
-    {/* Image plus compacte (4/5) */}
-    <div className="relative w-full aspect-[4/5] bg-neutral-900 group overflow-hidden">
-      <Image
-        src={post.image}
-        alt={post.caption}
-        fill
-        className="object-cover transition-transform duration-700 group-hover:scale-105"
-        priority
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/40 to-transparent pointer-events-none" />
-      
-      {/* Slogan flottant discret */}
-      <div className="absolute top-3 left-3">
-        <span className="bg-[#0A0A0A]/60 backdrop-blur-md px-2 py-1 rounded-full border border-[#D4AF37]/20 text-[7px] font-medium text-[#D4AF37] uppercase tracking-wider">
-          {post.user.specialty}
-        </span>
-      </div>
-    </div>
-
-    {/* Actions & Description Immédiate */}
-    <div className="px-3 py-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-3">
-          <button onClick={() => onLike(post.id)} className="flex items-center gap-1 group/btn text-white/40 hover:text-[#D4AF37] transition-all">
-            <Heart size={20} className={post.isLiked ? "fill-[#D4AF37] text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" : ""} />
-            <span className="text-[10px] font-bold">{post.likes}</span>
-          </button>
-          <div className="flex items-center gap-1 text-white/40">
-            <MessageSquare size={20} />
-            <span className="text-[10px] font-bold">{post.comments}</span>
+          <div className="text-right flex-shrink-0">
+            <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] font-bold">À partir de</p>
+            <p className="text-sm font-serif font-bold text-[#D4AF37] leading-none">{post.price}</p>
           </div>
-          <button onClick={() => onSave(post.id)} className="text-white/40 hover:text-[#D4AF37] transition-all">
-            <Bookmark size={20} className={post.isSaved ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
-          </button>
         </div>
-        <div className="text-right">
-          <p className="text-[10px] font-serif text-[#D4AF37] font-bold">{post.price}</p>
-        </div>
-      </div>
 
-      <div className="space-y-1">
-        <p className="text-[11px] text-white/90 leading-snug line-clamp-2">
-          <span className="font-bold mr-1.5 text-[#D4AF37]">{post.user.name}</span>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-[9px] text-white/40 uppercase tracking-[0.18em] font-bold">
+            <span className="truncate">{post.garment_type}</span>
+            {post.fabric_type && (
+              <>
+                <span className="text-white/20">•</span>
+                <span className="truncate">{post.fabric_type}</span>
+              </>
+            )}
+          </div>
+          <StarRating rating={post.complexity_score || 0} />
+        </div>
+
+        <p className="text-[11px] text-white/80 leading-snug line-clamp-2">
           {post.caption}
         </p>
-        <div className="flex gap-2 text-[8px] text-white/30 uppercase font-bold tracking-widest">
-          <span>{post.garment_type}</span>
-          <span>•</span>
-          <span>{post.fabric_type}</span>
-        </div>
-      </div>
 
-      <button className="w-full bg-[#D4AF37] text-[#0A0A0A] py-2 rounded-lg text-[10px] font-black tracking-[0.1em] uppercase shadow-lg transition-all hover:bg-white active:scale-[0.98] mt-1">
-        Demander un devis
-      </button>
-    </div>
-  </motion.article>
-)
+        {/* Actions : Like + Devis sur la même ligne */}
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center gap-3 text-white/50">
+            <button onClick={() => onLike(post.id)} className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors active:scale-95">
+              <Heart size={18} className={post.isLiked ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
+              <span className="text-[10px] font-bold">{post.likes}</span>
+            </button>
+            <div className="flex items-center gap-1.5">
+              <MessageSquare size={18} />
+              <span className="text-[10px] font-bold">{post.comments}</span>
+            </div>
+            <button onClick={() => onSave(post.id)} className="hover:text-[#D4AF37] transition-colors active:scale-95">
+              <Bookmark size={18} className={post.isSaved ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
+            </button>
+          </div>
 
-// Card Client Révisée style Instagram
-const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number) => void, onSave: (id: number) => void }) => (
-  <motion.article
-    initial={{ opacity: 0, y: 40 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-60px" }}
-    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-    className="mb-8 bg-[#0A0A0A] group mx-3 max-w-xl"
-  >
-    {/* Header Client Compact */}
-    <div className="flex items-center justify-between px-1 mb-2">
-      <div className="flex items-center gap-2">
-        <div className="w-9 h-9 rounded-full overflow-hidden border border-white/10 p-0.5">
-          <Image src={post.user.avatar} alt={post.user.name} fill className="object-cover rounded-full" />
-        </div>
-        <div>
-          <span className="font-bold text-xs tracking-wide block text-white/90">{post.user.name}</span>
-          <p className="text-[8px] text-[#D4AF37] font-bold uppercase tracking-widest flex items-center gap-1">
-            <CheckCircle2 size={8} className="text-[#D4AF37]"/> {post.taggedTailor?.name}
-          </p>
-        </div>
-      </div>
-      <StarRating rating={post.quality_rating || 0} />
-    </div>
-
-    {/* Image plus compacte (4/5) */}
-    <div className="relative w-full aspect-[4/5] bg-neutral-900 rounded-lg overflow-hidden shadow-xl group">
-      <Image
-        src={post.image}
-        alt={post.caption}
-        fill
-        className="object-cover transition-transform duration-700 group-hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/40 to-transparent pointer-events-none" />
-      
-      {/* Badge discret */}
-      <div className="absolute bottom-3 left-3">
-        <span className="bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 text-[7px] font-bold text-white/60 uppercase tracking-widest">
-          #{post.garment_type.replace(' ', '')}
-        </span>
-      </div>
-    </div>
-
-    {/* Actions Style Instagram */}
-    <div className="px-1 py-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-3">
-          <button onClick={() => onLike(post.id)} className="transition-all active:scale-90">
-            <Heart size={24} className={post.isLiked ? "fill-[#D4AF37] text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]" : "text-white/80 hover:text-[#D4AF37]"} />
-          </button>
-          <button className="transition-all active:scale-90">
-            <MessageCircle size={24} className="text-white/80 hover:text-[#D4AF37]" />
-          </button>
-          <button className="transition-all active:scale-90">
-            <Share2 size={24} className="text-white/80 hover:text-[#D4AF37]" />
+          <button className="bg-[#D4AF37] text-[#0A0A0A] px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(212,175,55,0.35)] active:scale-95">
+            Devis
           </button>
         </div>
-        <button onClick={() => onSave(post.id)} className="transition-all active:scale-90">
-          <Bookmark size={24} className={post.isSaved ? "fill-[#D4AF37] text-[#D4AF37]" : "text-white/80 hover:text-[#D4AF37]"} />
-        </button>
+      </div>
+    </motion.article>
+  )
+}
+
+// Card Client (viewport-friendly, mention "Réalisé par...", CTA = Liker)
+const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number) => void, onSave: (id: number) => void }) => {
+  const trackRef = useTrackPostVisibility({
+    post_id: post.id,
+    interaction_type: 'post_view',
+    interaction_score: 2,
+    metadata: { role: 'client', garment_type: post.garment_type, tailor: post.taggedTailor?.name },
+  })
+
+  return (
+    <motion.article
+      ref={trackRef as unknown as React.RefObject<HTMLElement>}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="mx-3 mb-6 bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden shadow-xl max-h-[80vh]"
+    >
+      {/* Image : max 50vh + object-cover */}
+      <div className="relative w-full aspect-[4/5] max-h-[50vh] bg-neutral-900">
+        <Image
+          src={post.image}
+          alt={post.caption}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 560px"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/55 to-transparent pointer-events-none" />
       </div>
 
-      {/* Description Immédiate */}
-      <div className="space-y-1">
-        <p className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">
-          {post.likes.toLocaleString()} likes
-        </p>
-        <p className="text-xs leading-relaxed text-white/90 line-clamp-3">
-          <span className="font-bold mr-2 text-white">{post.user.name.toLowerCase().replace(' ', '_')}</span>
+      {/* Bloc compact sous image (Z-pattern) */}
+      <div className="px-3 py-3 space-y-2">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="font-bold text-sm text-white/90 truncate">{post.user.name}</span>
+              {post.user.isVerified && <CheckCircle2 className="w-3 h-3 text-[#D4AF37] flex-shrink-0" />}
+            </div>
+            <p className="text-[9px] text-[#D4AF37]/80 uppercase tracking-[0.2em] font-black truncate">
+              Réalisé par {post.taggedTailor?.name}
+            </p>
+          </div>
+          <div className="flex-shrink-0">
+            <StarRating rating={post.quality_rating || 0} />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-[9px] text-white/40 uppercase tracking-[0.18em] font-bold">
+            <span className="truncate">{post.garment_type}</span>
+          </div>
+          <button onClick={() => onSave(post.id)} className="text-white/40 hover:text-[#D4AF37] transition-colors active:scale-95">
+            <Bookmark size={18} className={post.isSaved ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
+          </button>
+        </div>
+
+        <p className="text-[11px] text-white/80 leading-snug line-clamp-2">
           {post.caption}
         </p>
-        <button className="text-[10px] text-white/30 font-medium hover:text-[#D4AF37] transition-colors">
-          Voir les {post.comments} commentaires
-        </button>
+
+        {/* Actions : Like + Liker sur la même ligne */}
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center gap-3 text-white/50">
+            <button onClick={() => onLike(post.id)} className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors active:scale-95">
+              <Heart size={18} className={post.isLiked ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
+              <span className="text-[10px] font-bold">{post.likes}</span>
+            </button>
+            <div className="flex items-center gap-1.5">
+              <MessageCircle size={18} />
+              <span className="text-[10px] font-bold">{post.comments}</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => onLike(post.id)}
+            className="bg-white/5 border border-white/10 text-white/80 px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] hover:border-[#D4AF37]/30 hover:text-[#D4AF37] transition-all active:scale-95"
+          >
+            Liker
+          </button>
+        </div>
       </div>
-    </div>
-  </motion.article>
-)
+    </motion.article>
+  )
+}
 
 export default function HomePage() {
   const [posts, setPosts] = useState(mockPosts)
