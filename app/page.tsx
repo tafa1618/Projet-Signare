@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { 
   Heart, 
@@ -16,7 +17,8 @@ import {
   ExternalLink,
   MessageSquare,
   Scissors,
-  Plus
+  Plus,
+  LogOut
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -321,6 +323,12 @@ const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
 
 export default function HomePage() {
   const [posts, setPosts] = useState(mockPosts)
+  const router = useRouter()
+
+  const handleLogout = () => {
+    // Simulation de déconnexion
+    router.push('/welcome')
+  }
 
   const handleLike = (postId: number) => {
     setPosts(posts.map(post => 
@@ -363,10 +371,16 @@ export default function HomePage() {
                 <Plus className="w-5 h-5 text-[#0A0A0A]" strokeWidth={3} />
               </motion.button>
             </Link>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] text-[#D4AF37] font-semibold tracking-widest uppercase">Exploration</span>
-              <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
-            </div>
+            
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleLogout}
+              className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors p-2"
+              title="Déconnexion"
+            >
+              <LogOut className="w-6 h-6" />
+            </motion.button>
           </div>
         </div>
       </motion.header>
