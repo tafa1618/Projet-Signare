@@ -14,16 +14,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" className="dark">
-      <body className="bg-[#0A0A0A] text-white min-h-screen flex flex-col m-0 p-0 overflow-x-hidden">
-        {/* Contenu principal */}
-        <main className="flex-1 w-full pb-24">
+      <body className="bg-[#0A0A0A] text-white m-0 p-0 overflow-x-hidden">
+        {/* CONTENU SCROLLABLE */}
+        <div className="min-h-screen pb-24">
           {children}
-        </main>
+        </div>
 
-        {/* Barre de navigation fixe */}
+        {/* NAVIGATION FIXE */}
         <BottomNav />
       </body>
     </html>
   )
 }
-

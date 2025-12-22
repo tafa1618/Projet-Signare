@@ -160,9 +160,9 @@ const TailorCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
   <motion.article
     initial={{ opacity: 0, y: 40 }}
     whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-100px" }}
-    transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-    className="mb-8 bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl overflow-hidden shadow-2xl transition-all hover:border-[#D4AF37]/40 mx-4"
+    viewport={{ once: true, margin: "-60px" }}
+    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+    className="mb-6 bg-[#0A0A0A] border border-[#D4AF37]/15 rounded-lg overflow-hidden shadow-xl transition-all hover:border-[#D4AF37]/30 mx-3 max-w-xl"
   >
     {/* Header Tailleur Compact */}
     <div className="flex items-center justify-between px-3 py-2 bg-[#D4AF37]/5">
@@ -183,8 +183,8 @@ const TailorCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
       </div>
     </div>
 
-    {/* Image Carrée Style Instagram */}
-    <div className="relative w-full aspect-square bg-neutral-900 group overflow-hidden">
+    {/* Image plus compacte (4/5) */}
+    <div className="relative w-full aspect-[4/5] bg-neutral-900 group overflow-hidden">
       <Image
         src={post.image}
         alt={post.caption}
@@ -205,7 +205,7 @@ const TailorCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
     {/* Actions & Description Immédiate */}
     <div className="px-3 py-3 space-y-2">
       <div className="flex items-center justify-between">
-        <div className="flex gap-4">
+        <div className="flex gap-3">
           <button onClick={() => onLike(post.id)} className="flex items-center gap-1 group/btn text-white/40 hover:text-[#D4AF37] transition-all">
             <Heart size={20} className={post.isLiked ? "fill-[#D4AF37] text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" : ""} />
             <span className="text-[10px] font-bold">{post.likes}</span>
@@ -247,9 +247,9 @@ const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
   <motion.article
     initial={{ opacity: 0, y: 40 }}
     whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-100px" }}
-    transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-    className="mb-10 bg-[#0A0A0A] group mx-4"
+    viewport={{ once: true, margin: "-60px" }}
+    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+    className="mb-8 bg-[#0A0A0A] group mx-3 max-w-xl"
   >
     {/* Header Client Compact */}
     <div className="flex items-center justify-between px-1 mb-2">
@@ -267,8 +267,8 @@ const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
       <StarRating rating={post.quality_rating || 0} />
     </div>
 
-    {/* Image Carrée (1:1) */}
-    <div className="relative w-full aspect-square bg-neutral-900 rounded-lg overflow-hidden shadow-xl group">
+    {/* Image plus compacte (4/5) */}
+    <div className="relative w-full aspect-[4/5] bg-neutral-900 rounded-lg overflow-hidden shadow-xl group">
       <Image
         src={post.image}
         alt={post.caption}
@@ -288,7 +288,7 @@ const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
     {/* Actions Style Instagram */}
     <div className="px-1 py-3 space-y-2">
       <div className="flex items-center justify-between">
-        <div className="flex gap-4">
+        <div className="flex gap-3">
           <button onClick={() => onLike(post.id)} className="transition-all active:scale-90">
             <Heart size={24} className={post.isLiked ? "fill-[#D4AF37] text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]" : "text-white/80 hover:text-[#D4AF37]"} />
           </button>
