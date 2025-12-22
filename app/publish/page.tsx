@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -22,15 +22,22 @@ import type { Post } from '@/shared/types/database.types'
  * @ai-context Interface de capture de données luxe pour le dataset de recommandation et NLP
  */
 
-// Mock des tailleurs pour le matchmaking
-const MOCK_TAILORS = [
-  { id: 't1', name: 'Atelier Fatou' },
-  { id: 't2', name: 'Maison Ndèye' },
-  { id: 't3', name: 'Couture Aminata' },
-  { id: 't4', name: 'Dakar Luxe' }
+type TailorOption = {
+  id: string
+  name: string
+  avatar: string
+  isMasterTailor?: boolean
+}
+
+// Mock des tailleurs (Salon Privé-like)
+const MOCK_TAILORS: TailorOption[] = [
+  { id: 't1', name: 'Atelier Fatou', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fatou', isMasterTailor: true },
+  { id: 't2', name: 'Maison Ndèye', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ndeye', isMasterTailor: true },
+  { id: 't3', name: 'Couture Aminata', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aminata' },
+  { id: 't4', name: 'Dakar Luxe', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dakar' }
 ]
 
-const STYLE_TAGS = ['#Mariage', '#Quotidien', '#Tabaski', '#Gala', '#Cérémonie']
+const EVENT_STYLES = ['Mariage', 'Quotidien', 'Tabaski', 'Gala', 'Cérémonie'] as const
 
 export default function PublishPage() {
   const router = useRouter()
@@ -39,9 +46,10 @@ export default function PublishPage() {
   // États du formulaire
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [description, setDescription] = useState('')
-  const [selectedTailor, setSelectedTailor] = useState('')
+  const [selectedTailorId, setSelectedTailorId] = useState<string>('')
+  const [eventStyle, setEventStyle] = useState<(typeof EVENT_STYLES)[number] | ''>('')
   const [qualityRating, setQualityRating] = useState(0)
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [showTailorMenu, setShowTailorMenu] = useState(false)
   
   // États UI
   const [isPublishing, setIsPublishing] = useState(false)
@@ -57,16 +65,14 @@ export default function PublishPage() {
     }
   }
 
-  // Gestion des tags
-  const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    )
-  }
+  const selectedTailor = useMemo(
+    () => MOCK_TAILORS.find((t) => t.id === selectedTailorId) ?? null,
+    [selectedTailorId]
+  )
 
   // Publication (Simulation)
   const handlePublish = async () => {
-    if (!imagePreview || !selectedTailor) return
+    if (!imagePreview || !selectedTailorId || !eventStyle) return
     
     setIsPublishing(true)
     
@@ -76,8 +82,11 @@ export default function PublishPage() {
       image_url: imagePreview,
       caption: description,
       garment_type: 'autre', // À extraire via IA idéalement
-      style_tags: selectedTags,
-      quality_rating: qualityRating, // Champ personnalisé pour ML Sentiment Analysis
+      event_style: eventStyle,
+      quality_rating: qualityRating || null,
+      // pour rester compatible avec le schéma ML-Ready existant
+      occasion_tags: eventStyle ? [eventStyle.toLowerCase()] : [],
+      style_tags: eventStyle ? [eventStyle.toLowerCase()] : [],
       is_commissioned: true,
       created_at: new Date().toISOString()
     }
@@ -97,169 +106,275 @@ export default function PublishPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white pb-32">
+    <div className="bg-[#0A0A0A] text-white overflow-hidden h-[calc(100dvh-80px)] -mb-24">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-[#D4AF37]/20 px-6 py-4 flex items-center justify-between">
         <button onClick={() => router.back()} className="text-white/60 hover:text-white transition-colors">
           <X size={24} />
         </button>
-        <h1 className="text-lg font-serif text-[#D4AF37] tracking-[0.1em] uppercase">Partager mon Style</h1>
+        <h1 className="text-lg font-serif text-[#D4AF37] tracking-[0.2em] uppercase">PARTAGER MON STYLE</h1>
         <div className="w-6" /> {/* Spacer */}
       </div>
 
       <motion.main 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md mx-auto px-6 pt-8 space-y-10"
+        className="max-w-md mx-auto px-6 pt-5 pb-28 h-full overflow-y-auto space-y-5"
       >
         {/* 1. UPLOAD IMAGE */}
-        <section className="space-y-4">
-          <div 
+        <section className="space-y-3">
+          <label className="text-[10px] uppercase tracking-[0.22em] text-[#D4AF37] font-black">Photo</label>
+          <div
             onClick={() => fileInputRef.current?.click()}
             className={cn(
-              "relative aspect-[3/4] w-full rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden",
-              imagePreview ? "border-transparent" : "border-[#D4AF37]/30 bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10"
+              "w-full rounded-2xl border border-dashed border-[#D4AF37]/30 cursor-pointer transition-all",
+              imagePreview ? "bg-transparent" : "bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10"
             )}
           >
             {imagePreview ? (
-              <>
-                <Image src={imagePreview} alt="Preview" fill className="object-cover" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                  <Camera className="w-10 h-10 text-white" />
-                </div>
-              </>
-            ) : (
-              <div className="text-center p-8 space-y-4">
-                <div className="bg-[#D4AF37]/20 p-4 rounded-full inline-block">
-                  <Upload className="w-8 h-8 text-[#D4AF37]" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-bold tracking-wide">Ajouter une photo</p>
-                  <p className="text-xs text-white/40 leading-relaxed">Glissez votre tenue portée ou cliquez pour parcourir</p>
+              <div className="relative aspect-[4/5] max-h-[40vh] overflow-hidden rounded-2xl">
+                <Image src={imagePreview} alt="Aperçu" fill className="object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setImagePreview(null)
+                    setShowTailorMenu(false)
+                  }}
+                  className="absolute top-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-2 text-white/80 hover:text-[#D4AF37] transition-colors"
+                  aria-label="Retirer l’image"
+                >
+                  <X size={16} />
+                </button>
+                <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-black/50 backdrop-blur-md border border-[#D4AF37]/20 rounded-full px-3 py-1.5">
+                  <Camera size={14} className="text-[#D4AF37]" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">Changer</span>
                 </div>
               </div>
+            ) : (
+              <div className="flex items-center justify-between px-4 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-[#D4AF37]/15 border border-[#D4AF37]/20 p-2.5 rounded-xl">
+                    <Upload className="w-5 h-5 text-[#D4AF37]" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold">Ajouter une photo</p>
+                    <p className="text-xs text-white/40">Glissez-déposez ou cliquez</p>
+                  </div>
+                </div>
+                <Sparkles className="w-5 h-5 text-[#D4AF37]/50" />
+              </div>
             )}
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleImageChange} 
-              className="hidden" 
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              className="hidden"
               accept="image/*"
             />
           </div>
         </section>
 
         {/* 2. DESCRIPTION (NLP Ready) */}
-        <section className="space-y-4">
-          <label className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37] font-bold">L'histoire de votre tenue</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Racontez-nous l'occasion, les compliments reçus ou le travail de votre tailleur..."
-            className="w-full bg-transparent border-b-2 border-[#D4AF37]/20 focus:border-[#D4AF37] min-h-[100px] outline-none transition-all py-2 text-sm leading-relaxed placeholder:text-white/20 resize-none"
-          />
-        </section>
-
-        {/* 3. TAILLEUR (Matchmaking Ready) */}
-        <section className="space-y-4">
-          <label className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37] font-bold">Qui est votre tailleur ?</label>
-          <div className="relative group">
-            <select
-              value={selectedTailor}
-              onChange={(e) => setSelectedTailor(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 appearance-none outline-none focus:border-[#D4AF37]/50 transition-all text-sm"
+        <AnimatePresence>
+          {imagePreview && (
+            <motion.section
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.25 }}
+              className="space-y-3"
             >
-              <option value="" disabled className="bg-[#0A0A0A]">Sélectionner un artisan</option>
-              {MOCK_TAILORS.map(t => (
-                <option key={t.id} value={t.id} className="bg-[#0A0A0A]">{t.name}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none group-focus-within:text-[#D4AF37]" size={18} />
-          </div>
-        </section>
+              <label className="text-[10px] uppercase tracking-[0.22em] text-[#D4AF37] font-black">L’histoire</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Occasion, compliments reçus, finitions du tailleur…"
+                className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/40 transition-all text-sm leading-relaxed placeholder:text-white/20 resize-none min-h-[84px]"
+              />
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        {/* 3. TAILLEUR + STYLE (grille 2 colonnes) */}
+        <AnimatePresence>
+          {imagePreview && description.trim().length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.25 }}
+              className="space-y-3"
+            >
+              <label className="text-[10px] uppercase tracking-[0.22em] text-[#D4AF37] font-black">Détails</label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Tailleur picker (Salon Privé-like) */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowTailorMenu((v) => !v)}
+                    className="w-full flex items-center justify-between gap-3 bg-white/[0.03] border border-white/10 rounded-xl px-3 py-3 hover:border-[#D4AF37]/20 transition-all"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={cn(
+                        "w-10 h-10 rounded-full overflow-hidden border p-0.5 flex-shrink-0",
+                        selectedTailor?.isMasterTailor ? "border-[#D4AF37]/50" : "border-white/10"
+                      )}>
+                        <div className="w-full h-full rounded-full overflow-hidden relative bg-neutral-900">
+                          <Image
+                            src={selectedTailor?.avatar ?? 'https://api.dicebear.com/7.x/avataaars/svg?seed=Signare'}
+                            alt="Tailleur"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </div>
+                      <div className="min-w-0 text-left">
+                        <p className="text-[9px] text-[#D4AF37]/70 uppercase tracking-[0.22em] font-black">Tailleur</p>
+                        <p className="text-sm font-semibold text-white/90 truncate">
+                          {selectedTailor?.name ?? 'Sélectionner'}
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronDown size={18} className="text-white/30" />
+                  </button>
+
+                  <AnimatePresence>
+                    {showTailorMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.18 }}
+                        className="absolute z-50 mt-2 w-full bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl overflow-hidden shadow-2xl"
+                      >
+                        {MOCK_TAILORS.map((t) => (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedTailorId(t.id)
+                              setShowTailorMenu(false)
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-[#D4AF37]/10 transition-colors"
+                          >
+                            <div className={cn(
+                              "w-9 h-9 rounded-full overflow-hidden border p-0.5",
+                              t.isMasterTailor ? "border-[#D4AF37]/50" : "border-white/10"
+                            )}>
+                              <div className="w-full h-full rounded-full overflow-hidden relative bg-neutral-900">
+                                <Image src={t.avatar} alt={t.name} fill className="object-cover" />
+                              </div>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-white/90 truncate">{t.name}</p>
+                              <p className="text-[9px] text-white/40 uppercase tracking-[0.22em] font-black">
+                                {t.isMasterTailor ? 'Maître Tailleur' : 'Atelier'}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Event style pills */}
+                <div className="bg-white/[0.03] border border-white/10 rounded-xl px-3 py-3">
+                  <p className="text-[9px] text-[#D4AF37]/70 uppercase tracking-[0.22em] font-black mb-2">Style d’événement</p>
+                  <div className="flex flex-wrap gap-2">
+                    {EVENT_STYLES.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setEventStyle(eventStyle === tag ? '' : tag)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border",
+                          eventStyle === tag
+                            ? "bg-[#D4AF37] border-[#D4AF37] text-[#0A0A0A] shadow-[0_0_14px_rgba(212,175,55,0.25)]"
+                            : "bg-[#0A0A0A] border-[#D4AF37]/20 text-white/60 hover:border-[#D4AF37]/40 hover:text-white/80"
+                        )}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
 
         {/* 4. QUALITY RATING (Sentiment Analysis Ready) */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <label className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37] font-bold">Niveau de satisfaction</label>
-            <span className="text-[10px] text-white/40 font-medium italic flex items-center gap-1">
-              <Info size={10} /> ML Sentiment Score
-            </span>
-          </div>
-          <div className="flex justify-between items-center bg-white/5 p-6 rounded-2xl border border-white/5">
-            <div className="flex gap-3">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <motion.button
-                  key={star}
-                  whileTap={{ scale: 0.8 }}
-                  onClick={() => setQualityRating(star)}
-                  className="transition-colors"
-                >
-                  <Star 
-                    size={32} 
-                    className={cn(
-                      "transition-all duration-300",
-                      star <= qualityRating 
-                        ? "fill-[#D4AF37] text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]" 
-                        : "text-white/10"
-                    )} 
-                  />
-                </motion.button>
-              ))}
-            </div>
-            <span className="text-xl font-serif text-[#D4AF37]/60">{qualityRating}/5</span>
-          </div>
-        </section>
+        <AnimatePresence>
+          {imagePreview && description.trim().length > 0 && selectedTailorId && eventStyle && (
+            <motion.section
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.25 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] uppercase tracking-[0.22em] text-[#D4AF37] font-black">Satisfaction</label>
+                <span className="text-[10px] text-[#D4AF37] font-black tracking-[0.18em]">{qualityRating}/5</span>
+              </div>
 
-        {/* 5. STYLE TAGS */}
-        <section className="space-y-4">
-          <label className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37] font-bold">Style de l'événement</label>
-          <div className="flex flex-wrap gap-3">
-            {STYLE_TAGS.map(tag => (
-              <button
-                key={tag}
-                onClick={() => toggleTag(tag)}
-                className={cn(
-                  "px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all border",
-                  selectedTags.includes(tag)
-                    ? "bg-[#D4AF37] border-[#D4AF37] text-[#0A0A0A] shadow-[0_0_15px_rgba(212,175,55,0.3)]"
-                    : "bg-transparent border-white/10 text-white/40 hover:border-[#D4AF37]/30 hover:text-white/60"
-                )}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-        </section>
+              <div className="flex items-center justify-between bg-white/[0.03] px-4 py-3 rounded-2xl border border-white/10">
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <motion.button
+                      key={star}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setQualityRating(star)}
+                      className="transition-colors"
+                      aria-label={`Note ${star}`}
+                    >
+                      <Star
+                        size={22}
+                        className={cn(
+                          "transition-all duration-200",
+                          star <= qualityRating
+                            ? "fill-[#D4AF37] text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.35)]"
+                            : "text-white/15"
+                        )}
+                      />
+                    </motion.button>
+                  ))}
+                </div>
 
-        {/* BUTTON PUBLIER */}
-        <div className="pt-10">
+                <span className="text-[10px] text-white/40 font-medium italic flex items-center gap-1">
+                  <Info size={10} /> ML Sentiment
+                </span>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        <div className="h-10" />
+      </motion.main>
+
+      {/* Bouton Publier fixé (toujours accessible) */}
+      <div className="fixed bottom-20 left-0 right-0 z-50 px-6">
+        <div className="max-w-md mx-auto bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent pt-4">
           <motion.button
-            whileHover={{ scale: 1.02, boxShadow: '0 0 40px rgba(212,175,55,0.4)' }}
+            whileHover={{ scale: 1.01, boxShadow: '0 0 28px rgba(212,175,55,0.35)' }}
             whileTap={{ scale: 0.98 }}
             onClick={handlePublish}
-            disabled={isPublishing || !imagePreview || !selectedTailor}
-            className="w-full bg-[#D4AF37] text-[#0A0A0A] font-black tracking-[0.2em] uppercase py-5 rounded-2xl shadow-xl transition-all relative overflow-hidden disabled:opacity-50 disabled:grayscale group"
+            disabled={isPublishing || !imagePreview || !selectedTailorId || !eventStyle}
+            className="w-full bg-[#D4AF37] text-[#0A0A0A] font-black tracking-[0.22em] uppercase py-4 rounded-2xl shadow-xl transition-all relative overflow-hidden disabled:opacity-50 disabled:grayscale"
           >
             <span className="relative z-10 flex items-center justify-center gap-3">
               {isPublishing ? (
                 <div className="w-5 h-5 border-2 border-[#0A0A0A]/30 border-t-[#0A0A0A] rounded-full animate-spin" />
               ) : (
-                <>PUBLIER MA CRÉATION <Sparkles size={18} /></>
+                <>PUBLIER <Sparkles size={18} /></>
               )}
             </span>
-            
-            {/* Glow effect */}
-            {!isPublishing && (
-              <motion.div
-                animate={{ x: ['-100%', '200%'] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 opacity-30"
-              />
-            )}
           </motion.button>
         </div>
-      </motion.main>
+      </div>
 
       {/* SUCCESS MODAL */}
       <AnimatePresence>

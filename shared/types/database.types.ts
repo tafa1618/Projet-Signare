@@ -100,6 +100,19 @@ export interface Post {
   is_commissioned: boolean
   inquiries_count: number
   conversion_rate: number | null
+
+  /**
+   * Satisfaction client (1-5)
+   * @ai-context Label explicite pour entraîner un modèle de ranking qualité (tailleur ↔ style ↔ satisfaction).
+   * Renseigné principalement lors d'une publication “client”.
+   */
+  quality_rating: number | null
+
+  /**
+   * Style d'événement (ex: "mariage", "quotidien", "tabaski")
+   * @ai-context Conserve le contexte d'usage (occasion) pour recommandations et analytics.
+   */
+  event_style: string | null
   
   created_at: string
   updated_at: string

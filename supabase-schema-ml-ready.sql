@@ -84,6 +84,10 @@ CREATE TABLE posts (
   style_tags TEXT[] DEFAULT '{}', -- ['traditionnel', 'chic', 'casual']
   occasion_tags TEXT[] DEFAULT '{}', -- ['mariage', 'bureau', 'soirée']
   season_tags TEXT[] DEFAULT '{}', -- ['été', 'hiver', 'toute_saison']
+
+  -- Feedback client (pour post "client")
+  quality_rating INTEGER CHECK (quality_rating >= 1 AND quality_rating <= 5),
+  event_style TEXT,
   
   -- Détails techniques
   has_embroidery BOOLEAN DEFAULT FALSE,
