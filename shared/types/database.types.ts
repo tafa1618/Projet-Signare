@@ -93,6 +93,11 @@ export interface Post {
   comments_count: number
   views_count: number
   shares_count: number
+  /**
+   * Nombre de republications (reposts)
+   * @ai-context Signal social de propagation. Utile pour apprendre la viralité et les affinités (user ↔ style ↔ créateur).
+   */
+  reposts_count: number
   saves_count: number
   
   // Conversion
@@ -161,6 +166,15 @@ export interface UserInteraction {
   device_type: string | null
   user_agent: string | null
   
+  created_at: string
+}
+
+// ==================== REPOSTS ====================
+export interface Repost {
+  id: string
+  user_id: string
+  post_id: string
+  comment: string | null
   created_at: string
 }
 
@@ -440,8 +454,13 @@ export interface Database {
       }
       posts: {
         Row: Post
-        Insert: Omit<Post, 'id' | 'created_at' | 'updated_at' | 'likes_count' | 'comments_count' | 'views_count' | 'shares_count' | 'saves_count'>
+        Insert: Omit<Post, 'id' | 'created_at' | 'updated_at' | 'likes_count' | 'comments_count' | 'views_count' | 'shares_count' | 'reposts_count' | 'saves_count'>
         Update: Partial<Omit<Post, 'id' | 'created_at'>>
+      }
+      reposts: {
+        Row: Repost
+        Insert: Omit<Repost, 'id' | 'created_at'>
+        Update: never
       }
       post_annotations: {
         Row: PostAnnotation

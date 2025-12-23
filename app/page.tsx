@@ -18,7 +18,8 @@ import {
   MessageSquare,
   Scissors,
   Plus,
-  LogOut
+  LogOut,
+  Repeat2
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -40,8 +41,10 @@ interface Post {
   price?: string
   likes: number
   comments: number
+  reposts?: number
   isLiked: boolean
   isSaved: boolean
+  isReposted?: boolean
   taggedTailor?: {
     name: string
     id: string
@@ -339,7 +342,7 @@ function useTrackPostVisibility(payload: InteractionPayload) {
 }
 
 // Card Tailleur (viewport-friendly, Z-pattern, CTA + Like sur la même ligne)
-const TailorCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number) => void, onSave: (id: number) => void }) => {
+const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (id: number) => void, onSave: (id: number) => void, onRepost: (id: number) => void }) => {
   const trackRef = useTrackPostVisibility({
     post_id: post.id,
     interaction_type: 'post_view',
@@ -425,10 +428,23 @@ const TailorCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
               <Heart size={18} className={post.isLiked ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
               <span className="text-[10px] font-bold">{post.likes}</span>
             </button>
-            <div className="flex items-center gap-1.5">
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              onClick={() => onRepost(post.id)}
+              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors"
+              aria-label="Republier"
+            >
+              <Repeat2 size={18} className={post.isReposted ? "text-[#D4AF37]" : ""} />
+              <span className="text-[10px] font-bold">{post.reposts ?? 0}</span>
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors"
+              aria-label="Commentaires"
+            >
               <MessageSquare size={18} />
               <span className="text-[10px] font-bold">{post.comments}</span>
-            </div>
+            </motion.button>
             <button onClick={() => onSave(post.id)} className="hover:text-[#D4AF37] transition-colors active:scale-95">
               <Bookmark size={18} className={post.isSaved ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
             </button>
@@ -454,7 +470,7 @@ const TailorCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
 }
 
 // Card Client (viewport-friendly, mention "Réalisé par...", CTA = Liker)
-const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number) => void, onSave: (id: number) => void }) => {
+const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (id: number) => void, onSave: (id: number) => void, onRepost: (id: number) => void }) => {
   const trackRef = useTrackPostVisibility({
     post_id: post.id,
     interaction_type: 'post_view',
@@ -539,13 +555,26 @@ const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
               <Heart size={18} className={post.isLiked ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
               <span className="text-[10px] font-bold">{post.likes}</span>
             </button>
-            <div className="flex items-center gap-1.5">
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              onClick={() => onRepost(post.id)}
+              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors"
+              aria-label="Republier"
+            >
+              <Repeat2 size={18} className={post.isReposted ? "text-[#D4AF37]" : ""} />
+              <span className="text-[10px] font-bold">{post.reposts ?? 0}</span>
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors"
+              aria-label="Commentaires"
+            >
               <MessageCircle size={18} />
               <span className="text-[10px] font-bold">{post.comments}</span>
-            </div>
+            </motion.button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end">
             <Link
               href={`/messages?user=${encodeURIComponent(post.user.name)}`}
               className="bg-white/5 border border-[#D4AF37]/25 text-[#D4AF37] px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-95 flex items-center gap-2"
@@ -554,12 +583,6 @@ const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
               <MessageCircle size={16} />
               Discuter
             </Link>
-            <button
-              onClick={() => onLike(post.id)}
-              className="bg-white/5 border border-white/10 text-white/80 px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] hover:border-[#D4AF37]/30 hover:text-[#D4AF37] transition-all active:scale-95"
-            >
-              Liker
-            </button>
           </div>
         </div>
       </div>
@@ -570,6 +593,12 @@ const ClientCard = ({ post, onLike, onSave }: { post: Post, onLike: (id: number)
 export default function HomePage() {
   const [posts, setPosts] = useState(mockPosts)
   const router = useRouter()
+
+  const isAuthenticated = () => {
+    // @ai-context Auth simulée : permet de tester le flow social (repost) sans backend.
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('signare_auth_demo') === '1'
+  }
 
   const handleLogout = () => {
     // Simulation de déconnexion
@@ -590,6 +619,53 @@ export default function HomePage() {
         ? { ...post, isSaved: !post.isSaved }
         : post
     ))
+  }
+
+  const handleRepost = (postId: number) => {
+    const authed = isAuthenticated()
+    if (!authed) {
+      // @ai-context Sauvegarde de l'intention (repost) pour reprise après login.
+      try {
+        localStorage.setItem('signare_intent', JSON.stringify({ type: 'repost', postId, created_at: new Date().toISOString() }))
+      } catch {
+        // ignore
+      }
+      router.push(`/login?next=${encodeURIComponent('/')}&intent=repost&postId=${postId}`)
+      return
+    }
+
+    setPosts((prev) =>
+      prev.map((post) => {
+        if (post.id !== postId) return post
+        const nextIsReposted = !(post.isReposted ?? false)
+        const currentCount = post.reposts ?? 0
+        const nextCount = nextIsReposted ? currentCount + 1 : Math.max(0, currentCount - 1)
+
+        // Placeholder ML tracking (à connecter à Supabase user_interactions + reposts table)
+        console.log('[ML] trackInteraction', {
+          post_id: postId,
+          interaction_type: nextIsReposted ? 'repost' : 'unrepost',
+          interaction_score: nextIsReposted ? 3 : 1,
+          metadata: { source: 'feed', role: post.type, garment_type: post.garment_type },
+          timestamp: new Date().toISOString(),
+        })
+
+        try {
+          const raw = localStorage.getItem('signare_reposts')
+          const current = raw ? (JSON.parse(raw) as any[]) : []
+          const actor = 'demo-user'
+          const item = { user_id: actor, post_id: String(postId), comment: null, created_at: new Date().toISOString() }
+          const next = nextIsReposted
+            ? [item, ...(Array.isArray(current) ? current : [])]
+            : (Array.isArray(current) ? current.filter((r) => !(r.user_id === actor && r.post_id === String(postId))) : [])
+          localStorage.setItem('signare_reposts', JSON.stringify(next))
+        } catch {
+          // ignore
+        }
+
+        return { ...post, isReposted: nextIsReposted, reposts: nextCount }
+      })
+    )
   }
 
   return (
@@ -635,9 +711,9 @@ export default function HomePage() {
       <main className="max-w-2xl mx-auto pt-6">
         {posts.map((post) => (
           post.type === 'tailor' ? (
-            <TailorCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} />
+            <TailorCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={handleRepost} />
           ) : (
-            <ClientCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} />
+            <ClientCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={handleRepost} />
           )
         ))}
 

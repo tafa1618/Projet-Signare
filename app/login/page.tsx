@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -9,6 +10,7 @@ import { Phone, Mail, ArrowRight, Sparkles } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [phoneOrEmail, setPhoneOrEmail] = useState('')
   const [isFocused, setIsFocused] = useState(false)
 
@@ -16,8 +18,20 @@ export default function LoginPage() {
     e.preventDefault()
     // TODO: Implémenter la logique de connexion avec Supabase
     console.log('Connexion avec:', phoneOrEmail)
-    
-    // Redirection vers le feed
+
+    // @ai-context Auth simulée : permet de tester les flows (repost, commandes, etc.) sans backend.
+    try {
+      localStorage.setItem('signare_auth_demo', '1')
+    } catch {
+      // ignore
+    }
+
+    // Intention sauvegardée (ex: repost) + redirection
+    const next = searchParams.get('next')
+    if (next) {
+      router.push(next)
+      return
+    }
     router.push('/')
   }
 

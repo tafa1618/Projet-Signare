@@ -100,6 +100,7 @@ CREATE TABLE posts (
   comments_count INTEGER DEFAULT 0,
   views_count INTEGER DEFAULT 0,
   shares_count INTEGER DEFAULT 0,
+  reposts_count INTEGER DEFAULT 0, -- Republications (social loop)
   saves_count INTEGER DEFAULT 0, -- Favoris
   
   -- Conversion metrics
@@ -123,6 +124,24 @@ CREATE INDEX idx_posts_cultural_tags ON posts USING GIN(cultural_tags);
 CREATE INDEX idx_posts_style_tags ON posts USING GIN(style_tags);
 CREATE INDEX idx_posts_search ON posts USING GIN(search_vector);
 CREATE INDEX idx_posts_created ON posts(created_at DESC);
+
+-- =====================================================
+-- TABLE: reposts
+-- Republication d'un modèle (social loop)
+-- @ai-context Sert à entraîner un modèle de propagation sociale (viralité, affinités, graph d'influence).
+-- =====================================================
+CREATE TABLE reposts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE NOT NULL,
+  comment TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, post_id)
+);
+
+CREATE INDEX idx_reposts_user ON reposts(user_id);
+CREATE INDEX idx_reposts_post ON reposts(post_id);
+CREATE INDEX idx_reposts_created ON reposts(created_at DESC);
 
 -- =====================================================
 -- TABLE: post_annotations
@@ -167,6 +186,7 @@ CREATE TABLE user_interactions (
   -- Type d'interaction
   interaction_type TEXT NOT NULL CHECK (interaction_type IN (
     'view', 'like', 'unlike', 'comment', 'share', 'save', 'unsave',
+    'repost', 'unrepost',
     'click', 'zoom', 'inquiry', 'purchase'
   )),
   
@@ -523,6 +543,7 @@ FOR EACH ROW EXECUTE FUNCTION update_post_search_vector();
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reposts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE post_annotations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_interactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE search_queries ENABLE ROW LEVEL SECURITY;
@@ -537,6 +558,10 @@ CREATE POLICY "Users update own profile" ON profiles FOR UPDATE USING (auth.uid(
 CREATE POLICY "Public posts" ON posts FOR SELECT USING (true);
 CREATE POLICY "Users create posts" ON posts FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users update own posts" ON posts FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Public reposts" ON reposts FOR SELECT USING (true);
+CREATE POLICY "Users create reposts" ON reposts FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users delete own reposts" ON reposts FOR DELETE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users track own interactions" ON user_interactions FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users view own interactions" ON user_interactions FOR SELECT USING (auth.uid() = user_id);

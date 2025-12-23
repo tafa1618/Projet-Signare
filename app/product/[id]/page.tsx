@@ -154,6 +154,20 @@ export default function ProductDetailPage() {
     return product.gallery_urls.length > 0 ? product.gallery_urls : [product.image_url]
   }, [product])
 
+  const similarProducts = useMemo(() => {
+    if (!product) return []
+    const sameType = Object.values(MOCK_PRODUCTS).filter(
+      (p) => p.id !== product.id && p.garment_type === product.garment_type
+    )
+    const sameStyle = Object.values(MOCK_PRODUCTS).filter(
+      (p) => p.id !== product.id && p.style_tags.some((t) => product.style_tags.includes(t))
+    )
+    const merged = [...sameType, ...sameStyle].filter(
+      (p, idx, arr) => arr.findIndex((x) => x.id === p.id) === idx
+    )
+    return merged.slice(0, 3)
+  }, [product])
+
   useEffect(() => {
     // @ai-context La simple ouverture de la page détail = signal d'intérêt fort
     trackProductDetailView({
@@ -347,6 +361,80 @@ export default function ProductDetailPage() {
                 >
                   {t}
                 </span>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Recommandations similaires */}
+        <motion.section
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
+          className="mt-6 px-4 pb-10"
+        >
+          <div className="max-w-lg mx-auto space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles size={16} className="text-[#D4AF37]" />
+              <h3 className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">
+                Recommandés pour vous
+              </h3>
+            </div>
+
+            {similarProducts.length === 0 && (
+              <p className="text-[11px] text-white/40">
+                Aucun modèle similaire pour l’instant.
+              </p>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {similarProducts.map((p) => (
+                <motion.article
+                  key={p.id}
+                  whileHover={{ translateY: -2 }}
+                  className="bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden"
+                >
+                  <Link
+                    href={`/product/${p.id}`}
+                    className="block"
+                    onClick={() => {
+                      trackProductDetailView({
+                        user_id: 'current-user-id',
+                        post_id: String(p.id),
+                        interaction_type: 'click',
+                        session_id: 'session-demo',
+                        duration_seconds: null,
+                        scroll_depth: null,
+                        came_from: 'product:recommendation_click',
+                        device_type: 'web',
+                        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                      })
+                    }}
+                  >
+                    <div className="relative w-full aspect-[4/5] bg-neutral-900">
+                      <Image
+                        src={p.image_url}
+                        alt={p.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 560px"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/60 to-transparent" />
+                    </div>
+                    <div className="px-3 py-3 space-y-1.5">
+                      <p className="text-sm font-serif text-[#D4AF37] leading-tight line-clamp-2">{p.title}</p>
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-black">
+                        {p.garment_type} • {p.fabric_type ?? '—'}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-white/80">{formatFCFA(p.price)}</span>
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37]/80 font-black">
+                          Voir
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.article>
               ))}
             </div>
           </div>
