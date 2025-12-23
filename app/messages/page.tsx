@@ -17,7 +17,9 @@ import {
   MessageCircle,
   Camera,
   Mic,
-  Star
+  Star,
+  Phone,
+  Video
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { Database } from '@/shared/types/database.types'
@@ -375,9 +377,51 @@ export default function MessagesPage() {
                   </div>
                 </div>
 
-                <button className="p-2 text-white/30 hover:text-[#D4AF37] transition-colors">
-                  <MoreVertical size={18} />
-                </button>
+                <div className="flex items-center gap-3 ml-4">
+                  <motion.button
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => {
+                      trackInteraction({
+                        user_id: currentUserId,
+                        post_id: null,
+                        interaction_type: 'click',
+                        session_id: sessionId,
+                        duration_seconds: null,
+                        scroll_depth: null,
+                        came_from: 'messages:call_audio',
+                        device_type: 'web',
+                        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                      })
+                    }}
+                    className="px-3 py-2 rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] bg-[#0A0A0A] hover:bg-[#D4AF37]/10 transition-colors text-[10px] font-black uppercase tracking-[0.18em] flex items-center gap-1.5"
+                  >
+                    <Phone size={14} />
+                    Appel
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => {
+                      trackInteraction({
+                        user_id: currentUserId,
+                        post_id: null,
+                        interaction_type: 'click',
+                        session_id: sessionId,
+                        duration_seconds: null,
+                        scroll_depth: null,
+                        came_from: 'messages:call_video',
+                        device_type: 'web',
+                        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                      })
+                    }}
+                    className="px-3 py-2 rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] bg-[#0A0A0A] hover:bg-[#D4AF37]/10 transition-colors text-[10px] font-black uppercase tracking-[0.18em] flex items-center gap-1.5"
+                  >
+                    <Video size={14} />
+                    Vidéo
+                  </motion.button>
+                  <button className="p-2 text-white/30 hover:text-[#D4AF37] transition-colors ml-1">
+                    <MoreVertical size={18} />
+                  </button>
+                </div>
               </header>
 
               {/* Messages */}

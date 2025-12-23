@@ -229,6 +229,29 @@ export interface FabricLibrary {
   created_at: string
 }
 
+// ==================== FABRIC VENDORS ====================
+export interface FabricVendor {
+  id: string
+  shop_name: string
+  shop_address: string | null
+  city: string | null
+  country: string
+  delivery_available: boolean
+  specialties: string[]
+  price_range_min: number | null
+  price_range_max: number | null
+  stock_status: string | null
+  average_preparation_hours: number | null
+  catalog_urls: string[]
+  whatsapp_contact: string | null
+  phone_contact: string | null
+  rating: number | null
+  total_sales: number
+  total_clients: number
+  created_at: string
+  updated_at: string
+}
+
 // ==================== PATTERN_LIBRARY ====================
 export interface PatternLibrary {
   id: string
@@ -481,6 +504,11 @@ export interface Database {
         Row: FabricLibrary
         Insert: Omit<FabricLibrary, 'id' | 'created_at'>
         Update: Partial<Omit<FabricLibrary, 'id' | 'created_at'>>
+      }
+      fabric_vendors: {
+        Row: FabricVendor
+        Insert: Omit<FabricVendor, 'created_at' | 'updated_at'>
+        Update: Partial<Omit<FabricVendor, 'id' | 'created_at'>>
       }
       pattern_library: {
         Row: PatternLibrary

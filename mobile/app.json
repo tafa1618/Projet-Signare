@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Signare Mobile",
+    "slug": "signare-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "signare",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "package": "com.signare.app"
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "extra": {
+      "eas": {
+        "projectId": "signare-mobile-demo"
+      }
+    }
+  }
+}
+

@@ -37,8 +37,8 @@
 ### Polices
 ```css
 /* Polices (verrouillées via next/font pour un rendu constant Windows/macOS) */
-font-sans: 'Inter', 'system-ui', sans-serif                 /* Corps de texte */
-font-serif: 'Playfair Display', 'Georgia', serif            /* Titres élégants */
+font-sans: 'Inter', 'system-ui', sans-serif                 /* Corps de texte, mesures, prix, scores */
+font-serif: 'Cormorant', 'Playfair Display', 'Georgia', serif  /* Titres élégants et émotionnels */
 ```
 
 ### Implémentation (Next.js)
@@ -49,28 +49,37 @@ Inter({ variable: '--font-sans' })
 Playfair_Display({ variable: '--font-serif' })
 ```
 
-### Hiérarchie
+### Hiérarchie & Letter-spacing (premium)
 ```css
 /* Titres principaux */
-h1: text-6xl (60px), font-serif, text-[#D4AF37], tracking-[0.2em]
+h1: text-6xl (60px), font-serif, text-[#D4AF37], tracking-[0.24em]
 
 /* Titres secondaires */
-h2: text-4xl (36px), font-serif, text-[#D4AF37], tracking-[0.15em]
+h2: text-4xl (36px), font-serif, text-[#D4AF37], tracking-[0.18em]
 
 /* Titres de section */
-h3: text-2xl (24px), font-serif, text-[#D4AF37], tracking-wide
+h3: text-2xl (24px), font-serif, text-[#D4AF37], tracking-[0.16em]
 
 /* Sous-titres */
 .subtitle: text-base (16px), font-light, text-white/90, tracking-wide
 
 /* Corps de texte */
-.body: text-sm (14px), font-normal, text-white/70
+.body: text-sm (14px), font-normal, text-white/70, font-sans
 
 /* Petits textes */
-.caption: text-xs (12px), font-medium, text-white/60
+.caption: text-xs (12px), font-medium, text-white/60, font-sans
 
 /* Labels navigation */
-.nav-label: text-[10px], font-semibold, uppercase, tracking-wider
+.nav-label: text-[10px], font-semibold, uppercase, tracking-[0.2em], font-sans
+```
+
+### Usage spécifique des chiffres
+```css
+/* Toujours en sans-serif pour la lisibilité (mesures, prix, scores) */
+.number, .price, .score, .measure {
+  font-family: var(--font-sans);
+  letter-spacing: 0.02em;
+}
 ```
 
 ## 🔘 Boutons

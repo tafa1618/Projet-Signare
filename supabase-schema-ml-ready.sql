@@ -275,6 +275,40 @@ CREATE TABLE fabric_library (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- =====================================================
+-- TABLE: fabric_vendors
+-- Vendeurs de tissus (profil métier dédié)
+-- @ai-context Permet de relier choix de tissus (qualité/prix/stock) aux créations tailleurs et aux préférences clients.
+-- =====================================================
+CREATE TABLE fabric_vendors (
+  id UUID PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  shop_name TEXT NOT NULL,
+  shop_address TEXT,
+  city TEXT,
+  country TEXT DEFAULT 'Sénégal',
+  delivery_available BOOLEAN DEFAULT FALSE,
+  
+  specialties TEXT[] DEFAULT '{}',           -- ex: ['bazin', 'wax', 'soie']
+  price_range_min INTEGER,                   -- FCFA
+  price_range_max INTEGER,                   -- FCFA
+  stock_status TEXT,                         -- 'faible', 'moyen', 'élevé'
+  average_preparation_hours NUMERIC(5,2),    -- temps pour préparer/expédier
+  
+  catalog_urls TEXT[] DEFAULT '{}',          -- échantillons visuels
+  whatsapp_contact TEXT,
+  phone_contact TEXT,
+  
+  rating NUMERIC(3,2),
+  total_sales INTEGER DEFAULT 0,
+  total_clients INTEGER DEFAULT 0,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_fabric_vendors_city ON fabric_vendors(city);
+CREATE INDEX idx_fabric_vendors_specialties ON fabric_vendors USING GIN(specialties);
+
 CREATE INDEX idx_fabrics_category ON fabric_library(category);
 CREATE INDEX idx_fabrics_traditional ON fabric_library(is_traditional);
 
@@ -550,6 +584,7 @@ ALTER TABLE search_queries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mesures ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE inspirations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fabric_vendors ENABLE ROW LEVEL SECURITY;
 
 -- Policies (exemples, à adapter selon besoins)
 CREATE POLICY "Public profiles" ON profiles FOR SELECT USING (true);
@@ -565,6 +600,10 @@ CREATE POLICY "Users delete own reposts" ON reposts FOR DELETE USING (auth.uid()
 
 CREATE POLICY "Users track own interactions" ON user_interactions FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users view own interactions" ON user_interactions FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Public fabric vendors" ON fabric_vendors FOR SELECT USING (true);
+CREATE POLICY "Users manage own vendor profile" ON fabric_vendors FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users update own vendor profile" ON fabric_vendors FOR UPDATE USING (auth.uid() = id);
 
 -- =====================================================
 -- VUES UTILES
