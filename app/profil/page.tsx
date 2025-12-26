@@ -13,7 +13,8 @@ import {
   Star,
   Scissors,
   MessageCircle,
-  Package
+  Package,
+  Bike
 } from 'lucide-react'
 import type { Database, Mesure } from '@/shared/types/database.types'
 
@@ -94,6 +95,30 @@ const MOCK_TAILOR_PROFILE: TailorProfile = {
   creationsCount: 24,
 }
 
+const MOCK_TAILOR_ORDERS = [
+  {
+    id: 'ord-101',
+    client: 'Fatou Dia',
+    model: 'Boubou perlé Soirée',
+    status: 'En cours',
+    measures: { poitrine: 92, taille: 68, hanches: 98 },
+  },
+  {
+    id: 'ord-102',
+    client: 'Aïssatou Ndiaye',
+    model: 'Grand boubou brodé',
+    status: 'À livrer',
+    measures: { poitrine: 96, taille: 72, hanches: 104 },
+  },
+  {
+    id: 'ord-103',
+    client: 'Mame Diarra',
+    model: 'Kaftan soie',
+    status: 'Patronage',
+    measures: { poitrine: 88, taille: 66, hanches: 94 },
+  },
+]
+
 type ProfileMode = 'client' | 'tailleur'
 
 function StarRating({ rating }: { rating: number }) {
@@ -118,6 +143,7 @@ export default function ProfilPage() {
   const sessionId = 'session-demo'
   const [mode, setMode] = useState<ProfileMode>('client')
   const [profileOverride, setProfileOverride] = useState<{ name: string; avatar: string; id: string } | null>(null)
+  const [deliveryStatus, setDeliveryStatus] = useState<string | null>(null)
 
   // Utilisateur connecté (simulation)
   const actorUserId = MOCK_CLIENT_PROFILE.id
@@ -189,6 +215,40 @@ export default function ProfilPage() {
   const handleLogout = () => {
     // TODO: Implémenter la déconnexion Supabase
     router.push('/welcome')
+  }
+
+  const simulateDeliveryQuote = async () => {
+    try {
+      setDeliveryStatus('Calcul en cours...')
+      // Simulation d’appel au micro-service delivery_engine
+      const payload = {
+        distance_km: 6.2,
+        traffic_level: 'medium',
+        zone_type: 'dense',
+        delivery_datetime: new Date().toISOString(),
+      }
+      const res = await fetch('http://localhost:8001/api/cost/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) throw new Error('Delivery engine indisponible')
+      const data = await res.json()
+      setDeliveryStatus(`Total: ${data.total_cost.toFixed ? data.total_cost.toFixed(0) : data.total_cost} FCFA (base ${data.base_cost.toFixed ? data.base_cost.toFixed(0) : data.base_cost})`)
+      trackProfileInteraction({
+        user_id: actorUserId,
+        post_id: null,
+        interaction_type: 'click',
+        session_id: sessionId,
+        duration_seconds: null,
+        scroll_depth: null,
+        came_from: 'profil:tailor_delivery_quote',
+        device_type: 'web',
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      })
+    } catch (e) {
+      setDeliveryStatus('Erreur: impossible de joindre delivery_engine (simu)')
+    }
   }
 
   return (
@@ -381,51 +441,95 @@ export default function ProfilPage() {
           </>
         ) : (
           <>
-            {/* CTA : Démarrer une discussion */}
-            <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
-              <button
-                onClick={() => {
-                  trackProfileInteraction({
-                    user_id: actorUserId,
-                    post_id: null,
-                    interaction_type: 'click',
-                    session_id: sessionId,
-                    duration_seconds: null,
-                    scroll_depth: null,
-                    came_from: `profil:tailor_message:${profile.name}`,
-                    device_type: 'web',
-                    user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-                  })
-                  router.push(`/messages?tailor=${encodeURIComponent(profile.name)}`)
-                }}
-                className="w-full flex items-center justify-center gap-2 bg-[#0A0A0A] border border-[#D4AF37]/30 text-[#D4AF37] py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.22em] hover:bg-[#D4AF37]/10 transition-all active:scale-[0.98]"
-              >
-                <MessageCircle size={18} />
-                Lancer la discussion
-              </button>
+            {/* Commandes atelier : accès direct + aperçu détaillé */}
+            <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black">Commandes atelier</p>
+                  <p className="text-xs text-white/60">Clients, modèles et mesures clés</p>
+                </div>
+                <button
+                  onClick={() => {
+                    trackProfileInteraction({
+                      user_id: actorUserId,
+                      post_id: null,
+                      interaction_type: 'click',
+                      session_id: sessionId,
+                      duration_seconds: null,
+                      scroll_depth: null,
+                      came_from: 'profil:tailor_orders',
+                      device_type: 'web',
+                      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                    })
+                    router.push('/orders')
+                  }}
+                  className="flex items-center gap-2 bg-[#D4AF37] text-[#0A0A0A] px-3 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.18em] shadow-[0_0_14px_rgba(212,175,55,0.25)] active:scale-[0.98] transition-all"
+                >
+                  <Package size={16} />
+                  Voir tout
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                {MOCK_TAILOR_ORDERS.map((order) => (
+                  <div
+                    key={order.id}
+                    className="border border-[#D4AF37]/20 rounded-xl p-3 bg-white/[0.02] hover:border-[#D4AF37]/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] text-[#D4AF37] uppercase tracking-[0.18em] font-black">{order.client}</p>
+                        <p className="text-sm text-white mt-0.5">{order.model}</p>
+                      </div>
+                      <span className="text-[10px] px-2 py-1 rounded-full border border-[#D4AF37]/40 text-[#D4AF37] font-black uppercase tracking-[0.18em]">
+                        {order.status}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-center gap-3 text-[11px] text-white/70">
+                      <span className="flex items-center gap-1">
+                        <Ruler className="w-3 h-3 text-[#D4AF37]" />
+                        {order.measures.poitrine} / {order.measures.taille} / {order.measures.hanches} cm
+                      </span>
+                      <span className="text-white/30">Poitrine / Taille / Hanches</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        trackProfileInteraction({
+                          user_id: actorUserId,
+                          post_id: null,
+                          interaction_type: 'click',
+                          session_id: sessionId,
+                          duration_seconds: null,
+                          scroll_depth: null,
+                          came_from: `profil:tailor_order_open:${order.id}`,
+                          device_type: 'web',
+                          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                        })
+                        router.push(`/order/${order.id}`)
+                      }}
+                      className="mt-3 w-full text-left text-[11px] font-black uppercase tracking-[0.2em] text-[#D4AF37] border border-[#D4AF37]/30 rounded-lg px-3 py-2 hover:bg-[#D4AF37]/10 transition-all active:scale-[0.99]"
+                    >
+                      Ouvrir la commande
+                    </button>
+                  </div>
+                ))}
+              </div>
             </section>
 
-            {/* CTA : Voir les commandes (tailleur) */}
-            <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
+            {/* CTA : Livrer (simulation delivery_engine) */}
+            <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black">Livraison express</p>
+                {deliveryStatus && (
+                  <span className="text-[11px] text-white/70">{deliveryStatus}</span>
+                )}
+              </div>
               <button
-                onClick={() => {
-                  trackProfileInteraction({
-                    user_id: actorUserId,
-                    post_id: null,
-                    interaction_type: 'click',
-                    session_id: sessionId,
-                    duration_seconds: null,
-                    scroll_depth: null,
-                    came_from: 'profil:tailor_orders',
-                    device_type: 'web',
-                    user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-                  })
-                  router.push('/orders')
-                }}
+                onClick={simulateDeliveryQuote}
                 className="w-full flex items-center justify-center gap-2 bg-[#D4AF37] text-[#0A0A0A] py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.22em] shadow-[0_0_14px_rgba(212,175,55,0.25)] active:scale-[0.98] transition-all"
               >
-                <Package size={18} />
-                Mes commandes
+                <Bike size={18} />
+                Livrer (simu API)
               </button>
             </section>
 
@@ -469,7 +573,7 @@ export default function ProfilPage() {
                     key={img.id}
                     onClick={() => {
                       trackProfileInteraction({
-                        user_id: currentUserId,
+                        user_id: actorUserId,
                         post_id: null,
                         interaction_type: 'click',
                         session_id: sessionId,
