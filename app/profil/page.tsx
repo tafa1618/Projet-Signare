@@ -14,7 +14,9 @@ import {
   Scissors,
   MessageCircle,
   Package,
-  Bike
+  Bike,
+  Store,
+  Upload
 } from 'lucide-react'
 import type { Database, Mesure } from '@/shared/types/database.types'
 
@@ -569,25 +571,47 @@ export default function ProfilPage() {
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {gallery.map((img) => (
-                  <button
-                    key={img.id}
-                    onClick={() => {
-                      trackProfileInteraction({
-                        user_id: actorUserId,
-                        post_id: null,
-                        interaction_type: 'click',
-                        session_id: sessionId,
-                        duration_seconds: null,
-                        scroll_depth: null,
-                        came_from: `profil:tailor_creation_open:${img.id}`,
-                        device_type: 'web',
-                        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-                      })
-                    }}
-                    className="relative aspect-square rounded-lg overflow-hidden border border-white/5 hover:border-[#D4AF37]/40 transition-colors"
-                  >
-                    <Image src={img.src} alt="Création" fill className="object-cover opacity-90 hover:opacity-100 transition-opacity" />
-                  </button>
+                  <div key={img.id} className="relative group">
+                    <button
+                      onClick={() => {
+                        trackProfileInteraction({
+                          user_id: actorUserId,
+                          post_id: null,
+                          interaction_type: 'click',
+                          session_id: sessionId,
+                          duration_seconds: null,
+                          scroll_depth: null,
+                          came_from: `profil:tailor_creation_open:${img.id}`,
+                          device_type: 'web',
+                          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                        })
+                      }}
+                      className="relative aspect-square rounded-lg overflow-hidden border border-white/5 hover:border-[#D4AF37]/40 transition-colors w-full"
+                    >
+                      <Image src={img.src} alt="Création" fill className="object-cover opacity-90 hover:opacity-100 transition-opacity" />
+                    </button>
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        trackProfileInteraction({
+                          user_id: actorUserId,
+                          post_id: null,
+                          interaction_type: 'click',
+                          session_id: sessionId,
+                          duration_seconds: null,
+                          scroll_depth: null,
+                          came_from: `profil:tailor_publish_to_shop:${img.id}`,
+                          device_type: 'web',
+                          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                        })
+                        router.push(`/shop/publish?image=${encodeURIComponent(img.src)}&type=tailleur`)
+                      }}
+                      className="absolute bottom-1.5 right-1.5 bg-[#D4AF37] text-[#0A0A0A] p-1.5 rounded-lg shadow-[0_0_12px_rgba(212,175,55,0.5)] opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Publier sur le shop"
+                    >
+                      <Store size={12} />
+                    </motion.button>
+                  </div>
                 ))}
               </div>
             </section>
