@@ -239,24 +239,24 @@ export default function MessagesPage() {
         "w-full md:w-[340px] border-r border-[#D4AF37]/20 flex flex-col bg-[#0A0A0A]",
         selectedConv ? "hidden md:flex" : "flex"
       )}>
-        <header className="px-6 pt-6 pb-4 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-[#D4AF37]/20">
+        <header className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-[#D4AF37]/20">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-serif text-[#D4AF37] tracking-[0.2em] uppercase">MESSAGES</h1>
-            <button className="p-2 text-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors">
-              <Plus size={20} />
+            <h1 className="text-lg sm:text-xl font-serif text-[#D4AF37] tracking-[0.15em] sm:tracking-[0.2em] uppercase">MESSAGES</h1>
+            <button className="p-1.5 sm:p-2 text-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors">
+              <Plus size={18} className="sm:w-5 sm:h-5" />
             </button>
           </div>
-          <div className="relative mt-4">
-            <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-[#D4AF37]/40" size={16} />
+          <div className="relative mt-3 sm:mt-4">
+            <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 w-3.5 h-3.5 sm:w-4 sm:h-4" size={14} />
             <input
               type="text"
               placeholder="RECHERCHER..."
-              className="w-full bg-transparent border-b border-[#D4AF37]/20 py-2.5 pl-7 pr-3 text-[10px] font-black tracking-[0.22em] uppercase outline-none focus:border-[#D4AF37] placeholder:text-white/20"
+              className="w-full bg-transparent border-b border-[#D4AF37]/20 py-2 sm:py-2.5 pl-6 sm:pl-7 pr-2 sm:pr-3 text-[9px] sm:text-[10px] font-black tracking-[0.18em] sm:tracking-[0.22em] uppercase outline-none focus:border-[#D4AF37] placeholder:text-white/20"
             />
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-3 py-2">
+        <div className="flex-1 overflow-y-auto px-2 sm:px-3 py-2">
           {conversations.map((conv, idx) => (
             <motion.button
               key={conv.id}
@@ -278,7 +278,7 @@ export default function MessagesPage() {
                 })
               }}
               className={cn(
-                "w-full text-left flex items-center gap-3 px-3 py-3 rounded-xl border transition-all duration-300",
+                "w-full text-left flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border transition-all duration-300",
                 "border-transparent hover:border-[#D4AF37]/15",
                 "hover:bg-gradient-to-r hover:from-[#D4AF37]/10 hover:to-transparent",
                 "active:scale-[0.99]"
@@ -286,7 +286,7 @@ export default function MessagesPage() {
             >
               <div className="relative flex-shrink-0">
                 <div className={cn(
-                  "w-11 h-11 rounded-full overflow-hidden border p-0.5",
+                  "w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden border p-0.5",
                   conv.user.isMasterTailor ? "border-[#D4AF37]/50" : "border-white/10"
                 )}>
                   <div className="w-full h-full rounded-full overflow-hidden relative bg-neutral-900">
@@ -296,23 +296,23 @@ export default function MessagesPage() {
               </div>
               
               <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-baseline mb-1">
-                  <div className="min-w-0">
-                    <h3 className="font-serif font-bold text-sm tracking-wide text-white/90 truncate">{conv.user.name}</h3>
-                    <p className="text-[8px] text-[#D4AF37]/70 uppercase tracking-[0.2em] font-black truncate">
+                <div className="flex justify-between items-baseline mb-0.5 sm:mb-1">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-serif font-bold text-xs sm:text-sm tracking-wide text-white/90 truncate">{conv.user.name}</h3>
+                    <p className="text-[7px] sm:text-[8px] text-[#D4AF37]/70 uppercase tracking-[0.15em] sm:tracking-[0.2em] font-black truncate">
                       {conv.user.rankLabel}
                     </p>
                   </div>
-                  <span className="text-[9px] text-white/30 font-bold uppercase tracking-[0.15em]">{conv.updatedAt}</span>
+                  <span className="text-[8px] sm:text-[9px] text-white/30 font-bold uppercase tracking-[0.12em] sm:tracking-[0.15em] flex-shrink-0 ml-2">{conv.updatedAt}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <p className="text-xs text-white/40 truncate pr-4 italic">{conv.lastMessage}</p>
+                  <p className="text-[10px] sm:text-xs text-white/40 truncate pr-2 sm:pr-4 italic">{conv.lastMessage}</p>
                   {conv.unreadCount > 0 && (
-                    <div className="bg-[#D4AF37] w-2 h-2 rounded-full shadow-[0_0_12px_rgba(212,175,55,0.7)] flex-shrink-0" />
+                    <div className="bg-[#D4AF37] w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shadow-[0_0_12px_rgba(212,175,55,0.7)] flex-shrink-0" />
                   )}
                 </div>
                 {typeof conv.user.rating === 'number' && (
-                  <div className="mt-1">
+                  <div className="mt-0.5 sm:mt-1">
                     <StarRating rating={conv.user.rating} />
                   </div>
                 )}
@@ -338,18 +338,18 @@ export default function MessagesPage() {
               className="flex flex-col h-full"
             >
               {/* Header Chat (Feed-like) */}
-              <header className="px-6 py-4 border-b border-[#D4AF37]/20 bg-[#0A0A0A]/90 backdrop-blur-xl flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
+              <header className="px-3 sm:px-6 py-3 sm:py-4 border-b border-[#D4AF37]/20 bg-[#0A0A0A]/90 backdrop-blur-xl flex items-center justify-between gap-2 sm:gap-4">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                   <button
                     onClick={() => setSelectedConv(null)}
-                    className="md:hidden p-2 -ml-2 text-[#D4AF37] active:bg-[#D4AF37]/10 rounded-full"
+                    className="md:hidden p-1.5 -ml-1 text-[#D4AF37] active:bg-[#D4AF37]/10 rounded-full flex-shrink-0"
                     aria-label="Retour"
                   >
-                    <ChevronLeft size={26} />
+                    <ChevronLeft size={22} className="sm:w-6 sm:h-6" />
                   </button>
 
                   <div className={cn(
-                    "w-9 h-9 rounded-full overflow-hidden border p-0.5 flex-shrink-0",
+                    "w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border p-0.5 flex-shrink-0",
                     selectedConv.user.isMasterTailor ? "border-[#D4AF37]/50" : "border-white/10"
                   )}>
                     <div className="w-full h-full rounded-full overflow-hidden relative bg-neutral-900">
@@ -357,19 +357,19 @@ export default function MessagesPage() {
                     </div>
                   </div>
 
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <h2 className="font-serif font-bold text-sm text-[#D4AF37] tracking-[0.18em] uppercase truncate">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                      <h2 className="font-serif font-bold text-xs sm:text-sm text-[#D4AF37] tracking-[0.15em] sm:tracking-[0.18em] uppercase truncate">
                         {selectedConv.user.name}
                       </h2>
                       {selectedConv.user.status === 'atelier' && (
-                        <div className="flex items-center gap-1 text-[#D4AF37]">
-                          <Scissors size={12} />
+                        <div className="flex items-center gap-1 text-[#D4AF37] flex-shrink-0">
+                          <Scissors size={10} className="sm:w-3 sm:h-3" />
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-[9px] text-white/40 uppercase tracking-[0.22em] font-black truncate">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <p className="text-[8px] sm:text-[9px] text-white/40 uppercase tracking-[0.18em] sm:tracking-[0.22em] font-black truncate">
                         {selectedConv.user.rankLabel}
                       </p>
                       {typeof selectedConv.user.rating === 'number' && <StarRating rating={selectedConv.user.rating} />}
@@ -377,7 +377,7 @@ export default function MessagesPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 ml-4">
+                <div className="flex items-center gap-1.5 sm:gap-3 ml-2 sm:ml-4 flex-shrink-0">
                   <motion.button
                     whileTap={{ scale: 0.94 }}
                     onClick={() => {
@@ -393,10 +393,10 @@ export default function MessagesPage() {
                         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
                       })
                     }}
-                    className="px-3 py-2 rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] bg-[#0A0A0A] hover:bg-[#D4AF37]/10 transition-colors text-[10px] font-black uppercase tracking-[0.18em] flex items-center gap-1.5"
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] bg-[#0A0A0A] hover:bg-[#D4AF37]/10 transition-colors text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.18em] flex items-center gap-1 sm:gap-1.5"
                   >
-                    <Phone size={14} />
-                    Appel
+                    <Phone size={12} className="sm:w-[14px] sm:h-[14px]" />
+                    <span className="hidden xs:inline">Appel</span>
                   </motion.button>
                   <motion.button
                     whileTap={{ scale: 0.94 }}
@@ -413,19 +413,19 @@ export default function MessagesPage() {
                         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
                       })
                     }}
-                    className="px-3 py-2 rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] bg-[#0A0A0A] hover:bg-[#D4AF37]/10 transition-colors text-[10px] font-black uppercase tracking-[0.18em] flex items-center gap-1.5"
+                    className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] bg-[#0A0A0A] hover:bg-[#D4AF37]/10 transition-colors text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.18em] flex items-center gap-1 sm:gap-1.5"
                   >
-                    <Video size={14} />
-                    Vidéo
+                    <Video size={12} className="sm:w-[14px] sm:h-[14px]" />
+                    <span className="hidden xs:inline">Vidéo</span>
                   </motion.button>
-                  <button className="p-2 text-white/30 hover:text-[#D4AF37] transition-colors ml-1">
-                    <MoreVertical size={18} />
+                  <button className="p-1.5 sm:p-2 text-white/30 hover:text-[#D4AF37] transition-colors flex-shrink-0">
+                    <MoreVertical size={16} className="sm:w-[18px] sm:h-[18px]" />
                   </button>
                 </div>
               </header>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 sm:py-4 space-y-3 sm:space-y-4">
                 {selectedConv.messages.map((msg) => {
                   const isMe = msg.senderId === currentUserId
                   return (
@@ -465,9 +465,9 @@ export default function MessagesPage() {
               </div>
 
               {/* Input compact (no-scroll global) */}
-              <div className="sticky bottom-0 border-t border-[#D4AF37]/20 bg-[#0A0A0A]/95 backdrop-blur-xl px-6 py-3">
+              <div className="sticky bottom-0 border-t border-[#D4AF37]/20 bg-[#0A0A0A]/95 backdrop-blur-xl px-3 sm:px-6 py-2.5 sm:py-3">
                 <div className="relative">
-                  <div className="flex items-center gap-2 bg-white/[0.03] border border-white/10 rounded-2xl px-3 py-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2 bg-white/[0.03] border border-white/10 rounded-xl sm:rounded-2xl px-2 sm:px-3 py-1.5 sm:py-2">
                     <button
                       onClick={() => {
                         setShowQuickMenu((v) => !v)
@@ -483,10 +483,10 @@ export default function MessagesPage() {
                           user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
                         })
                       }}
-                      className="p-2 rounded-xl text-[#D4AF37]/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all"
+                      className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl text-[#D4AF37]/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all flex-shrink-0"
                       aria-label="Actions rapides"
                     >
-                      <Plus size={18} />
+                      <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
 
                     <input
@@ -494,11 +494,11 @@ export default function MessagesPage() {
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
                       placeholder="VOTRE MESSAGE..."
-                      className="flex-1 bg-transparent text-[11px] font-black tracking-[0.22em] uppercase outline-none placeholder:text-white/15"
+                      className="flex-1 bg-transparent text-[10px] sm:text-[11px] font-black tracking-[0.18em] sm:tracking-[0.22em] uppercase outline-none placeholder:text-white/15 min-w-0"
                     />
 
                     <button
-                      className="p-2 text-white/20 hover:text-[#D4AF37] transition-colors"
+                      className="p-1.5 sm:p-2 text-white/20 hover:text-[#D4AF37] transition-colors flex-shrink-0"
                       aria-label="Message vocal"
                       onClick={() => {
                         trackInteraction({
@@ -515,11 +515,11 @@ export default function MessagesPage() {
                         // TODO: implémenter enregistrement audio (MediaRecorder) + upload Supabase Storage
                       }}
                     >
-                      <Mic size={18} />
+                      <Mic size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
 
-                    <button className="p-2 text-white/20 hover:text-[#D4AF37] transition-colors" aria-label="Photo">
-                      <Camera size={18} />
+                    <button className="p-1.5 sm:p-2 text-white/20 hover:text-[#D4AF37] transition-colors flex-shrink-0" aria-label="Photo">
+                      <Camera size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
 
                     <motion.button
@@ -539,10 +539,10 @@ export default function MessagesPage() {
                         })
                         setInputText('')
                       }}
-                      className="bg-[#D4AF37] text-[#0A0A0A] p-2.5 rounded-xl shadow-[0_0_18px_rgba(212,175,55,0.35)]"
+                      className="bg-[#D4AF37] text-[#0A0A0A] p-2 sm:p-2.5 rounded-lg sm:rounded-xl shadow-[0_0_18px_rgba(212,175,55,0.35)] flex-shrink-0"
                       aria-label="Envoyer"
                     >
-                      <Send size={18} />
+                      <Send size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </motion.button>
                   </div>
 
