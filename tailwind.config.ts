@@ -31,6 +31,27 @@ const config: Config = {
           DEFAULT: '#FFFFFF',
           casse: '#F5F5F5',
         },
+        // Couleurs premium standardisées
+        bg: {
+          primary: 'var(--color-bg-primary)',
+        },
+        text: {
+          primary: 'var(--color-text-primary)',
+          secondary: 'var(--color-text-secondary)',
+        },
+        accent: {
+          DEFAULT: 'var(--color-accent)',
+        },
+      },
+      fontSize: {
+        // Tailles standardisées en rem
+        'body': 'var(--text-body)',
+        'h1-mobile': 'var(--text-h1-mobile)',
+        'h1-desktop': 'var(--text-h1-desktop)',
+        'h2-mobile': 'var(--text-h2-mobile)',
+        'h2-desktop': 'var(--text-h2-desktop)',
+        'h3-mobile': 'var(--text-h3-mobile)',
+        'h3-desktop': 'var(--text-h3-desktop)',
       },
       fontFamily: {
         serif: ['var(--font-serif)', 'Georgia', 'Cambria', 'Times New Roman', 'serif'],

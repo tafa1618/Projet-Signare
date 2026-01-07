@@ -12,6 +12,7 @@ const fontSans = Inter({
 const fontSerif = Playfair_Display({
   subsets: ['latin'],
   display: 'swap',
+  weight: '700', // Bold uniquement pour h1, h2, h3
   variable: '--font-serif',
 })
 
@@ -27,7 +28,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" className={`dark ${fontSans.variable} ${fontSerif.variable}`}>
-      <body className="bg-[#0A0A0A] text-white m-0 p-0 overflow-x-hidden">
+      <body className="m-0 p-0 overflow-x-hidden" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
         {/* CONTENU SCROLLABLE */}
         <div className="min-h-screen pb-24">
           {children}

@@ -95,7 +95,7 @@ export default function BottomNav() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed bottom-0 left-0 right-0 w-full z-[100] h-20 bg-[#0A0A0A]/95 backdrop-blur-lg border-t border-[#D4AF37]/30 pb-safe"
+          className="fixed bottom-0 left-0 right-0 w-full z-[100] h-20 bg-[#0A0A0A]/95 backdrop-blur-lg pb-safe"
         >
           <div className="flex justify-around items-center h-full px-4 max-w-2xl mx-auto">
             {navItems.map((item) => {

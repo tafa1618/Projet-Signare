@@ -496,6 +496,39 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
           </div>
         </div>
       )}
+      
+      {/* Propriétaire de la publication - En haut avant la photo */}
+      <div className="px-3 sm:px-4 pt-3 sm:pt-4 pb-2 sm:pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <Link
+              href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.user.name)}`}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#D4AF37]/30"
+            >
+              <span className="text-xs sm:text-sm text-[#D4AF37] font-bold">
+                {post.user.name.charAt(0).toUpperCase()}
+              </span>
+            </Link>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                <Link
+                  href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.user.name)}`}
+                  className="font-serif font-bold text-xs sm:text-sm text-[#D4AF37] truncate hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
+                >
+                  {post.user.name}
+                </Link>
+                {post.user.isVerified && <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37] flex-shrink-0" />}
+              </div>
+              <p className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold truncate">{post.user.role}</p>
+            </div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-[8px] sm:text-[9px] text-white/40 uppercase tracking-[0.2em] font-bold">À partir de</p>
+            <p className="text-sm sm:text-base font-serif font-bold text-[#D4AF37] leading-none">{post.price}</p>
+          </div>
+        </div>
+      </div>
+      
       {/* Carrousel de médias : max 50vh + object-cover (clic => détail produit) */}
       <div ref={mediaContainerRef} className="relative w-full aspect-[4/5] max-h-[50vh] bg-neutral-900">
         <Link
@@ -605,35 +638,6 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
 
       {/* Bloc compact sous image (Z-pattern) - Style FriendKit */}
       <div className="px-3 sm:px-4 py-3 sm:py-4 space-y-2 sm:space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <Link
-              href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.user.name)}`}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#D4AF37]/30"
-            >
-              <span className="text-xs sm:text-sm text-[#D4AF37] font-bold">
-                {post.user.name.charAt(0).toUpperCase()}
-              </span>
-            </Link>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
-                <Link
-                  href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.user.name)}`}
-                  className="font-serif font-bold text-xs sm:text-sm text-[#D4AF37] truncate hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
-                >
-                  {post.user.name}
-                </Link>
-                {post.user.isVerified && <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37] flex-shrink-0" />}
-              </div>
-              <p className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold truncate">{post.user.role}</p>
-            </div>
-          </div>
-          <div className="text-right flex-shrink-0">
-            <p className="text-[8px] sm:text-[9px] text-white/40 uppercase tracking-[0.2em] font-bold">À partir de</p>
-            <p className="text-sm sm:text-base font-serif font-bold text-[#D4AF37] leading-none">{post.price}</p>
-          </div>
-        </div>
-
         <div className="flex items-center justify-between gap-2 sm:gap-3 pt-1">
           <div className="flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold">
             <span className="truncate">{post.garment_type}</span>
@@ -824,6 +828,47 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
           </div>
         </div>
       )}
+      
+      {/* Propriétaire de la publication - En haut avant la photo */}
+      <div className="px-3 sm:px-4 pt-3 sm:pt-4 pb-2 sm:pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <Link
+              href={`/profil?mode=client&client=${encodeURIComponent(post.user.name)}`}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#D4AF37]/30"
+            >
+              <span className="text-xs sm:text-sm text-[#D4AF37] font-bold">
+                {post.user.name.charAt(0).toUpperCase()}
+              </span>
+            </Link>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Link
+                  href={`/profil?mode=client&client=${encodeURIComponent(post.user.name)}`}
+                  className="font-bold text-sm text-white/90 truncate hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
+                >
+                  {post.user.name}
+                </Link>
+                {post.user.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-[#D4AF37] flex-shrink-0" />}
+              </div>
+              <p className="text-[10px] text-[#D4AF37]/80 uppercase tracking-[0.15em] font-semibold truncate">
+                Réalisé par{' '}
+                {post.taggedTailor?.name ? (
+                  <Link
+                    href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.taggedTailor.name)}`}
+                    className="hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
+                  >
+                    {post.taggedTailor.name}
+                  </Link>
+                ) : (
+                  '—'
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {/* Carrousel de médias : max 50vh + object-cover (clic => détail produit) */}
       <div ref={mediaContainerRef} className="relative w-full aspect-[4/5] max-h-[50vh] bg-neutral-900">
         <Link
@@ -925,53 +970,16 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
 
       {/* Bloc compact sous image (Z-pattern) - Style FriendKit */}
       <div className="px-3 sm:px-4 py-3 sm:py-4 space-y-2 sm:space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <Link
-              href={`/profil?mode=client&client=${encodeURIComponent(post.user.name)}`}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#D4AF37]/30"
-            >
-              <span className="text-xs sm:text-sm text-[#D4AF37] font-bold">
-                {post.user.name.charAt(0).toUpperCase()}
-              </span>
-            </Link>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Link
-                  href={`/profil?mode=client&client=${encodeURIComponent(post.user.name)}`}
-                  className="font-bold text-sm text-white/90 truncate hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
-                >
-                  {post.user.name}
-                </Link>
-                {post.user.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-[#D4AF37] flex-shrink-0" />}
-              </div>
-              <p className="text-[10px] text-[#D4AF37]/80 uppercase tracking-[0.15em] font-semibold truncate">
-                Réalisé par{' '}
-                {post.taggedTailor?.name ? (
-                  <Link
-                    href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.taggedTailor.name)}`}
-                    className="hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
-                  >
-                    {post.taggedTailor.name}
-                  </Link>
-                ) : (
-                  '—'
-                )}
-              </p>
-            </div>
-          </div>
-          <div className="flex-shrink-0">
-            <StarRating rating={post.quality_rating || 0} />
-          </div>
-        </div>
-
         <div className="flex items-center justify-between gap-3 pt-1">
           <div className="flex items-center gap-2 text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold">
             <span className="truncate">{post.garment_type}</span>
           </div>
-          <button onClick={() => onSave(post.id)} className="text-white/40 hover:text-[#D4AF37] transition-colors active:scale-95">
-            <Bookmark size={18} className={post.isSaved ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
-          </button>
+          <div className="flex items-center gap-3">
+            <StarRating rating={post.quality_rating || 0} />
+            <button onClick={() => onSave(post.id)} className="text-white/40 hover:text-[#D4AF37] transition-colors active:scale-95">
+              <Bookmark size={18} className={post.isSaved ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
+            </button>
+          </div>
         </div>
 
         <p className="text-xs sm:text-sm text-white/90 leading-relaxed">
@@ -1231,7 +1239,7 @@ export default function HomePage() {
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-[#D4AF37]/20"
+        className="sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl"
       >
         <div className="max-w-2xl mx-auto">
           {/* Top Bar */}
