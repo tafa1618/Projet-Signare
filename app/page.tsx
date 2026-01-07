@@ -31,7 +31,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ShoppingCart,
-  Store
+  Store,
+  Menu
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/shared/lib/utils'
@@ -476,19 +477,19 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="mx-3 mb-6 bg-[#0A0A0A] border border-[#D4AF37]/15 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:border-[#D4AF37]/25 transition-all"
+      className="mx-2 sm:mx-3 mb-4 sm:mb-6 bg-[#0A0A0A] border border-[#D4AF37]/15 rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:border-[#D4AF37]/25 transition-all"
     >
       {post.repostOfId && (
-        <div className="px-3 pt-3">
-          <div className="rounded-lg border border-[#D4AF37]/25 bg-white/5 p-3 space-y-2">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-[#D4AF37] font-black">
+        <div className="px-2 sm:px-3 pt-2 sm:pt-3">
+          <div className="rounded-lg border border-[#D4AF37]/25 bg-white/5 p-2 sm:p-3 space-y-1.5 sm:space-y-2">
+            <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-[#D4AF37] font-black">
               Republié · <span className="text-white/70">par {post.user.name}</span>
             </p>
             {post.quote_comment && (
-              <p className="text-sm text-white/80 leading-snug">{post.quote_comment}</p>
+              <p className="text-xs sm:text-sm text-white/80 leading-snug">{post.quote_comment}</p>
             )}
             {post.quote_media && (
-              <div className="relative w-full h-32 rounded-md overflow-hidden border border-[#D4AF37]/20">
+              <div className="relative w-full h-28 sm:h-32 rounded-md overflow-hidden border border-[#D4AF37]/20">
                 <Image src={post.quote_media} alt="Media cité" fill className="object-cover" />
               </div>
             )}
@@ -537,17 +538,17 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
           ))}
           
           {/* Badge Tailleur */}
-          <div className="absolute top-3 left-3 z-20">
-            <span className="bg-[#D4AF37] text-[#0A0A0A] px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(212,175,55,0.35)]">
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20">
+            <span className="bg-[#D4AF37] text-[#0A0A0A] px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(212,175,55,0.35)]">
               Atelier
             </span>
           </div>
           
           {/* Badge Vidéo */}
           {mediaItems[currentMediaIndex]?.type === 'video' && (
-            <div className="absolute top-3 right-3 z-20 bg-black/50 backdrop-blur-md border border-[#D4AF37]/20 rounded-full px-2.5 py-1 flex items-center gap-1.5">
-              <Video size={12} className="text-[#D4AF37]" />
-              <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/90">Vidéo</span>
+            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 bg-black/50 backdrop-blur-md border border-[#D4AF37]/20 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 flex items-center gap-1 sm:gap-1.5">
+              <Video size={10} className="sm:w-3 sm:h-3 text-[#D4AF37]" />
+              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.18em] text-white/90">Vidéo</span>
             </div>
           )}
           
@@ -560,10 +561,10 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
                   e.stopPropagation()
                   goToPrevMedia()
                 }}
-                className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-2 text-white/80 hover:text-[#D4AF37] transition-colors z-20"
+                className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-1.5 sm:p-2 text-white/80 hover:text-[#D4AF37] transition-colors z-20"
                 aria-label="Média précédent"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={16} className="sm:w-[18px] sm:h-[18px]" />
               </button>
               <button
                 onClick={(e) => {
@@ -571,14 +572,14 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
                   e.stopPropagation()
                   goToNextMedia()
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-2 text-white/80 hover:text-[#D4AF37] transition-colors z-20"
+                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-1.5 sm:p-2 text-white/80 hover:text-[#D4AF37] transition-colors z-20"
                 aria-label="Média suivant"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px]" />
               </button>
               
               {/* Indicateurs de position */}
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+              <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-1.5 z-20">
                 {mediaItems.map((_, index) => (
                   <button
                     key={index}
@@ -588,10 +589,10 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
                       setCurrentMediaIndex(index)
                     }}
                     className={cn(
-                      "h-1.5 rounded-full transition-all",
+                      "h-1 sm:h-1.5 rounded-full transition-all",
                       index === currentMediaIndex
-                        ? "w-6 bg-[#D4AF37]"
-                        : "w-1.5 bg-white/30 hover:bg-white/50"
+                        ? "w-5 sm:w-6 bg-[#D4AF37]"
+                        : "w-1 sm:w-1.5 bg-white/30 hover:bg-white/50"
                     )}
                     aria-label={`Aller au média ${index + 1}`}
                   />
@@ -603,38 +604,38 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
       </div>
 
       {/* Bloc compact sous image (Z-pattern) - Style FriendKit */}
-      <div className="px-4 py-4 space-y-3">
+      <div className="px-3 sm:px-4 py-3 sm:py-4 space-y-2 sm:space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <Link
               href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.user.name)}`}
-              className="w-10 h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#D4AF37]/30"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#D4AF37]/30"
             >
-              <span className="text-sm text-[#D4AF37] font-bold">
+              <span className="text-xs sm:text-sm text-[#D4AF37] font-bold">
                 {post.user.name.charAt(0).toUpperCase()}
               </span>
             </Link>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 min-w-0">
+              <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
                 <Link
                   href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.user.name)}`}
-                  className="font-serif font-bold text-sm text-[#D4AF37] truncate hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
+                  className="font-serif font-bold text-xs sm:text-sm text-[#D4AF37] truncate hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
                 >
                   {post.user.name}
                 </Link>
-                {post.user.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-[#D4AF37] flex-shrink-0" />}
+                {post.user.isVerified && <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D4AF37] flex-shrink-0" />}
               </div>
-              <p className="text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold truncate">{post.user.role}</p>
+              <p className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold truncate">{post.user.role}</p>
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] font-bold">À partir de</p>
-            <p className="text-base font-serif font-bold text-[#D4AF37] leading-none">{post.price}</p>
+            <p className="text-[8px] sm:text-[9px] text-white/40 uppercase tracking-[0.2em] font-bold">À partir de</p>
+            <p className="text-sm sm:text-base font-serif font-bold text-[#D4AF37] leading-none">{post.price}</p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 pt-1">
-          <div className="flex items-center gap-2 text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold">
+        <div className="flex items-center justify-between gap-2 sm:gap-3 pt-1">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold">
             <span className="truncate">{post.garment_type}</span>
             {post.fabric_type && (
               <>
@@ -646,70 +647,70 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
           <StarRating rating={post.complexity_score || 0} />
         </div>
 
-        <p className="text-sm text-white/90 leading-relaxed">
+        <p className="text-xs sm:text-sm text-white/90 leading-relaxed">
           {post.caption}
         </p>
 
         {/* Actions : Like + Devis sur la même ligne - Style FriendKit */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/5">
-          <div className="flex items-center gap-4 text-white/50">
+        <div className="flex items-center justify-between pt-2 border-t border-white/5 flex-wrap gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 text-white/50 flex-wrap">
             <motion.button 
               onClick={() => onLike(post.id)} 
               whileTap={{ scale: 0.9 }}
-              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors group"
+              className="flex items-center gap-1 sm:gap-1.5 hover:text-[#D4AF37] transition-colors group"
             >
               <Heart 
-                size={20} 
-                className={`transition-all ${post.isLiked ? "fill-[#D4AF37] text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} 
+                size={18} 
+                className={`sm:w-5 sm:h-5 transition-all ${post.isLiked ? "fill-[#D4AF37] text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} 
               />
-              <span className="text-xs font-bold">{post.likes}</span>
+              <span className="text-[10px] sm:text-xs font-bold">{post.likes}</span>
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => openCommentModal(post.id)}
-              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors group"
+              className="flex items-center gap-1 sm:gap-1.5 hover:text-[#D4AF37] transition-colors group"
               aria-label="Commentaires"
             >
-              <MessageSquare size={20} className="group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-bold">{post.comments}</span>
+              <MessageSquare size={18} className="sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] sm:text-xs font-bold">{post.comments}</span>
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => onRepost(post.id)}
-              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors group"
+              className="flex items-center gap-1 sm:gap-1.5 hover:text-[#D4AF37] transition-colors group"
               aria-label="Republier"
             >
-              <Repeat2 size={20} className={`transition-all ${post.isReposted ? "text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} />
-              <span className="text-xs font-bold">{post.reposts ?? 0}</span>
+              <Repeat2 size={18} className={`sm:w-5 sm:h-5 transition-all ${post.isReposted ? "text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} />
+              <span className="text-[10px] sm:text-xs font-bold">{post.reposts ?? 0}</span>
             </motion.button>
             <motion.button 
               onClick={() => onSave(post.id)} 
               whileTap={{ scale: 0.9 }}
               className="hover:text-[#D4AF37] transition-colors group"
             >
-              <Bookmark size={20} className={`transition-all ${post.isSaved ? "fill-[#D4AF37] text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} />
+              <Bookmark size={18} className={`sm:w-5 sm:h-5 transition-all ${post.isSaved ? "fill-[#D4AF37] text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} />
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.9 }}
               className="hover:text-[#D4AF37] transition-colors group"
               aria-label="Plus d'options"
             >
-              <MoreVertical size={18} className="group-hover:scale-110 transition-transform" />
+              <MoreVertical size={16} className="sm:w-[18px] sm:h-[18px] group-hover:scale-110 transition-transform" />
             </motion.button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <Link
               href={`/messages?tailor=${encodeURIComponent(post.user.name)}`}
-              className="bg-white/5 border border-[#D4AF37]/25 text-[#D4AF37] px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-95 flex items-center gap-2"
+              className="bg-white/5 border border-[#D4AF37]/25 text-[#D4AF37] px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-95 flex items-center gap-1.5 sm:gap-2"
               aria-label="Discuter avec le tailleur"
             >
-              <MessageCircle size={14} />
-              Discuter
+              <MessageCircle size={12} className="sm:w-[14px] sm:h-[14px]" />
+              <span className="hidden xs:inline">Discuter</span>
             </Link>
             <motion.button 
               whileTap={{ scale: 0.95 }}
-              className="bg-[#D4AF37] text-[#0A0A0A] px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(212,175,55,0.35)] hover:shadow-[0_0_24px_rgba(212,175,55,0.5)] transition-all"
+              className="bg-[#D4AF37] text-[#0A0A0A] px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(212,175,55,0.35)] hover:shadow-[0_0_24px_rgba(212,175,55,0.5)] transition-all whitespace-nowrap"
             >
               Devis
             </motion.button>
@@ -804,19 +805,19 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="mx-3 mb-6 bg-[#0A0A0A] border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:border-[#D4AF37]/20 transition-all"
+      className="mx-2 sm:mx-3 mb-4 sm:mb-6 bg-[#0A0A0A] border border-white/10 rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:border-[#D4AF37]/20 transition-all"
     >
       {post.repostOfId && (
-        <div className="px-3 pt-3">
-          <div className="rounded-lg border border-[#D4AF37]/25 bg-white/5 p-3 space-y-2">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-[#D4AF37] font-black">
+        <div className="px-2 sm:px-3 pt-2 sm:pt-3">
+          <div className="rounded-lg border border-[#D4AF37]/25 bg-white/5 p-2 sm:p-3 space-y-1.5 sm:space-y-2">
+            <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-[#D4AF37] font-black">
               Republié · <span className="text-white/70">par {post.user.name}</span>
             </p>
             {post.quote_comment && (
-              <p className="text-sm text-white/80 leading-snug">{post.quote_comment}</p>
+              <p className="text-xs sm:text-sm text-white/80 leading-snug">{post.quote_comment}</p>
             )}
             {post.quote_media && (
-              <div className="relative w-full h-32 rounded-md overflow-hidden border border-[#D4AF37]/20">
+              <div className="relative w-full h-28 sm:h-32 rounded-md overflow-hidden border border-[#D4AF37]/20">
                 <Image src={post.quote_media} alt="Media cité" fill className="object-cover" />
               </div>
             )}
@@ -865,9 +866,9 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
           
           {/* Badge Vidéo */}
           {mediaItems[currentMediaIndex]?.type === 'video' && (
-            <div className="absolute top-3 right-3 z-20 bg-black/50 backdrop-blur-md border border-[#D4AF37]/20 rounded-full px-2.5 py-1 flex items-center gap-1.5">
-              <Video size={12} className="text-[#D4AF37]" />
-              <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/90">Vidéo</span>
+            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 bg-black/50 backdrop-blur-md border border-[#D4AF37]/20 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 flex items-center gap-1 sm:gap-1.5">
+              <Video size={10} className="sm:w-3 sm:h-3 text-[#D4AF37]" />
+              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.18em] text-white/90">Vidéo</span>
             </div>
           )}
           
@@ -880,10 +881,10 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
                   e.stopPropagation()
                   goToPrevMedia()
                 }}
-                className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-2 text-white/80 hover:text-[#D4AF37] transition-colors z-20"
+                className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-1.5 sm:p-2 text-white/80 hover:text-[#D4AF37] transition-colors z-20"
                 aria-label="Média précédent"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={16} className="sm:w-[18px] sm:h-[18px]" />
               </button>
               <button
                 onClick={(e) => {
@@ -891,14 +892,14 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
                   e.stopPropagation()
                   goToNextMedia()
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-2 text-white/80 hover:text-[#D4AF37] transition-colors z-20"
+                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-1.5 sm:p-2 text-white/80 hover:text-[#D4AF37] transition-colors z-20"
                 aria-label="Média suivant"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px]" />
               </button>
               
               {/* Indicateurs de position */}
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+              <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-1.5 z-20">
                 {mediaItems.map((_, index) => (
                   <button
                     key={index}
@@ -908,10 +909,10 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
                       setCurrentMediaIndex(index)
                     }}
                     className={cn(
-                      "h-1.5 rounded-full transition-all",
+                      "h-1 sm:h-1.5 rounded-full transition-all",
                       index === currentMediaIndex
-                        ? "w-6 bg-[#D4AF37]"
-                        : "w-1.5 bg-white/30 hover:bg-white/50"
+                        ? "w-5 sm:w-6 bg-[#D4AF37]"
+                        : "w-1 sm:w-1.5 bg-white/30 hover:bg-white/50"
                     )}
                     aria-label={`Aller au média ${index + 1}`}
                   />
@@ -923,14 +924,14 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
       </div>
 
       {/* Bloc compact sous image (Z-pattern) - Style FriendKit */}
-      <div className="px-4 py-4 space-y-3">
+      <div className="px-3 sm:px-4 py-3 sm:py-4 space-y-2 sm:space-y-3">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <Link
               href={`/profil?mode=client&client=${encodeURIComponent(post.user.name)}`}
-              className="w-10 h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#D4AF37]/30"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#D4AF37]/30"
             >
-              <span className="text-sm text-[#D4AF37] font-bold">
+              <span className="text-xs sm:text-sm text-[#D4AF37] font-bold">
                 {post.user.name.charAt(0).toUpperCase()}
               </span>
             </Link>
@@ -973,13 +974,13 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
           </button>
         </div>
 
-        <p className="text-sm text-white/90 leading-relaxed">
+        <p className="text-xs sm:text-sm text-white/90 leading-relaxed">
           {post.caption}
         </p>
 
         {/* Actions : Like + Liker sur la même ligne - Style FriendKit */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/5">
-          <div className="flex items-center gap-4 text-white/50">
+        <div className="flex items-center justify-between pt-2 border-t border-white/5 flex-wrap gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 text-white/50 flex-wrap">
             <motion.button 
               onClick={() => onLike(post.id)} 
               whileTap={{ scale: 0.9 }}
@@ -1025,14 +1026,14 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
             </motion.button>
           </div>
 
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end flex-shrink-0">
             <Link
               href={`/messages?user=${encodeURIComponent(post.user.name)}`}
-              className="bg-white/5 border border-[#D4AF37]/25 text-[#D4AF37] px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-95 flex items-center gap-2"
+              className="bg-white/5 border border-[#D4AF37]/25 text-[#D4AF37] px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-95 flex items-center gap-1.5 sm:gap-2"
               aria-label="Discuter avec ce membre"
             >
-              <MessageCircle size={14} />
-              Discuter
+              <MessageCircle size={12} className="sm:w-[14px] sm:h-[14px]" />
+              <span className="hidden xs:inline">Discuter</span>
             </Link>
           </div>
         </div>
@@ -1048,6 +1049,7 @@ export default function HomePage() {
   const [commentModal, setCommentModal] = useState<{ postId: number; comments: Array<{ id: number; user: string; avatar: string; text: string; time: string; likes: number }> } | null>(null)
   const [commentDraft, setCommentDraft] = useState('')
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
 
   const currentRepostPost = repostModal ? posts.find((p) => p.id === repostModal.postId) : null
@@ -1233,15 +1235,16 @@ export default function HomePage() {
       >
         <div className="max-w-2xl mx-auto">
           {/* Top Bar */}
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#D4AF37] p-1.5 rounded-lg shadow-[0_0_15px_rgba(212,175,55,0.4)]">
-                <Sparkles className="w-5 h-5 text-[#0A0A0A]" />
+          <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="bg-[#D4AF37] p-1 sm:p-1.5 rounded-lg shadow-[0_0_15px_rgba(212,175,55,0.4)] flex-shrink-0">
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#0A0A0A]" />
               </div>
-              <h1 className="text-xl font-serif text-[#D4AF37] tracking-[0.2em]">SIGNARE</h1>
+              <h1 className="text-lg sm:text-xl font-serif text-[#D4AF37] tracking-[0.15em] sm:tracking-[0.2em] truncate">SIGNARE</h1>
             </div>
             
-            <div className="flex items-center gap-2">
+            {/* Desktop: Tous les boutons visibles */}
+            <div className="hidden md:flex items-center gap-2">
               {/* Search Button */}
               <Link href="/search">
                 <motion.button
@@ -1309,7 +1312,7 @@ export default function HomePage() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative w-9 h-9 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/30 flex items-center justify-center overflow-hidden"
+                  className="relative w-9 h-9 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/30 flex items-center justify-center overflow-hidden flex-shrink-0"
                   title="Profil"
                 >
                   <span className="text-sm text-[#D4AF37] font-bold">
@@ -1323,14 +1326,116 @@ export default function HomePage() {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  className="bg-[#D4AF37] p-2 rounded-full shadow-lg"
+                  className="bg-[#D4AF37] p-2 rounded-full shadow-lg flex-shrink-0"
                   title="Publier"
                 >
                   <Plus className="w-5 h-5 text-[#0A0A0A]" strokeWidth={3} />
                 </motion.button>
               </Link>
             </div>
+            
+            {/* Mobile: Boutons essentiels + Menu Hamburger */}
+            <div className="flex md:hidden items-center gap-1.5">
+              {/* Publish - Toujours visible */}
+              <Link href="/publish">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="bg-[#D4AF37] p-1.5 rounded-full shadow-lg flex-shrink-0"
+                  title="Publier"
+                >
+                  <Plus className="w-4 h-4 text-[#0A0A0A]" strokeWidth={3} />
+                </motion.button>
+              </Link>
+              
+              {/* Avatar Profil - Toujours visible */}
+              <Link href="/profil">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative w-8 h-8 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/30 flex items-center justify-center overflow-hidden flex-shrink-0"
+                  title="Profil"
+                >
+                  <span className="text-xs text-[#D4AF37] font-bold">
+                    U
+                  </span>
+                </motion.button>
+              </Link>
+              
+              {/* Menu Hamburger */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors p-1.5"
+                title="Menu"
+                aria-label="Menu"
+              >
+                <Menu className="w-5 h-5" />
+              </motion.button>
+            </div>
           </div>
+          
+          {/* Menu Hamburger Mobile */}
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="md:hidden border-t border-[#D4AF37]/20 bg-[#0A0A0A] px-4 py-3"
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/search"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/10 transition-colors"
+                >
+                  <Search className="w-5 h-5 text-[#D4AF37]" />
+                  <span className="text-sm font-semibold text-white">Rechercher</span>
+                </Link>
+                
+                <Link
+                  href="/shop"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/10 transition-colors"
+                >
+                  <Store className="w-5 h-5 text-[#D4AF37]" />
+                  <span className="text-sm font-semibold text-white">Boutique</span>
+                </Link>
+                
+                <Link
+                  href="/cart"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/10 transition-colors relative"
+                >
+                  <ShoppingCart className="w-5 h-5 text-[#D4AF37]" />
+                  <span className="text-sm font-semibold text-white">Panier</span>
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
+                </Link>
+                
+                <motion.button
+                  onClick={() => {
+                    setNotificationsOpen(!notificationsOpen)
+                    setMenuOpen(false)
+                  }}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/10 transition-colors relative"
+                >
+                  <Bell className="w-5 h-5 text-[#D4AF37]" />
+                  <span className="text-sm font-semibold text-white">Notifications</span>
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
+                </motion.button>
+                
+                <Link
+                  href="/messages"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/10 transition-colors relative"
+                >
+                  <MessageCircle className="w-5 h-5 text-[#D4AF37]" />
+                  <span className="text-sm font-semibold text-white">Messages</span>
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
+                </Link>
+              </div>
+            </motion.div>
+          )}
           
           {/* Notifications Dropdown */}
           {notificationsOpen && (
