@@ -35,6 +35,8 @@ const config: Config = {
           'Roboto',
           'sans-serif',
         ],
+        // Police d'affichage explicite pour les titres/labels (fallback system)
+        display: ["'Inter'", 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         'gold-sm': '0 1px 2px 0 rgba(212, 175, 55, 0.1)',

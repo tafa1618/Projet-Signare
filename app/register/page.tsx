@@ -5,20 +5,50 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Phone, Mail, User as UserIcon, ArrowRight, Sparkles, Check } from 'lucide-react'
+import { Phone, Mail, User as UserIcon, ArrowRight, Sparkles, Check, Calendar, Scissors } from 'lucide-react'
 
 export default function RegisterPage() {
   const router = useRouter()
   const [phoneOrEmail, setPhoneOrEmail] = useState('')
   const [fullName, setFullName] = useState('')
+  const [dateOfBirth, setDateOfBirth] = useState('')
+  const [gender, setGender] = useState<'signare' | 'ndanane' | null>(null)
+  const [isTailor, setIsTailor] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [isFocusedPhone, setIsFocusedPhone] = useState(false)
   const [isFocusedName, setIsFocusedName] = useState(false)
+  const [isFocusedDate, setIsFocusedDate] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Calcul de l'âge pour ML (recommandations basées sur l'âge)
+    const age = dateOfBirth ? Math.floor((new Date().getTime() - new Date(dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null
+    
+    // Données ML-ready pour les recommandations dans le feed
+    const registrationData = {
+      phoneOrEmail,
+      fullName,
+      dateOfBirth,
+      age, // Calculé pour ML
+      gender, // 'signare' (femme) ou 'ndanane' (homme)
+      isTailor, // Booléen pour différencier les tailleurs
+      // Métadonnées ML pour recommandations
+      mlMetadata: {
+        age_group: age ? (age < 18 ? 'teen' : age < 25 ? 'young_adult' : age < 35 ? 'adult' : age < 50 ? 'mature' : 'senior') : null,
+        gender_preference: gender,
+        user_type: isTailor ? 'creator' : 'client',
+        registration_date: new Date().toISOString(),
+      }
+    }
+    
     // TODO: Implémenter la logique d'inscription avec Supabase
-    console.log('Inscription:', { phoneOrEmail, fullName })
+    // Ces données seront stockées dans la table profiles avec les colonnes :
+    // - date_of_birth (DATE)
+    // - gender (TEXT: 'signare' | 'ndanane')
+    // - is_tailor (BOOLEAN)
+    // - age (INTEGER, calculé)
+    console.log('Inscription ML-ready:', registrationData)
     
     // Redirection vers le feed
     router.push('/')
@@ -147,6 +177,106 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* Input Date de Naissance */}
+          <div className="relative">
+            <label className="block text-white/70 text-xs tracking-widest uppercase mb-3">
+              Date de Naissance
+            </label>
+            
+            <div className="relative">
+              <input
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                onFocus={() => setIsFocusedDate(true)}
+                onBlur={() => setIsFocusedDate(false)}
+                max={new Date().toISOString().split('T')[0]}
+                className="w-full bg-transparent text-white text-lg py-3 px-1 border-b-2 border-white/20 focus:border-[#D4AF37] outline-none transition-all duration-300 placeholder:text-white/30 [color-scheme:dark]"
+              />
+              
+              {/* Icône */}
+              <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                <Calendar className="w-5 h-5 text-[#D4AF37]/50" />
+              </div>
+            </div>
+
+            {/* Ligne animée */}
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: isFocusedDate ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37]/0 via-[#D4AF37] to-[#D4AF37]/0 origin-center"
+            />
+          </div>
+
+          {/* Sélection Genre */}
+          <div className="relative">
+            <label className="block text-white/70 text-xs tracking-widest uppercase mb-3">
+              Genre
+            </label>
+            
+            <div className="flex gap-3">
+              <motion.button
+                type="button"
+                onClick={() => setGender('signare')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`flex-1 py-4 px-4 rounded-lg border-2 transition-all duration-300 ${
+                  gender === 'signare'
+                    ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]'
+                    : 'border-white/20 text-white/60 hover:border-[#D4AF37]/50 hover:text-white/80'
+                }`}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-lg font-serif tracking-wide">SIGNARE</span>
+                  <span className="text-xs text-white/50">Femme</span>
+                </div>
+              </motion.button>
+              
+              <motion.button
+                type="button"
+                onClick={() => setGender('ndanane')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`flex-1 py-4 px-4 rounded-lg border-2 transition-all duration-300 ${
+                  gender === 'ndanane'
+                    ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37]'
+                    : 'border-white/20 text-white/60 hover:border-[#D4AF37]/50 hover:text-white/80'
+                }`}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-lg font-serif tracking-wide">NDANANE</span>
+                  <span className="text-xs text-white/50">Homme</span>
+                </div>
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Checkbox Tailleur */}
+          <div className="flex items-start gap-3">
+            <button
+              type="button"
+              onClick={() => setIsTailor(!isTailor)}
+              className="mt-1 flex-shrink-0"
+            >
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-300 ${
+                isTailor 
+                  ? 'bg-[#D4AF37] border-[#D4AF37]' 
+                  : 'border-white/30 hover:border-[#D4AF37]/50'
+              }`}>
+                {isTailor && (
+                  <Check className="w-3 h-3 text-[#0A0A0A]" strokeWidth={3} />
+                )}
+              </div>
+            </button>
+            <div className="flex items-center gap-2 flex-1">
+              <Scissors className="w-4 h-4 text-[#D4AF37]/60" />
+              <p className="text-white/60 text-xs leading-relaxed">
+                Je suis tailleur
+              </p>
+            </div>
+          </div>
+
           {/* Checkbox Conditions */}
           <div className="flex items-start gap-3">
             <button
@@ -184,7 +314,7 @@ export default function RegisterPage() {
               boxShadow: '0 0 40px rgba(212,175,55,0.6)',
             }}
             whileTap={{ scale: 0.98 }}
-            disabled={!phoneOrEmail || !fullName || !acceptTerms}
+            disabled={!phoneOrEmail || !fullName || !dateOfBirth || !gender || !acceptTerms}
             className="w-full bg-[#D4AF37] text-[#0A0A0A] font-bold text-sm tracking-widest uppercase py-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
           >
             {/* Effet de brillance */}

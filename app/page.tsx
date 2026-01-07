@@ -19,12 +19,24 @@ import {
   Scissors,
   Plus,
   LogOut,
-  Repeat2
+  Repeat2,
+  Bell,
+  Search,
+  X,
+  Send,
+  MoreVertical,
+  Flag
 } from 'lucide-react'
 import Link from 'next/link'
+import { cn } from '@/shared/lib/utils'
 
 // Types pour les posts
 type PostType = 'tailor' | 'client'
+
+interface MediaItem {
+  url: string
+  type: 'image' | 'video'
+}
 
 interface Post {
   id: number
@@ -36,7 +48,8 @@ interface Post {
     role: string
     specialty?: string
   }
-  image: string
+  image: string // Pour compatibilité avec l'ancien code
+  media?: MediaItem[] // Nouveau : support multi-médias
   caption: string
   price?: string
   likes: number
@@ -45,6 +58,8 @@ interface Post {
   isLiked: boolean
   isSaved: boolean
   isReposted?: boolean
+  repostOfId?: number | null
+  repostedByMe?: boolean
   taggedTailor?: {
     name: string
     id: string
@@ -53,9 +68,39 @@ interface Post {
   fabric_type?: string
   complexity_score?: number
   quality_rating?: number
+  quote_comment?: string | null
+  quote_media?: string | null
 }
 
 const mockPosts: Post[] = [
+  {
+    id: 0,
+    type: 'client',
+    user: {
+      name: 'Vous',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=RepostDemo',
+      isVerified: false,
+      role: 'Repost',
+    },
+    repostOfId: 1,
+    repostedByMe: true,
+    image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&h=1000&fit=crop',
+    caption: 'Boubou Royale en basin riche. Un travail de broderie de plus de 40 heures. ✨🇸🇳',
+    likes: 0,
+    comments: 0,
+    reposts: 1,
+    isLiked: false,
+    isSaved: false,
+    isReposted: true,
+    taggedTailor: {
+      name: 'Atelier Fatou',
+      id: 'tailor-fatou',
+    },
+    garment_type: 'Boubou',
+    quality_rating: 5,
+    quote_comment: '🔥 À voir absolument — finitions dignes d’un défilé.',
+    quote_media: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&h=1200&fit=crop',
+  },
   {
     id: 1,
     type: 'tailor',
@@ -349,6 +394,74 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
     interaction_score: 2,
     metadata: { role: 'tailleur', garment_type: post.garment_type, fabric_type: post.fabric_type },
   })
+  
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0)
+  const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({})
+  const mediaContainerRef = useRef<HTMLDivElement>(null)
+  
+  // Récupérer les médias (nouveau format ou ancien format pour compatibilité)
+  const mediaItems: MediaItem[] = post.media && post.media.length > 0 
+    ? post.media 
+    : [{ url: post.image, type: 'image' }]
+  
+  // Autoplay pour les vidéos visibles (Intersection Observer)
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Jouer la vidéo de l'index actuel si c'est une vidéo
+            const currentMedia = mediaItems[currentMediaIndex]
+            if (currentMedia?.type === 'video') {
+              const video = videoRefs.current[currentMediaIndex]
+              if (video) {
+                video.play().catch(() => {
+                  // Ignorer les erreurs d'autoplay (politique du navigateur)
+                })
+              }
+            }
+          } else {
+            // Pauser toutes les vidéos quand la carte n'est plus visible
+            Object.values(videoRefs.current).forEach((video) => {
+              if (video) {
+                video.pause()
+              }
+            })
+          }
+        })
+      },
+      { threshold: 0.5 }
+    )
+    
+    if (mediaContainerRef.current) {
+      observer.observe(mediaContainerRef.current)
+    }
+    
+    return () => observer.disconnect()
+  }, [currentMediaIndex, mediaItems])
+  
+  // Pauser la vidéo précédente quand on change de média
+  useEffect(() => {
+    const prevVideo = videoRefs.current[currentMediaIndex]
+    if (prevVideo && mediaItems[currentMediaIndex]?.type === 'video') {
+      prevVideo.play().catch(() => {})
+    }
+    
+    // Pauser les autres vidéos
+    Object.entries(videoRefs.current).forEach(([index, video]) => {
+      if (video && Number(index) !== currentMediaIndex) {
+        video.pause()
+      }
+    })
+  }, [currentMediaIndex, mediaItems])
+  
+  const goToNextMedia = () => {
+    setCurrentMediaIndex((prev) => (prev + 1) % mediaItems.length)
+  }
+  
+  const goToPrevMedia = () => {
+    setCurrentMediaIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length)
+  }
 
   return (
     <motion.article
@@ -357,59 +470,169 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="mx-3 mb-6 bg-[#0A0A0A] border border-[#D4AF37]/15 rounded-xl overflow-hidden shadow-xl max-h-[80vh]"
+      className="mx-3 mb-6 bg-[#0A0A0A] border border-[#D4AF37]/15 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:border-[#D4AF37]/25 transition-all"
     >
-      {/* Image : max 50vh + object-cover (clic => détail produit) */}
-      <Link
-        href={`/product/${post.id}`}
-        className="relative block w-full aspect-[4/5] max-h-[50vh] bg-neutral-900"
-        aria-label="Voir le détail du produit"
-      >
-        <Image
-          src={post.image}
-          alt={post.caption}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 560px"
-          priority={post.id === 1}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/60 to-transparent pointer-events-none" />
-
-        {/* Badge Tailleur */}
-        <div className="absolute top-3 left-3">
-          <span className="bg-[#D4AF37] text-[#0A0A0A] px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(212,175,55,0.35)]">
-            Atelier
-          </span>
+      {post.repostOfId && (
+        <div className="px-3 pt-3">
+          <div className="rounded-lg border border-[#D4AF37]/25 bg-white/5 p-3 space-y-2">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[#D4AF37] font-black">
+              Republié · <span className="text-white/70">par {post.user.name}</span>
+            </p>
+            {post.quote_comment && (
+              <p className="text-sm text-white/80 leading-snug">{post.quote_comment}</p>
+            )}
+            {post.quote_media && (
+              <div className="relative w-full h-32 rounded-md overflow-hidden border border-[#D4AF37]/20">
+                <Image src={post.quote_media} alt="Media cité" fill className="object-cover" />
+              </div>
+            )}
+          </div>
         </div>
-      </Link>
-
-      {/* Bloc compact sous image (Z-pattern) */}
-      <div className="px-3 py-3 space-y-2">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <Link
-                href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.user.name)}`}
-                className="font-serif font-bold text-sm text-[#D4AF37] truncate hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
-              >
-                {post.user.name}
-              </Link>
-              {post.user.isVerified && <CheckCircle2 className="w-3 h-3 text-[#D4AF37] flex-shrink-0" />}
+      )}
+      {/* Carrousel de médias : max 50vh + object-cover (clic => détail produit) */}
+      <div ref={mediaContainerRef} className="relative w-full aspect-[4/5] max-h-[50vh] bg-neutral-900">
+        <Link
+          href={`/product/${post.id}`}
+          className="relative block w-full h-full"
+          aria-label="Voir le détail du produit"
+        >
+          {mediaItems.map((media, index) => (
+            <div
+              key={index}
+              className={cn(
+                "absolute inset-0 transition-opacity duration-300",
+                index === currentMediaIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+              )}
+            >
+              {media.type === 'video' ? (
+                <video
+                  ref={(el) => {
+                    videoRefs.current[index] = el
+                  }}
+                  src={media.url}
+                  className="w-full h-full object-cover"
+                  muted
+                  loop
+                  playsInline
+                  controls={false}
+                />
+              ) : (
+                <Image
+                  src={media.url}
+                  alt={post.caption}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 560px"
+                  priority={post.id === 1 && index === 0}
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/60 to-transparent pointer-events-none" />
             </div>
-            <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] font-bold truncate">{post.user.role}</p>
+          ))}
+          
+          {/* Badge Tailleur */}
+          <div className="absolute top-3 left-3 z-20">
+            <span className="bg-[#D4AF37] text-[#0A0A0A] px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(212,175,55,0.35)]">
+              Atelier
+            </span>
+          </div>
+          
+          {/* Badge Vidéo */}
+          {mediaItems[currentMediaIndex]?.type === 'video' && (
+            <div className="absolute top-3 right-3 z-20 bg-black/50 backdrop-blur-md border border-[#D4AF37]/20 rounded-full px-2.5 py-1 flex items-center gap-1.5">
+              <Video size={12} className="text-[#D4AF37]" />
+              <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/90">Vidéo</span>
+            </div>
+          )}
+          
+          {/* Navigation carrousel */}
+          {mediaItems.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  goToPrevMedia()
+                }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-2 text-white/80 hover:text-[#D4AF37] transition-colors z-20"
+                aria-label="Média précédent"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  goToNextMedia()
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-2 text-white/80 hover:text-[#D4AF37] transition-colors z-20"
+                aria-label="Média suivant"
+              >
+                <ChevronRight size={18} />
+              </button>
+              
+              {/* Indicateurs de position */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+                {mediaItems.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setCurrentMediaIndex(index)
+                    }}
+                    className={cn(
+                      "h-1.5 rounded-full transition-all",
+                      index === currentMediaIndex
+                        ? "w-6 bg-[#D4AF37]"
+                        : "w-1.5 bg-white/30 hover:bg-white/50"
+                    )}
+                    aria-label={`Aller au média ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </Link>
+      </div>
+
+      {/* Bloc compact sous image (Z-pattern) - Style FriendKit */}
+      <div className="px-4 py-4 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <Link
+              href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.user.name)}`}
+              className="w-10 h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#D4AF37]/30"
+            >
+              <span className="text-sm text-[#D4AF37] font-bold">
+                {post.user.name.charAt(0).toUpperCase()}
+              </span>
+            </Link>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Link
+                  href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.user.name)}`}
+                  className="font-serif font-bold text-sm text-[#D4AF37] truncate hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
+                >
+                  {post.user.name}
+                </Link>
+                {post.user.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-[#D4AF37] flex-shrink-0" />}
+              </div>
+              <p className="text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold truncate">{post.user.role}</p>
+            </div>
           </div>
           <div className="text-right flex-shrink-0">
             <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] font-bold">À partir de</p>
-            <p className="text-sm font-serif font-bold text-[#D4AF37] leading-none">{post.price}</p>
+            <p className="text-base font-serif font-bold text-[#D4AF37] leading-none">{post.price}</p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-[9px] text-white/40 uppercase tracking-[0.18em] font-bold">
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <div className="flex items-center gap-2 text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold">
             <span className="truncate">{post.garment_type}</span>
             {post.fabric_type && (
               <>
-                <span className="text-white/20">•</span>
+                <span className="text-white/30">•</span>
                 <span className="truncate">{post.fabric_type}</span>
               </>
             )}
@@ -417,51 +640,73 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
           <StarRating rating={post.complexity_score || 0} />
         </div>
 
-        <p className="text-[11px] text-white/80 leading-snug line-clamp-2">
+        <p className="text-sm text-white/90 leading-relaxed">
           {post.caption}
         </p>
 
-        {/* Actions : Like + Devis sur la même ligne */}
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex items-center gap-3 text-white/50">
-            <button onClick={() => onLike(post.id)} className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors active:scale-95">
-              <Heart size={18} className={post.isLiked ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
-              <span className="text-[10px] font-bold">{post.likes}</span>
-            </button>
-            <motion.button
-              whileTap={{ scale: 0.92 }}
-              onClick={() => onRepost(post.id)}
-              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors"
-              aria-label="Republier"
+        {/* Actions : Like + Devis sur la même ligne - Style FriendKit */}
+        <div className="flex items-center justify-between pt-2 border-t border-white/5">
+          <div className="flex items-center gap-4 text-white/50">
+            <motion.button 
+              onClick={() => onLike(post.id)} 
+              whileTap={{ scale: 0.9 }}
+              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors group"
             >
-              <Repeat2 size={18} className={post.isReposted ? "text-[#D4AF37]" : ""} />
-              <span className="text-[10px] font-bold">{post.reposts ?? 0}</span>
+              <Heart 
+                size={20} 
+                className={`transition-all ${post.isLiked ? "fill-[#D4AF37] text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} 
+              />
+              <span className="text-xs font-bold">{post.likes}</span>
             </motion.button>
             <motion.button
-              whileTap={{ scale: 0.92 }}
-              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors"
+              whileTap={{ scale: 0.9 }}
+              onClick={() => openCommentModal(post.id)}
+              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors group"
               aria-label="Commentaires"
             >
-              <MessageSquare size={18} />
-              <span className="text-[10px] font-bold">{post.comments}</span>
+              <MessageSquare size={20} className="group-hover:scale-110 transition-transform" />
+              <span className="text-xs font-bold">{post.comments}</span>
             </motion.button>
-            <button onClick={() => onSave(post.id)} className="hover:text-[#D4AF37] transition-colors active:scale-95">
-              <Bookmark size={18} className={post.isSaved ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
-            </button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => onRepost(post.id)}
+              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors group"
+              aria-label="Republier"
+            >
+              <Repeat2 size={20} className={`transition-all ${post.isReposted ? "text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} />
+              <span className="text-xs font-bold">{post.reposts ?? 0}</span>
+            </motion.button>
+            <motion.button 
+              onClick={() => onSave(post.id)} 
+              whileTap={{ scale: 0.9 }}
+              className="hover:text-[#D4AF37] transition-colors group"
+            >
+              <Bookmark size={20} className={`transition-all ${post.isSaved ? "fill-[#D4AF37] text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} />
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              className="hover:text-[#D4AF37] transition-colors group"
+              aria-label="Plus d'options"
+            >
+              <MoreVertical size={18} className="group-hover:scale-110 transition-transform" />
+            </motion.button>
           </div>
 
           <div className="flex items-center gap-2">
             <Link
               href={`/messages?tailor=${encodeURIComponent(post.user.name)}`}
-              className="bg-white/5 border border-[#D4AF37]/25 text-[#D4AF37] px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-95 flex items-center gap-2"
+              className="bg-white/5 border border-[#D4AF37]/25 text-[#D4AF37] px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-95 flex items-center gap-2"
               aria-label="Discuter avec le tailleur"
             >
-              <MessageCircle size={16} />
+              <MessageCircle size={14} />
               Discuter
             </Link>
-            <button className="bg-[#D4AF37] text-[#0A0A0A] px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(212,175,55,0.35)] active:scale-95">
+            <motion.button 
+              whileTap={{ scale: 0.95 }}
+              className="bg-[#D4AF37] text-[#0A0A0A] px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.18em] shadow-[0_0_18px_rgba(212,175,55,0.35)] hover:shadow-[0_0_24px_rgba(212,175,55,0.5)] transition-all"
+            >
               Devis
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
@@ -477,6 +722,74 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
     interaction_score: 2,
     metadata: { role: 'client', garment_type: post.garment_type, tailor: post.taggedTailor?.name },
   })
+  
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0)
+  const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({})
+  const mediaContainerRef = useRef<HTMLDivElement>(null)
+  
+  // Récupérer les médias (nouveau format ou ancien format pour compatibilité)
+  const mediaItems: MediaItem[] = post.media && post.media.length > 0 
+    ? post.media 
+    : [{ url: post.image, type: 'image' }]
+  
+  // Autoplay pour les vidéos visibles (Intersection Observer)
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Jouer la vidéo de l'index actuel si c'est une vidéo
+            const currentMedia = mediaItems[currentMediaIndex]
+            if (currentMedia?.type === 'video') {
+              const video = videoRefs.current[currentMediaIndex]
+              if (video) {
+                video.play().catch(() => {
+                  // Ignorer les erreurs d'autoplay (politique du navigateur)
+                })
+              }
+            }
+          } else {
+            // Pauser toutes les vidéos quand la carte n'est plus visible
+            Object.values(videoRefs.current).forEach((video) => {
+              if (video) {
+                video.pause()
+              }
+            })
+          }
+        })
+      },
+      { threshold: 0.5 }
+    )
+    
+    if (mediaContainerRef.current) {
+      observer.observe(mediaContainerRef.current)
+    }
+    
+    return () => observer.disconnect()
+  }, [currentMediaIndex, mediaItems])
+  
+  // Pauser la vidéo précédente quand on change de média
+  useEffect(() => {
+    const prevVideo = videoRefs.current[currentMediaIndex]
+    if (prevVideo && mediaItems[currentMediaIndex]?.type === 'video') {
+      prevVideo.play().catch(() => {})
+    }
+    
+    // Pauser les autres vidéos
+    Object.entries(videoRefs.current).forEach(([index, video]) => {
+      if (video && Number(index) !== currentMediaIndex) {
+        video.pause()
+      }
+    })
+  }, [currentMediaIndex, mediaItems])
+  
+  const goToNextMedia = () => {
+    setCurrentMediaIndex((prev) => (prev + 1) % mediaItems.length)
+  }
+  
+  const goToPrevMedia = () => {
+    setCurrentMediaIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length)
+  }
 
   return (
     <motion.article
@@ -485,58 +798,168 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="mx-3 mb-6 bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden shadow-xl max-h-[80vh]"
+      className="mx-3 mb-6 bg-[#0A0A0A] border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] hover:border-[#D4AF37]/20 transition-all"
     >
-      {/* Image : max 50vh + object-cover (clic => détail produit) */}
-      <Link
-        href={`/product/${post.id}`}
-        className="relative block w-full aspect-[4/5] max-h-[50vh] bg-neutral-900"
-        aria-label="Voir le détail du produit"
-      >
-        <Image
-          src={post.image}
-          alt={post.caption}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 560px"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/55 to-transparent pointer-events-none" />
-      </Link>
-
-      {/* Bloc compact sous image (Z-pattern) */}
-      <div className="px-3 py-3 space-y-2">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <Link
-                href={`/profil?mode=client&client=${encodeURIComponent(post.user.name)}`}
-                className="font-bold text-sm text-white/90 truncate hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
-              >
-                {post.user.name}
-              </Link>
-              {post.user.isVerified && <CheckCircle2 className="w-3 h-3 text-[#D4AF37] flex-shrink-0" />}
-            </div>
-            <p className="text-[9px] text-[#D4AF37]/80 uppercase tracking-[0.2em] font-black truncate">
-              Réalisé par{' '}
-              {post.taggedTailor?.name ? (
-                <Link
-                  href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.taggedTailor.name)}`}
-                  className="hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
-                >
-                  {post.taggedTailor.name}
-                </Link>
-              ) : (
-                '—'
-              )}
+      {post.repostOfId && (
+        <div className="px-3 pt-3">
+          <div className="rounded-lg border border-[#D4AF37]/25 bg-white/5 p-3 space-y-2">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[#D4AF37] font-black">
+              Republié · <span className="text-white/70">par {post.user.name}</span>
             </p>
+            {post.quote_comment && (
+              <p className="text-sm text-white/80 leading-snug">{post.quote_comment}</p>
+            )}
+            {post.quote_media && (
+              <div className="relative w-full h-32 rounded-md overflow-hidden border border-[#D4AF37]/20">
+                <Image src={post.quote_media} alt="Media cité" fill className="object-cover" />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {/* Carrousel de médias : max 50vh + object-cover (clic => détail produit) */}
+      <div ref={mediaContainerRef} className="relative w-full aspect-[4/5] max-h-[50vh] bg-neutral-900">
+        <Link
+          href={`/product/${post.id}`}
+          className="relative block w-full h-full"
+          aria-label="Voir le détail du produit"
+        >
+          {mediaItems.map((media, index) => (
+            <div
+              key={index}
+              className={cn(
+                "absolute inset-0 transition-opacity duration-300",
+                index === currentMediaIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+              )}
+            >
+              {media.type === 'video' ? (
+                <video
+                  ref={(el) => {
+                    videoRefs.current[index] = el
+                  }}
+                  src={media.url}
+                  className="w-full h-full object-cover"
+                  muted
+                  loop
+                  playsInline
+                  controls={false}
+                />
+              ) : (
+                <Image
+                  src={media.url}
+                  alt={post.caption}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 560px"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/55 to-transparent pointer-events-none" />
+            </div>
+          ))}
+          
+          {/* Badge Vidéo */}
+          {mediaItems[currentMediaIndex]?.type === 'video' && (
+            <div className="absolute top-3 right-3 z-20 bg-black/50 backdrop-blur-md border border-[#D4AF37]/20 rounded-full px-2.5 py-1 flex items-center gap-1.5">
+              <Video size={12} className="text-[#D4AF37]" />
+              <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/90">Vidéo</span>
+            </div>
+          )}
+          
+          {/* Navigation carrousel */}
+          {mediaItems.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  goToPrevMedia()
+                }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-2 text-white/80 hover:text-[#D4AF37] transition-colors z-20"
+                aria-label="Média précédent"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  goToNextMedia()
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-md border border-white/10 rounded-full p-2 text-white/80 hover:text-[#D4AF37] transition-colors z-20"
+                aria-label="Média suivant"
+              >
+                <ChevronRight size={18} />
+              </button>
+              
+              {/* Indicateurs de position */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+                {mediaItems.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setCurrentMediaIndex(index)
+                    }}
+                    className={cn(
+                      "h-1.5 rounded-full transition-all",
+                      index === currentMediaIndex
+                        ? "w-6 bg-[#D4AF37]"
+                        : "w-1.5 bg-white/30 hover:bg-white/50"
+                    )}
+                    aria-label={`Aller au média ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </Link>
+      </div>
+
+      {/* Bloc compact sous image (Z-pattern) - Style FriendKit */}
+      <div className="px-4 py-4 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <Link
+              href={`/profil?mode=client&client=${encodeURIComponent(post.user.name)}`}
+              className="w-10 h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#D4AF37]/30"
+            >
+              <span className="text-sm text-[#D4AF37] font-bold">
+                {post.user.name.charAt(0).toUpperCase()}
+              </span>
+            </Link>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Link
+                  href={`/profil?mode=client&client=${encodeURIComponent(post.user.name)}`}
+                  className="font-bold text-sm text-white/90 truncate hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
+                >
+                  {post.user.name}
+                </Link>
+                {post.user.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-[#D4AF37] flex-shrink-0" />}
+              </div>
+              <p className="text-[10px] text-[#D4AF37]/80 uppercase tracking-[0.15em] font-semibold truncate">
+                Réalisé par{' '}
+                {post.taggedTailor?.name ? (
+                  <Link
+                    href={`/profil?mode=tailleur&tailor=${encodeURIComponent(post.taggedTailor.name)}`}
+                    className="hover:text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
+                  >
+                    {post.taggedTailor.name}
+                  </Link>
+                ) : (
+                  '—'
+                )}
+              </p>
+            </div>
           </div>
           <div className="flex-shrink-0">
             <StarRating rating={post.quality_rating || 0} />
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-[9px] text-white/40 uppercase tracking-[0.18em] font-bold">
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <div className="flex items-center gap-2 text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold">
             <span className="truncate">{post.garment_type}</span>
           </div>
           <button onClick={() => onSave(post.id)} className="text-white/40 hover:text-[#D4AF37] transition-colors active:scale-95">
@@ -544,43 +967,65 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
           </button>
         </div>
 
-        <p className="text-[11px] text-white/80 leading-snug line-clamp-2">
+        <p className="text-sm text-white/90 leading-relaxed">
           {post.caption}
         </p>
 
-        {/* Actions : Like + Liker sur la même ligne */}
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex items-center gap-3 text-white/50">
-            <button onClick={() => onLike(post.id)} className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors active:scale-95">
-              <Heart size={18} className={post.isLiked ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
-              <span className="text-[10px] font-bold">{post.likes}</span>
-            </button>
-            <motion.button
-              whileTap={{ scale: 0.92 }}
-              onClick={() => onRepost(post.id)}
-              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors"
-              aria-label="Republier"
+        {/* Actions : Like + Liker sur la même ligne - Style FriendKit */}
+        <div className="flex items-center justify-between pt-2 border-t border-white/5">
+          <div className="flex items-center gap-4 text-white/50">
+            <motion.button 
+              onClick={() => onLike(post.id)} 
+              whileTap={{ scale: 0.9 }}
+              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors group"
             >
-              <Repeat2 size={18} className={post.isReposted ? "text-[#D4AF37]" : ""} />
-              <span className="text-[10px] font-bold">{post.reposts ?? 0}</span>
+              <Heart 
+                size={20} 
+                className={`transition-all ${post.isLiked ? "fill-[#D4AF37] text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} 
+              />
+              <span className="text-xs font-bold">{post.likes}</span>
             </motion.button>
             <motion.button
-              whileTap={{ scale: 0.92 }}
-              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors"
+              whileTap={{ scale: 0.9 }}
+              onClick={() => openCommentModal(post.id)}
+              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors group"
               aria-label="Commentaires"
             >
-              <MessageCircle size={18} />
-              <span className="text-[10px] font-bold">{post.comments}</span>
+              <MessageCircle size={20} className="group-hover:scale-110 transition-transform" />
+              <span className="text-xs font-bold">{post.comments}</span>
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => onRepost(post.id)}
+              className="flex items-center gap-1.5 hover:text-[#D4AF37] transition-colors group"
+              aria-label="Republier"
+            >
+              <Repeat2 size={20} className={`transition-all ${post.isReposted ? "text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} />
+              <span className="text-xs font-bold">{post.reposts ?? 0}</span>
+            </motion.button>
+            <motion.button 
+              onClick={() => onSave(post.id)} 
+              whileTap={{ scale: 0.9 }}
+              className="hover:text-[#D4AF37] transition-colors group"
+            >
+              <Bookmark size={20} className={`transition-all ${post.isSaved ? "fill-[#D4AF37] text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} />
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              className="hover:text-[#D4AF37] transition-colors group"
+              aria-label="Plus d'options"
+            >
+              <MoreVertical size={18} className="group-hover:scale-110 transition-transform" />
             </motion.button>
           </div>
 
           <div className="flex items-center justify-end">
             <Link
               href={`/messages?user=${encodeURIComponent(post.user.name)}`}
-              className="bg-white/5 border border-[#D4AF37]/25 text-[#D4AF37] px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-95 flex items-center gap-2"
+              className="bg-white/5 border border-[#D4AF37]/25 text-[#D4AF37] px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-95 flex items-center gap-2"
               aria-label="Discuter avec ce membre"
             >
-              <MessageCircle size={16} />
+              <MessageCircle size={14} />
               Discuter
             </Link>
           </div>
@@ -592,7 +1037,20 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
 
 export default function HomePage() {
   const [posts, setPosts] = useState(mockPosts)
+  const [repostModal, setRepostModal] = useState<{ postId: number; comment: string; media: string | null } | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  const [commentModal, setCommentModal] = useState<{ postId: number; comments: Array<{ id: number; user: string; avatar: string; text: string; time: string; likes: number }> } | null>(null)
+  const [commentDraft, setCommentDraft] = useState('')
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const router = useRouter()
+
+  const currentRepostPost = repostModal ? posts.find((p) => p.id === repostModal.postId) : null
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 2400)
+    return () => clearTimeout(t)
+  }, [toast])
 
   const isAuthenticated = () => {
     // @ai-context Auth simulée : permet de tester le flow social (repost) sans backend.
@@ -621,7 +1079,48 @@ export default function HomePage() {
     ))
   }
 
-  const handleRepost = (postId: number) => {
+  const openCommentModal = (postId: number) => {
+    const post = posts.find(p => p.id === postId)
+    if (!post) return
+    
+    // Mock comments (à remplacer par des vraies données)
+    const mockComments = [
+      { id: 1, user: 'Awa Ndiaye', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Awa', text: 'Magnifique ! Où puis-je commander ?', time: '2h', likes: 12 },
+      { id: 2, user: 'Mariama Diallo', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mariama', text: 'Les finitions sont impeccables ✨', time: '5h', likes: 8 },
+      { id: 3, user: 'Khadija Sy', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Khadija', text: 'J\'adore le tissu !', time: '1j', likes: 15 },
+    ]
+    
+    setCommentModal({ postId, comments: mockComments })
+  }
+
+  const handleSendComment = () => {
+    if (!commentModal || !commentDraft.trim()) return
+    
+    const newComment = {
+      id: Date.now(),
+      user: 'Vous',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=You',
+      text: commentDraft.trim(),
+      time: 'maintenant',
+      likes: 0,
+    }
+    
+    setCommentModal({
+      ...commentModal,
+      comments: [newComment, ...commentModal.comments],
+    })
+    
+    // Mettre à jour le nombre de commentaires du post
+    setPosts(posts.map(post => 
+      post.id === commentModal.postId 
+        ? { ...post, comments: post.comments + 1 }
+        : post
+    ))
+    
+    setCommentDraft('')
+  }
+
+  const openRepost = (postId: number) => {
     const authed = isAuthenticated()
     if (!authed) {
       // @ai-context Sauvegarde de l'intention (repost) pour reprise après login.
@@ -634,19 +1133,32 @@ export default function HomePage() {
       return
     }
 
-    setPosts((prev) =>
-      prev.map((post) => {
-        if (post.id !== postId) return post
-        const nextIsReposted = !(post.isReposted ?? false)
-        const currentCount = post.reposts ?? 0
-        const nextCount = nextIsReposted ? currentCount + 1 : Math.max(0, currentCount - 1)
+    const found = posts.find((p) => p.id === postId)
+    setRepostModal({ postId, comment: found?.quote_comment ?? '', media: found?.quote_media ?? null })
+  }
 
-        // Placeholder ML tracking (à connecter à Supabase user_interactions + reposts table)
+  const applyRepost = (postId: number, action: 'instant' | 'quote' | 'remove', comment?: string, media?: string | null) => {
+    setPosts((prev) => {
+      const base = prev.map((post) => {
+        if (post.id !== postId) return post
+
+        const wasReposted = post.isReposted ?? false
+        const willRepost = action === 'remove' ? false : true
+        const currentCount = post.reposts ?? 0
+        const nextCount =
+          action === 'remove'
+            ? Math.max(0, currentCount - (wasReposted ? 1 : 0))
+            : currentCount + (wasReposted ? 0 : 1)
+
+        const payloadType =
+          action === 'remove' ? 'unrepost' : action === 'quote' ? 'repost_quote' : 'repost'
+        const interactionScore = action === 'remove' ? 1 : action === 'quote' ? 4 : 3
+
         console.log('[ML] trackInteraction', {
           post_id: postId,
-          interaction_type: nextIsReposted ? 'repost' : 'unrepost',
-          interaction_score: nextIsReposted ? 3 : 1,
-          metadata: { source: 'feed', role: post.type, garment_type: post.garment_type },
+          interaction_type: payloadType,
+          interaction_score: interactionScore,
+          metadata: { source: 'feed', role: post.type, garment_type: post.garment_type, quote: comment?.length ? true : false, media: !!media },
           timestamp: new Date().toISOString(),
         })
 
@@ -654,56 +1166,163 @@ export default function HomePage() {
           const raw = localStorage.getItem('signare_reposts')
           const current = raw ? (JSON.parse(raw) as any[]) : []
           const actor = 'demo-user'
-          const item = { user_id: actor, post_id: String(postId), comment: null, created_at: new Date().toISOString() }
-          const next = nextIsReposted
-            ? [item, ...(Array.isArray(current) ? current : [])]
-            : (Array.isArray(current) ? current.filter((r) => !(r.user_id === actor && r.post_id === String(postId))) : [])
-          localStorage.setItem('signare_reposts', JSON.stringify(next))
+          if (action === 'remove') {
+            const next = Array.isArray(current)
+              ? current.filter((r) => !(r.user_id === actor && r.post_id === String(postId)))
+              : []
+            localStorage.setItem('signare_reposts', JSON.stringify(next))
+          } else {
+            const item = { user_id: actor, post_id: String(postId), comment: comment ?? null, media: media ?? null, created_at: new Date().toISOString() }
+            const next = [item, ...(Array.isArray(current) ? current.filter((r) => !(r.user_id === actor && r.post_id === String(postId))) : [])]
+            localStorage.setItem('signare_reposts', JSON.stringify(next))
+          }
         } catch {
           // ignore
         }
 
-        return { ...post, isReposted: nextIsReposted, reposts: nextCount }
+        return {
+          ...post,
+          isReposted: willRepost,
+          reposts: nextCount,
+          quote_comment: action === 'remove' ? null : comment ?? null,
+          quote_media: action === 'remove' ? null : media ?? null,
+        }
       })
-    )
+
+      if (action === 'remove') {
+        setToast('Republication retirée')
+        return base
+      }
+
+      const target = base.find((p) => p.id === postId)
+      if (!target) return base
+
+      const repostEntry: Post = {
+        ...target,
+        id: Date.now(),
+        repostOfId: postId,
+        repostedByMe: true,
+        quote_comment: comment ?? null,
+        quote_media: media ?? null,
+        user: {
+          ...target.user,
+          name: 'Vous',
+          role: 'Repost',
+        },
+        isReposted: true,
+      }
+
+      setToast('Republié sur votre feed')
+      return [repostEntry, ...base]
+    })
   }
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-24 text-white">
-      {/* Header Luxe */}
+      {/* Header Luxe - Inspiré de FriendKit */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-[#D4AF37]/20 px-6 py-4"
+        className="sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-[#D4AF37]/20"
       >
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#D4AF37] p-1.5 rounded-lg shadow-[0_0_15px_rgba(212,175,55,0.4)]">
-              <Sparkles className="w-5 h-5 text-[#0A0A0A]" />
+        <div className="max-w-2xl mx-auto">
+          {/* Top Bar */}
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#D4AF37] p-1.5 rounded-lg shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+                <Sparkles className="w-5 h-5 text-[#0A0A0A]" />
+              </div>
+              <h1 className="text-xl font-serif text-[#D4AF37] tracking-[0.2em]">SIGNARE</h1>
             </div>
-            <h1 className="text-2xl font-serif text-[#D4AF37] tracking-[0.2em]">SIGNARE</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/publish">
+            
+            <div className="flex items-center gap-2">
+              {/* Search Button */}
+              <Link href="/search">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors p-2"
+                  title="Rechercher"
+                >
+                  <Search className="w-5 h-5" />
+                </motion.button>
+              </Link>
+              
+              {/* Notifications */}
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                className="bg-[#D4AF37] p-2 rounded-full shadow-lg"
+                onClick={() => setNotificationsOpen(!notificationsOpen)}
+                className="relative text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors p-2"
+                title="Notifications"
               >
-                <Plus className="w-5 h-5 text-[#0A0A0A]" strokeWidth={3} />
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
               </motion.button>
-            </Link>
-            
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={handleLogout}
-              className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors p-2"
-              title="Déconnexion"
-            >
-              <LogOut className="w-6 h-6" />
-            </motion.button>
+              
+              {/* Messages */}
+              <Link href="/messages">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="relative text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors p-2"
+                  title="Messages"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
+                </motion.button>
+              </Link>
+              
+              {/* Publish */}
+              <Link href="/publish">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="bg-[#D4AF37] p-2 rounded-full shadow-lg"
+                  title="Publier"
+                >
+                  <Plus className="w-5 h-5 text-[#0A0A0A]" strokeWidth={3} />
+                </motion.button>
+              </Link>
+            </div>
           </div>
+          
+          {/* Notifications Dropdown */}
+          {notificationsOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="border-t border-[#D4AF37]/20 bg-[#0A0A0A] px-4 py-3 max-h-[60vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-[#D4AF37] uppercase tracking-[0.18em]">Notifications</h2>
+                <button onClick={() => setNotificationsOpen(false)} className="text-white/40 hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { user: 'Atelier Fatou', action: 'a aimé votre publication', time: '30 min' },
+                  { user: 'Mariama Diallo', action: 'a commenté votre publication', time: '2h' },
+                  { user: 'Khadija Sy', action: 'a republié votre publication', time: '5h' },
+                ].map((notif, idx) => (
+                  <div key={idx} className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                    <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-white/80">
+                        <span className="font-bold text-[#D4AF37]">{notif.user}</span> {notif.action}
+                      </p>
+                      <p className="text-[10px] text-white/40 mt-0.5">{notif.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Link href="/notifications" className="block text-center text-xs text-[#D4AF37] mt-3 py-2 hover:underline">
+                Voir tout
+              </Link>
+            </motion.div>
+          )}
         </div>
       </motion.header>
 
@@ -711,11 +1330,124 @@ export default function HomePage() {
       <main className="max-w-2xl mx-auto pt-6">
         {posts.map((post) => (
           post.type === 'tailor' ? (
-            <TailorCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={handleRepost} />
+            <TailorCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={openRepost} />
           ) : (
-            <ClientCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={handleRepost} />
+            <ClientCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={openRepost} />
           )
         ))}
+
+        {repostModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4"
+            onClick={() => setRepostModal(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              className="w-full max-w-md bg-[#0A0A0A] border border-[#D4AF37]/30 rounded-2xl shadow-[0_25px_80px_rgba(0,0,0,0.55)] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-5 py-4 border-b border-white/5">
+                <p className="text-[10px] uppercase tracking-[0.24em] text-[#D4AF37] font-black">Republier</p>
+                <p className="text-sm text-white/80 mt-1">Comme sur Twitter : republier direct ou citer.</p>
+              </div>
+              <div className="px-5 py-4 space-y-3">
+                {repostModal.media && (
+                  <div className="w-full rounded-xl overflow-hidden border border-[#D4AF37]/30 bg-white/5">
+                    <div className="relative w-full h-40">
+                      <Image src={repostModal.media} alt="Media ajouté" fill className="object-cover" />
+                    </div>
+                  </div>
+                )}
+                <textarea
+                  value={repostModal.comment}
+                  onChange={(e) => setRepostModal({ ...repostModal, comment: e.target.value.slice(0, 240) })}
+                  placeholder="Ajouter un commentaire (optionnel)..."
+                  className="w-full bg-white/5 border border-[#D4AF37]/30 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#D4AF37]"
+                  rows={3}
+                />
+                <div className="flex items-center justify-between text-[11px] text-white/50">
+                  <span>{repostModal.comment.trim().length} / 240</span>
+                  <span className="text-white/30">Citation optionnelle</span>
+                </div>
+                <div>
+                  <label className="flex items-center justify-center gap-2 w-full border border-[#D4AF37]/30 rounded-xl px-3 py-2 text-[11px] text-[#D4AF37] uppercase tracking-[0.18em] bg-white/5 hover:bg-[#D4AF37]/10 transition-colors cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        const reader = new FileReader()
+                        reader.onload = () => {
+                          setRepostModal((prev) => prev ? { ...prev, media: reader.result as string } : prev)
+                        }
+                        reader.readAsDataURL(file)
+                      }}
+                    />
+                    <span>Ajouter une photo</span>
+                  </label>
+                  {repostModal.media && (
+                    <button
+                      onClick={() => setRepostModal({ ...repostModal, media: null })}
+                      className="mt-2 text-[10px] text-white/60 hover:text-white"
+                    >
+                      Retirer la photo
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="px-5 pb-4 flex flex-col gap-2">
+                <button
+                  onClick={() => {
+                    applyRepost(repostModal.postId, 'instant', repostModal.comment.trim() || undefined, repostModal.media)
+                    setRepostModal(null)
+                  }}
+                  className="w-full bg-[#D4AF37] text-[#0A0A0A] py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.22em] shadow-[0_0_18px_rgba(212,175,55,0.35)] active:scale-[0.98] transition-all"
+                >
+                  Republier sans commentaire
+                </button>
+                <button
+                  disabled={!(repostModal.comment.trim() || repostModal.media)}
+                  onClick={() => {
+                    applyRepost(
+                      repostModal.postId,
+                      'quote',
+                      repostModal.comment.trim() || undefined,
+                      repostModal.media
+                    )
+                    setRepostModal(null)
+                  }}
+                  className="w-full bg-white/5 border border-[#D4AF37]/40 text-[#D4AF37] py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.22em] active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Citer et republier
+                </button>
+                {currentRepostPost?.isReposted && (
+                  <button
+                    onClick={() => {
+                      applyRepost(repostModal.postId, 'remove')
+                      setRepostModal(null)
+                    }}
+                    className="w-full bg-white/5 border border-white/15 text-white/70 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.22em] active:scale-[0.98] transition-all"
+                  >
+                    Retirer la republication
+                  </button>
+                )}
+                <button
+                  onClick={() => setRepostModal(null)}
+                  className="w-full text-white/60 hover:text-white text-[10px] font-black uppercase tracking-[0.22em] py-2"
+                >
+                  Annuler
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
 
         {/* Footer de fin de feed */}
         <div className="py-20 flex flex-col items-center">
@@ -729,6 +1461,109 @@ export default function HomePage() {
           </p>
         </div>
       </main>
+
+      {/* Modal Commentaires - Inspiré de FriendKit */}
+      {commentModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-end"
+          onClick={() => {
+            setCommentModal(null)
+            setCommentDraft('')
+          }}
+        >
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="w-full max-h-[85vh] bg-[#0A0A0A] border-t border-[#D4AF37]/30 rounded-t-2xl shadow-[0_-25px_80px_rgba(0,0,0,0.55)] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-[#D4AF37] uppercase tracking-[0.18em]">Commentaires</h3>
+                <p className="text-xs text-white/60 mt-0.5">{commentModal.comments.length} commentaire{commentModal.comments.length > 1 ? 's' : ''}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setCommentModal(null)
+                  setCommentDraft('')
+                }}
+                className="text-white/40 hover:text-white transition-colors p-2"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Comments List */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+              {commentModal.comments.map((comment) => (
+                <div key={comment.id} className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center">
+                    <span className="text-xs text-[#D4AF37] font-bold">
+                      {comment.user.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-bold text-white">{comment.user}</span>
+                      <span className="text-[10px] text-white/40">{comment.time}</span>
+                    </div>
+                    <p className="text-sm text-white/80 leading-relaxed">{comment.text}</p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <button className="flex items-center gap-1 text-white/40 hover:text-[#D4AF37] transition-colors">
+                        <Heart size={14} />
+                        <span className="text-[10px]">{comment.likes}</span>
+                      </button>
+                      <button className="text-white/40 hover:text-[#D4AF37] transition-colors text-[10px]">
+                        Répondre
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Input */}
+            <div className="px-5 py-4 border-t border-white/5">
+              <div className="flex items-end gap-2">
+                <div className="flex-1 bg-white/5 border border-[#D4AF37]/30 rounded-xl px-3 py-2 focus-within:border-[#D4AF37] transition-colors">
+                  <textarea
+                    value={commentDraft}
+                    onChange={(e) => setCommentDraft(e.target.value)}
+                    placeholder="Ajouter un commentaire..."
+                    className="w-full bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none resize-none"
+                    rows={2}
+                  />
+                </div>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleSendComment}
+                  disabled={!commentDraft.trim()}
+                  className="bg-[#D4AF37] text-[#0A0A0A] p-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-5 h-5" />
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {toast && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-4 right-4 z-[130] bg-[#D4AF37] text-[#0A0A0A] px-4 py-2 rounded-lg shadow-[0_10px_40px_rgba(212,175,55,0.45)] text-sm font-semibold"
+        >
+          {toast}
+        </motion.div>
+      )}
     </div>
   )
 }

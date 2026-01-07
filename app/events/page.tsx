@@ -18,6 +18,9 @@ import {
   Bookmark,
   MessageSquare,
 } from 'lucide-react'
+import mesureImg from '../../Assets/prise de mesure.jpg'
+import atelierImg from '../../Assets/unnamed (1).jpg'
+import lookbookImg from '../../Assets/unnamed.jpg'
 
 /**
  * Page Events - Stories, Lives & Défilés
@@ -58,9 +61,9 @@ type UpcomingEvent = {
 }
 
 const STORIES: Story[] = [
-  { id: 'me', label: 'Ma Story', type: 'story', thumbnail: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop', media: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=900&h=1400&fit=crop' },
-  { id: 'atelier', label: 'Atelier Diorane', type: 'live', thumbnail: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop', media: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=900&h=1400&fit=crop' },
-  { id: 'defile', label: 'Défilé Dakar 2024', type: 'story', thumbnail: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200&h=200&fit=crop', media: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&h=1400&fit=crop' },
+  { id: 'me', label: 'Ma Story', type: 'story', thumbnail: mesureImg.src, media: mesureImg.src },
+  { id: 'atelier', label: 'Atelier Diorane', type: 'live', thumbnail: atelierImg.src, media: atelierImg.src },
+  { id: 'defile', label: 'Défilé Dakar 2024', type: 'story', thumbnail: lookbookImg.src, media: lookbookImg.src },
 ]
 
 const LIVE_FEATURED: LiveEvent = {
@@ -69,7 +72,7 @@ const LIVE_FEATURED: LiveEvent = {
   creators: ['Maison Saliou', 'Atelier Diorane', 'Fatou Cissé'],
   viewers: 1284,
   startsIn: '00:12:45',
-  banner: 'https://images.unsplash.com/photo-1496747611180-206a5c8c26af?w=1200&h=800&fit=crop',
+  banner: lookbookImg.src,
 }
 
 const UPCOMING: UpcomingEvent[] = [

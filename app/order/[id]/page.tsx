@@ -150,9 +150,11 @@ export default function OrderPage() {
   const currentUserId = 'current-user-id'
   const sessionId = 'session-demo'
 
-  const [deliveryAddress, setDeliveryAddress] = useState('')
   const [distanceMode, setDistanceMode] = useState<'simulated' | 'manual'>('simulated')
   const [clientLocationId, setClientLocationId] = useState<string>('point-e')
+  const [autoPosition, setAutoPosition] = useState<LatLng | null>(null)
+  const [autoStatus, setAutoStatus] = useState<string | null>(null)
+  const [deliveryEngineQuote, setDeliveryEngineQuote] = useState<{ distance: number; cost: number } | null>(null)
   const [manualDistanceKm, setManualDistanceKm] = useState<number>(3)
   const [useMyMeasurements, setUseMyMeasurements] = useState(true)
   const [note, setNote] = useState('')
@@ -171,14 +173,18 @@ export default function OrderPage() {
 
   const computedDistanceKm = useMemo(() => {
     if (!product) return manualDistanceKm
+    if (deliveryEngineQuote) return clampNumber(deliveryEngineQuote.distance, 0, 200)
     if (distanceMode === 'manual') return clampNumber(manualDistanceKm, 0, 200)
     if (!tailorLocation) return clampNumber(manualDistanceKm, 0, 200)
     const km = haversineKm(clientLocation, tailorLocation)
     // arrondi 0.1 km pour UI
     return clampNumber(Math.round(km * 10) / 10, 0, 200)
-  }, [clientLocation, distanceMode, manualDistanceKm, product, tailorLocation])
+  }, [clientLocation, deliveryEngineQuote, distanceMode, manualDistanceKm, product, tailorLocation])
 
-  const shippingPrice = useMemo(() => computeShipping(computedDistanceKm), [computedDistanceKm])
+  const shippingPrice = useMemo(() => {
+    if (deliveryEngineQuote) return Math.round(deliveryEngineQuote.cost)
+    return computeShipping(computedDistanceKm)
+  }, [computedDistanceKm, deliveryEngineQuote])
   const totalPrice = useMemo(() => {
     if (!product) return 0
     return computeTotal(product.productPrice, shippingPrice)
@@ -199,7 +205,105 @@ export default function OrderPage() {
     })
   }, [product])
 
-  const canSubmit = Boolean(product && deliveryAddress.trim().length > 4)
+  const hasLocation =
+    distanceMode === 'manual'
+      ? true
+      : Boolean(autoPosition || deliveryEngineQuote)
+
+  const canSubmit = Boolean(product && hasLocation)
+
+  const fetchDeliveryEngineQuote = async (origin: LatLng, destination: LatLng) => {
+    try {
+      setAutoStatus('Calcul via delivery_engine…')
+      const body = {
+        current_position: { lat: origin.lat, lng: origin.lng },
+        candidate_position: { lat: destination.lat, lng: destination.lng },
+        traffic_level: 'medium',
+        zone_type: 'dense',
+      }
+      const res = await fetch('http://localhost:8001/api/route/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error('delivery_engine indisponible')
+      const data = await res.json()
+      setDeliveryEngineQuote({ distance: data.distance_km, cost: data.estimated_cost })
+      setAutoStatus(`Distance ${data.distance_km.toFixed(1)} km • ${Math.round(data.estimated_cost).toLocaleString('fr-FR')} FCFA`)
+      trackOrderInteraction({
+        user_id: currentUserId,
+        post_id: product ? String(product.id) : null,
+        interaction_type: 'click',
+        session_id: sessionId,
+        duration_seconds: null,
+        scroll_depth: null,
+        came_from: 'order:distance:auto:delivery_engine',
+        device_type: 'web',
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      })
+    } catch (e) {
+      setAutoStatus('Échec API delivery_engine (mode simulé)')
+      setDeliveryEngineQuote(null)
+    }
+  }
+
+  const fetchIpFallback = async () => {
+    try {
+      setAutoStatus('Localisation réseau…')
+      const res = await fetch('https://ipapi.co/json/')
+      if (!res.ok) throw new Error('ipapi.co indisponible')
+      const data = await res.json()
+      if (data?.latitude && data?.longitude) {
+        const coords = { lat: data.latitude, lng: data.longitude }
+        setAutoPosition(coords)
+        return coords
+      }
+    } catch (e) {
+      setAutoStatus('Localisation refusée (fallback réseau indisponible)')
+    }
+    return null
+  }
+
+  const handleAutoLocate = () => {
+    if (!tailorLocation) return
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setAutoStatus('Localisation non supportée (navigateur)')
+      return
+    }
+    if (
+      typeof window !== 'undefined' &&
+      window.location &&
+      window.location.protocol !== 'https:' &&
+      window.location.hostname !== 'localhost'
+    ) {
+      setAutoStatus('Activer HTTPS ou utiliser localhost pour le GPS')
+      return
+    }
+
+    setAutoStatus('Localisation…')
+    setDeliveryEngineQuote(null)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setAutoPosition(coords)
+        setClientLocationId('auto')
+        setAutoStatus('Position détectée')
+        fetchDeliveryEngineQuote(coords, tailorLocation)
+      },
+      async () => {
+        setAutoStatus('Localisation refusée, tentative réseau…')
+        setAutoPosition(null)
+        const fallback = await fetchIpFallback()
+        if (fallback && tailorLocation) {
+          setAutoStatus('Position approx. (IP)')
+          fetchDeliveryEngineQuote(fallback, tailorLocation)
+        } else {
+          setAutoStatus('Utiliser sélection simulée')
+        }
+      },
+      { enableHighAccuracy: true, timeout: 6000 }
+    )
+  }
 
   const handleSubmit = async () => {
     if (!product || !canSubmit) return
@@ -218,6 +322,11 @@ export default function OrderPage() {
     })
 
     // Simulation d'un Order conforme aux types
+    const resolvedCoords = autoPosition ?? clientLocation
+    const resolvedAddress =
+      (autoPosition && 'Position GPS détectée') ||
+      clientLocation.label
+
     const orderDraft: Partial<Order> = {
       buyer_id: currentUserId,
       seller_id: product.sellerId,
@@ -226,9 +335,9 @@ export default function OrderPage() {
       product_price: product.productPrice,
       shipping_price: shippingPrice,
       total_price: totalPrice,
-      delivery_latitude: clientLocation.lat,
-      delivery_longitude: clientLocation.lng,
-      delivery_address: deliveryAddress,
+      delivery_latitude: resolvedCoords.lat,
+      delivery_longitude: resolvedCoords.lng,
+      delivery_address: resolvedAddress,
       distance_km: computedDistanceKm,
       validation_code: '000000',
       estimated_delivery_date: null,
@@ -325,18 +434,6 @@ export default function OrderPage() {
             </div>
 
             <div className="mt-3 space-y-3">
-              <label className="block">
-                <span className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black flex items-center gap-2">
-                  <MapPin size={12} className="text-[#D4AF37]/80" /> Adresse
-                </span>
-                <input
-                  value={deliveryAddress}
-                  onChange={(e) => setDeliveryAddress(e.target.value)}
-                  placeholder="Ex: Point E, Dakar…"
-                  className="mt-2 w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/40 transition-all text-sm placeholder:text-white/20"
-                />
-              </label>
-
               {/* Distance (simulation avant implémentation réelle) */}
               <div className="bg-white/[0.03] border border-white/10 rounded-xl p-3">
                 <div className="flex items-center justify-between gap-3">
@@ -369,7 +466,7 @@ export default function OrderPage() {
                           : "bg-transparent text-white/60 border-white/10 hover:border-[#D4AF37]/30"
                       )}
                     >
-                      Auto
+                      Auto (GPS)
                     </button>
                     <button
                       onClick={() => {
@@ -401,35 +498,64 @@ export default function OrderPage() {
                 <div className="mt-3 space-y-3">
                   {distanceMode === 'simulated' ? (
                     <>
-                      <label className="block">
-                        <span className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black">
-                          Localisation client (simulée)
-                        </span>
-                        <select
-                          value={clientLocationId}
-                          onChange={(e) => {
-                            setClientLocationId(e.target.value)
-                            trackOrderInteraction({
-                              user_id: currentUserId,
-                              post_id: product ? String(product.id) : null,
-                              interaction_type: 'click',
-                              session_id: sessionId,
-                              duration_seconds: null,
-                              scroll_depth: null,
-                              came_from: `order:client_location:${e.target.value}`,
-                              device_type: 'web',
-                              user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-                            })
-                          }}
-                          className="mt-2 w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/40 transition-all text-sm"
-                        >
-                          {MOCK_CLIENT_LOCATIONS.map((l) => (
-                            <option key={l.id} value={l.id} className="bg-[#0A0A0A]">
-                              {l.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black">
+                            Localisation client
+                          </span>
+                          {autoStatus && (
+                            <span className="text-[11px] text-white/60">{autoStatus}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl px-4 py-3">
+                          <span className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black">
+                            Atelier (prérempli)
+                          </span>
+                          <span className="text-sm font-serif text-[#D4AF37]">
+                            {tailorLocation ? tailorLocation.label : '—'}
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleAutoLocate}
+                            className="flex-1 bg-[#D4AF37] text-[#0A0A0A] px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.22em] shadow-[0_0_14px_rgba(212,175,55,0.25)] active:scale-[0.98] transition-all"
+                          >
+                            Récupérer ma position
+                          </button>
+                          <select
+                            value={clientLocationId}
+                            onChange={(e) => {
+                              setClientLocationId(e.target.value)
+                              setAutoPosition(null)
+                              setDeliveryEngineQuote(null)
+                              setAutoStatus('Position simulée')
+                              trackOrderInteraction({
+                                user_id: currentUserId,
+                                post_id: product ? String(product.id) : null,
+                                interaction_type: 'click',
+                                session_id: sessionId,
+                                duration_seconds: null,
+                                scroll_depth: null,
+                                came_from: `order:client_location:${e.target.value}`,
+                                device_type: 'web',
+                                user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                              })
+                              if (tailorLocation) {
+                                const selected =
+                                  MOCK_CLIENT_LOCATIONS.find((l) => l.id === e.target.value) ?? clientLocation
+                                fetchDeliveryEngineQuote(selected, tailorLocation)
+                              }
+                            }}
+                            className="bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-3 outline-none focus:border-[#D4AF37]/40 transition-all text-xs w-40"
+                          >
+                            {MOCK_CLIENT_LOCATIONS.map((l) => (
+                              <option key={l.id} value={l.id} className="bg-[#0A0A0A]">
+                                {l.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
 
                       <div className="flex items-center justify-between bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl px-4 py-3">
                         <span className="text-xs text-white/60">
@@ -580,10 +706,15 @@ export default function OrderPage() {
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || isPlacing}
-            className="w-full bg-[#D4AF37] text-[#0A0A0A] py-4 rounded-2xl font-black uppercase tracking-[0.22em] text-[10px] shadow-[0_0_18px_rgba(212,175,55,0.35)] disabled:opacity-50 disabled:grayscale active:scale-[0.99] transition-all"
+            className="w-full bg-[#D4AF37] text-[#0A0A0A] py-4 rounded-2xl font-black uppercase tracking-[0.22em] text-[10px] shadow-[0_0_18px_rgba(212,175,55,0.35)] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed active:scale-[0.99] transition-all"
           >
             {isPlacing ? 'Validation…' : 'Confirmer la commande'}
           </button>
+          {!hasLocation && (
+            <p className="mt-2 text-[11px] text-white/50 text-center">
+              Active le GPS ou choisis une localisation pour continuer.
+            </p>
+          )}
         </div>
       </div>
 

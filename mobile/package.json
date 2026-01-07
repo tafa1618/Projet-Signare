@@ -2,9 +2,9 @@
   "name": "signare-mobile",
   "version": "0.1.0",
   "private": true,
-  "main": "expo-entry.js",
+  "main": "node_modules/expo/AppEntry.js",
   "scripts": {
-    "start": "node start-expo.js",
+    "start": "cross-env EXPO_NO_NODE_EXTERNALS=1 NODE_OPTIONS=--no-node-snapshot npx expo start --clear",
     "android": "cross-env NODE_OPTIONS='--no-node-snapshot' expo run:android",
     "ios": "cross-env NODE_OPTIONS='--no-node-snapshot' expo run:ios",
     "web": "expo start --web"

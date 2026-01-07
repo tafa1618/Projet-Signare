@@ -37,8 +37,9 @@
 ### Polices
 ```css
 /* Polices (verrouillées via next/font pour un rendu constant Windows/macOS) */
-font-sans: 'Inter', 'system-ui', sans-serif                 /* Corps de texte, mesures, prix, scores */
-font-serif: 'Cormorant', 'Playfair Display', 'Georgia', serif  /* Titres élégants et émotionnels */
+font-sans: 'Inter', 'system-ui', sans-serif                      /* Corps de texte, mesures, prix, scores */
+font-serif: 'Cormorant', 'Playfair Display', 'Georgia', serif    /* Titres élégants et émotionnels */
+font-display: 'Inter', 'system-ui', 'sans-serif'                 /* Titres/labels avec fallback system */
 ```
 
 ### Implémentation (Next.js)
@@ -47,6 +48,10 @@ font-serif: 'Cormorant', 'Playfair Display', 'Georgia', serif  /* Titres éléga
 // @ai-context Les variables CSS évitent les variations de rendu typographique entre OS.
 Inter({ variable: '--font-sans' })
 Playfair_Display({ variable: '--font-serif' })
+
+// tailwind.config.ts
+// Extend
+fontFamily.display = ["'Inter'", "system-ui", "sans-serif"]
 ```
 
 ### Hiérarchie & Letter-spacing (premium)

@@ -1,0 +1,23 @@
+# Environnement Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Outils/IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Cache / artefacts
+.mypy_cache/
+.pytest_cache/
+*.log
+
+# FastAPI / Uvicorn
+.coverage
+
+# OS
+Thumbs.db
+

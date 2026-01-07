@@ -28,8 +28,10 @@
 - **Interactions :** Système de Like avec retour haptique visuel (animation de l'icône Or).
 - **Performance :** Optimisation des images via `next/image`.
 
-## 5. Règles de Codage (Sonnet 4.5)
+## 5. Règles de Codage 
 - Toujours vérifier les types TypeScript.
 - Utiliser `shadcn/ui` comme base de composants si nécessaire, mais recolorer en Noir/Or.
 - Ne jamais coder de secrets en dur (utiliser `.env.local`).
 - Les messages d'erreur et succès doivent être élégants (Toasts personnalisés).
+## 6 Les genres dans l'application
+Le terme SIGNARE fera référence à Femme, et NDANANE aux Hommes, en tenir compte pour la segmentation et les suggessions.
