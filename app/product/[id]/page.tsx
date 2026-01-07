@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   ChevronLeft,
   ChevronRight,
@@ -15,6 +15,17 @@ import {
   Sparkles,
   Tag,
   ShoppingBag,
+  Heart,
+  Bookmark,
+  Share2,
+  MoreVertical,
+  Flag,
+  Send,
+  CheckCircle2,
+  Star,
+  X,
+  Video,
+  Play,
 } from 'lucide-react'
 import type { Database, Post as DbPost } from '@/shared/types/database.types'
 import { cn } from '@/shared/lib/utils'
@@ -139,6 +150,17 @@ function formatFCFA(value: number | null) {
   return `${value.toLocaleString('fr-FR')} FCFA`
 }
 
+type Comment = {
+  id: number
+  user: string
+  avatar: string
+  text: string
+  time: string
+  likes: number
+  isLiked: boolean
+  replies?: Comment[]
+}
+
 export default function ProductDetailPage() {
   const router = useRouter()
   const params = useParams<{ id: string }>()
@@ -147,7 +169,23 @@ export default function ProductDetailPage() {
   const product = MOCK_PRODUCTS[id] ?? null
 
   const [activeIndex, setActiveIndex] = useState(0)
+  const [isLiked, setIsLiked] = useState(false)
+  const [isSaved, setIsSaved] = useState(false)
+  const [likesCount, setLikesCount] = useState(856)
+  const [commentDraft, setCommentDraft] = useState('')
+  const [showComments, setShowComments] = useState(true)
+  const [isButtonVisible, setIsButtonVisible] = useState(false)
+  const [lastScrollY, setLastScrollY] = useState(0)
   const scrollerRef = useRef<HTMLDivElement | null>(null)
+  const contentRef = useRef<HTMLDivElement | null>(null)
+  
+  // Mock comments (style FriendKit)
+  const [comments, setComments] = useState<Comment[]>([
+    { id: 1, user: 'Awa Ndiaye', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Awa', text: 'Magnifique ! Où puis-je commander ?', time: '2h', likes: 12, isLiked: false },
+    { id: 2, user: 'Mariama Diallo', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mariama', text: 'Les finitions sont impeccables ✨', time: '5h', likes: 8, isLiked: true },
+    { id: 3, user: 'Khadija Sy', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Khadija', text: 'J\'adore le tissu !', time: '1j', likes: 15, isLiked: false },
+    { id: 4, user: 'Sokhna Fall', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sokhna', text: 'Le prix est-il négociable ?', time: '2j', likes: 3, isLiked: false },
+  ])
 
   const slides = useMemo(() => {
     if (!product) return []
@@ -183,11 +221,74 @@ export default function ProductDetailPage() {
     })
   }, [product])
 
+  // Gestion de la visibilité du bouton au scroll (comme le footer)
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout
+    const contentEl = contentRef.current
+    if (!contentEl) return
+
+    const handleScroll = () => {
+      const currentScrollY = contentEl.scrollTop
+      
+      // Afficher si on scroll vers le bas (plus de 100px)
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsButtonVisible(true)
+        clearTimeout(scrollTimeout)
+        // Cacher après 2 secondes d'inactivité de scroll
+        scrollTimeout = setTimeout(() => {
+          setIsButtonVisible(false)
+        }, 2000)
+      } else if (currentScrollY < lastScrollY || currentScrollY < 50) {
+        // Cacher si on scroll vers le haut ou si on est en haut
+        setIsButtonVisible(false)
+      }
+      
+      setLastScrollY(currentScrollY)
+    }
+
+    contentEl.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      contentEl.removeEventListener('scroll', handleScroll)
+      clearTimeout(scrollTimeout)
+    }
+  }, [lastScrollY])
+
   const scrollToIndex = (idx: number) => {
     const el = scrollerRef.current
     if (!el) return
     const width = el.clientWidth
     el.scrollTo({ left: width * idx, behavior: 'smooth' })
+  }
+
+  const handleLike = () => {
+    setIsLiked(!isLiked)
+    setLikesCount(prev => isLiked ? prev - 1 : prev + 1)
+  }
+
+  const handleCommentLike = (commentId: number) => {
+    setComments(prev => prev.map(c => 
+      c.id === commentId 
+        ? { ...c, isLiked: !c.isLiked, likes: c.isLiked ? c.likes - 1 : c.likes + 1 }
+        : c
+    ))
+  }
+
+  const handleSendComment = () => {
+    if (!commentDraft.trim()) return
+    
+    const newComment: Comment = {
+      id: Date.now(),
+      user: 'Vous',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=You',
+      text: commentDraft.trim(),
+      time: 'maintenant',
+      likes: 0,
+      isLiked: false,
+    }
+    
+    setComments(prev => [newComment, ...prev])
+    setCommentDraft('')
   }
 
   if (!product) {
@@ -222,7 +323,7 @@ export default function ProductDetailPage() {
       </header>
 
       {/* Contenu (mobile-first : max-w-md comme Feed/Messages) */}
-      <div className="h-full overflow-y-auto pb-36">
+      <div ref={contentRef} className="h-full overflow-y-auto pb-40">
         {/* Galerie */}
         <section className="pt-4 px-4">
           <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-neutral-900 max-w-lg mx-auto">
@@ -300,27 +401,92 @@ export default function ProductDetailPage() {
           className="mt-4 px-4"
         >
           <div className="bg-[#0A0A0A] border-t border-[#D4AF37]/30 rounded-2xl pt-4 pb-4 max-w-lg mx-auto">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="text-xl font-serif text-[#D4AF37] leading-tight">
-                  {product.title}
-                </h2>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-[10px] uppercase tracking-[0.22em] text-white/40 font-black">
-                    Créateur
-                  </span>
+            {/* Header avec créateur - Style FriendKit */}
+            <div className="flex items-start gap-3 mb-4">
+              <Link
+                href={`/profil?mode=tailleur&tailor=${encodeURIComponent(product.creator.name)}`}
+                className="w-12 h-12 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#D4AF37]/30"
+              >
+                <span className="text-base text-[#D4AF37] font-bold">
+                  {product.creator.name.charAt(0).toUpperCase()}
+                </span>
+              </Link>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
                   <Link
-                    href="/profil"
-                    className="text-[11px] text-white/80 hover:text-[#D4AF37] transition-colors font-semibold truncate"
+                    href={`/profil?mode=tailleur&tailor=${encodeURIComponent(product.creator.name)}`}
+                    className="font-serif font-bold text-base text-[#D4AF37] hover:underline decoration-[#D4AF37]/40 underline-offset-4"
                   >
                     {product.creator.name}
                   </Link>
+                  <CheckCircle2 className="w-4 h-4 text-[#D4AF37] flex-shrink-0" />
                 </div>
+                <p className="text-[10px] text-white/50 uppercase tracking-[0.15em] font-semibold mt-0.5">
+                  Maître Tailleur
+                </p>
+                <p className="text-[10px] text-white/40 mt-1">Il y a 2 heures</p>
               </div>
               <div className="text-right flex-shrink-0">
                 <p className="text-[10px] uppercase tracking-[0.22em] text-white/40 font-black">Prix</p>
                 <p className="text-lg font-serif text-[#D4AF37] font-bold">{formatFCFA(product.price)}</p>
               </div>
+            </div>
+            
+            <h2 className="text-xl font-serif text-[#D4AF37] leading-tight mb-4">
+              {product.title}
+            </h2>
+
+            <p className="mt-4 text-sm text-white/90 leading-relaxed">
+              {product.caption}
+            </p>
+
+            {/* Actions - Style FriendKit */}
+            <div className="mt-4 pt-4 border-t border-white/5 flex items-center gap-4">
+              <motion.button 
+                onClick={handleLike}
+                whileTap={{ scale: 0.9 }}
+                className="flex items-center gap-2 hover:text-[#D4AF37] transition-colors group"
+              >
+                <Heart 
+                  size={22} 
+                  className={`transition-all ${isLiked ? "fill-[#D4AF37] text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} 
+                />
+                <span className="text-sm font-bold">{likesCount}</span>
+              </motion.button>
+              
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowComments(!showComments)}
+                className="flex items-center gap-2 hover:text-[#D4AF37] transition-colors group"
+              >
+                <MessageCircle size={22} className="group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-bold">{comments.length}</span>
+              </motion.button>
+              
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                className="hover:text-[#D4AF37] transition-colors group"
+              >
+                <Share2 size={22} className="group-hover:scale-110 transition-transform" />
+              </motion.button>
+              
+              <motion.button 
+                onClick={() => setIsSaved(!isSaved)}
+                whileTap={{ scale: 0.9 }}
+                className="hover:text-[#D4AF37] transition-colors group ml-auto"
+              >
+                <Bookmark 
+                  size={22} 
+                  className={`transition-all ${isSaved ? "fill-[#D4AF37] text-[#D4AF37] scale-110" : "group-hover:scale-110"}`} 
+                />
+              </motion.button>
+              
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                className="hover:text-[#D4AF37] transition-colors group"
+              >
+                <MoreVertical size={20} className="group-hover:scale-110 transition-transform" />
+              </motion.button>
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2">
@@ -349,10 +515,6 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            <p className="mt-4 text-sm text-white/75 leading-relaxed">
-              {product.caption}
-            </p>
-
             <div className="mt-4 flex flex-wrap gap-2">
               {[...product.occasion_tags, ...product.style_tags].slice(0, 6).map((t) => (
                 <span
@@ -366,12 +528,91 @@ export default function ProductDetailPage() {
           </div>
         </motion.section>
 
+        {/* Commentaires - Style FriendKit */}
+        {showComments && (
+          <motion.section
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+            className="mt-4 px-4"
+          >
+            <div className="bg-[#0A0A0A] border-t border-[#D4AF37]/30 rounded-2xl pt-4 pb-4 max-w-lg mx-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-[#D4AF37] uppercase tracking-[0.18em]">
+                  Commentaires ({comments.length})
+                </h3>
+                <button
+                  onClick={() => setShowComments(false)}
+                  className="text-white/40 hover:text-white transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              
+              {/* Liste des commentaires */}
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-[#D4AF37]/30">
+                      <span className="text-sm text-[#D4AF37] font-bold">
+                        {comment.user.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-bold text-white">{comment.user}</span>
+                        <span className="text-[10px] text-white/40">{comment.time}</span>
+                      </div>
+                      <p className="text-sm text-white/80 leading-relaxed">{comment.text}</p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <button 
+                          onClick={() => handleCommentLike(comment.id)}
+                          className="flex items-center gap-1 text-white/40 hover:text-[#D4AF37] transition-colors"
+                        >
+                          <Heart size={14} className={comment.isLiked ? "fill-[#D4AF37] text-[#D4AF37]" : ""} />
+                          <span className="text-[10px]">{comment.likes}</span>
+                        </button>
+                        <button className="text-white/40 hover:text-[#D4AF37] transition-colors text-[10px]">
+                          Répondre
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Input commentaire */}
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <div className="flex items-end gap-2">
+                  <div className="flex-1 bg-white/5 border border-[#D4AF37]/30 rounded-xl px-3 py-2 focus-within:border-[#D4AF37] transition-colors">
+                    <textarea
+                      value={commentDraft}
+                      onChange={(e) => setCommentDraft(e.target.value)}
+                      placeholder="Ajouter un commentaire..."
+                      className="w-full bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none resize-none"
+                      rows={2}
+                    />
+                  </div>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleSendComment}
+                    disabled={!commentDraft.trim()}
+                    className="bg-[#D4AF37] text-[#0A0A0A] p-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Send className="w-5 h-5" />
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+        )}
+
         {/* Recommandations similaires */}
         <motion.section
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
-          className="mt-6 px-4 pb-10"
+          className="mt-6 px-4 pb-36"
         >
           <div className="max-w-lg mx-auto space-y-3">
             <div className="flex items-center gap-2">
@@ -441,10 +682,18 @@ export default function ProductDetailPage() {
         </motion.section>
       </div>
 
-      {/* Barre d'action fixe (conversion) */}
-      <div className="fixed bottom-20 left-0 right-0 z-50 px-4">
-        <div className="max-w-2xl mx-auto bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent pt-3">
-          <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-2xl p-3 flex items-center gap-2 max-w-lg mx-auto">
+      {/* Barre d'action fixe (conversion) - Apparaît au scroll */}
+      <AnimatePresence>
+        {isButtonVisible && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed bottom-20 left-0 right-0 z-50 px-4 pointer-events-none"
+          >
+          <div className="max-w-2xl mx-auto bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent pt-8 pb-3">
+            <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-2xl p-3 flex items-center gap-2 max-w-lg mx-auto pointer-events-auto shadow-[0_-8px_32px_rgba(0,0,0,0.6)]">
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={() => router.push(`/order/${product.id}`)}
@@ -484,7 +733,9 @@ export default function ProductDetailPage() {
             </motion.button>
           </div>
         </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
