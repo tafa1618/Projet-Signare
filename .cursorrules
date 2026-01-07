@@ -4,7 +4,11 @@
 - **Couleurs Principales :** - Noir Profond (`#0A0A0A`) pour le fond.
   - Or Raffiné (`#D4AF37`) pour les accents, boutons primaires et icônes actives.
   - Blanc Pur (`#FFFFFF`) pour le texte principal sur fond noir.
-- **Typographie :** Privilégier des polices élégantes (Serif pour les titres, Sans-serif moderne pour le corps).
+- **Typographie :** 
+- **Primary Font :** 'Playfair Display' (Serif) pour les titres et les prix de luxe.
+- **Secondary Font :** 'Inter' (Sans-serif) pour la navigation, les formulaires et les descriptions.
+- **Responsive Sizing :** Interdiction d'utiliser des px pour le texte. Utiliser exclusivement `rem` ou les classes Tailwind `text-sm`, `text-base`, etc.
+- **Loading Strategy :** Utiliser `font-display: swap` pour éviter que le texte disparaisse pendant le chargement des polices.
 - **Composants :** Utiliser `lucide-react` pour les icônes (toujours en Or ou Blanc). Utiliser `framer-motion` pour des animations fluides (effet "soie").
 - **UI :** Mobile-first absolu. Les cartes doivent avoir des bordures très fines ou des ombres dorées subtiles.
 
@@ -17,21 +21,43 @@
   - `/lib` : Configurations (Supabase, Utils).
 
 ## 3. Logistique & Livraison (Modèle Yango)
-- **Calcul de prix :** - Base : 500 FCFA.
+- **Calcul de prix :** - Base : 1500 FCFA.
   - Kilométrage : 100 FCFA / km.
   - Frais de service SIGNARE : 15% inclus dans le prix final.
 - **Sécurité :** Validation de livraison via `code_validation_client` obligatoire pour débloquer les fonds.
 - **Localisation :** Récupérer la latitude/longitude du user pour les adresses de livraison.
 
-## 4. Flux Social & Interactions
+## 4. Layout & Conteneurs (Règles Finales Validées)
+- **Layout Principal :** 
+  - Le `body` doit avoir uniquement `overflow-x-hidden` pour éviter le scroll horizontal.
+  - Pas de conteneur principal avec `max-w-screen-xl` dans le layout global.
+  - Chaque page gère son propre conteneur.
+- **Header :** 
+  - Utiliser `max-w-2xl mx-auto` pour centrer le header.
+  - Pas de padding supplémentaire global, le header gère son propre padding interne.
+- **Feed Principal :** 
+  - Utiliser `max-w-2xl mx-auto` pour le conteneur du feed.
+  - Cette largeur garantit une taille optimale sur PC et un centrage parfait sur mobile.
+- **Cartes de Posts :** 
+  - Utiliser `mx-2 sm:mx-3` pour les marges horizontales des cartes.
+  - Ne pas ajouter `w-full max-w-full` aux cartes, cela les rend trop grandes sur PC.
+  - Les cartes doivent rester dans le conteneur `max-w-2xl` pour un rendu optimal.
+- **ANTI-OVERFLOW & PADDING RULES :**
+  - **No Fixed Widths :** Interdiction d'utiliser des largeurs fixes supérieures à 320px sans media queries. Utiliser `w-full` par défaut.
+  - **Global Gutter :** Chaque page doit respecter un padding latéral minimal de `px-4` (16px) sur mobile pour éviter que le contenu ne colle aux bords de l'écran.
+  - **Horizontal Scroll Prevention :** L'axe X doit rester verrouillé (`overflow-x-hidden` sur le body uniquement). Si un scroll est nécessaire (ex: carrousel de tissus), il doit être confiné à une div spécifique et non à la page entière.
+  - **Viewport Meta :** S'assurer que la balise meta viewport est fixée à `width=device-width, initial-scale=1.0`.
+  - **IMPORTANT :** Ne pas utiliser `max-w-screen-xl` avec padding supplémentaire sur les conteneurs principaux. Utiliser `max-w-2xl mx-auto` pour un rendu optimal sur tous les écrans.
+
+## 5. Flux Social & Interactions
 - **Post :** Image plein écran, aspect ratio 4:5 ou 9:16.
 - **Interactions :** Système de Like avec retour haptique visuel (animation de l'icône Or).
 - **Performance :** Optimisation des images via `next/image`.
 
-## 5. Règles de Codage 
+## 6. Règles de Codage 
 - Toujours vérifier les types TypeScript.
 - Utiliser `shadcn/ui` comme base de composants si nécessaire, mais recolorer en Noir/Or.
 - Ne jamais coder de secrets en dur (utiliser `.env.local`).
 - Les messages d'erreur et succès doivent être élégants (Toasts personnalisés).
-## 6 Les genres dans l'application
+## 7. Les genres dans l'application
 Le terme SIGNARE fera référence à Femme, et NDANANE aux Hommes, en tenir compte pour la segmentation et les suggessions.

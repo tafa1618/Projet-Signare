@@ -394,7 +394,7 @@ function useTrackPostVisibility(payload: InteractionPayload) {
 }
 
 // Card Tailleur (viewport-friendly, Z-pattern, CTA + Like sur la même ligne)
-const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (id: number) => void, onSave: (id: number) => void, onRepost: (id: number) => void }) => {
+const TailorCard = ({ post, onLike, onSave, onRepost, openCommentModal }: { post: Post, onLike: (id: number) => void, onSave: (id: number) => void, onRepost: (id: number) => void, openCommentModal: (id: number) => void }) => {
   const trackRef = useTrackPostVisibility({
     post_id: post.id,
     interaction_type: 'post_view',
@@ -651,7 +651,7 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
           <StarRating rating={post.complexity_score || 0} />
         </div>
 
-        <p className="text-xs sm:text-sm text-white/90 leading-relaxed">
+        <p className="text-xs sm:text-sm text-white/90 leading-relaxed break-words">
           {post.caption}
         </p>
 
@@ -726,7 +726,7 @@ const TailorCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
 }
 
 // Card Client (viewport-friendly, mention "Réalisé par...", CTA = Liker)
-const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (id: number) => void, onSave: (id: number) => void, onRepost: (id: number) => void }) => {
+const ClientCard = ({ post, onLike, onSave, onRepost, openCommentModal }: { post: Post, onLike: (id: number) => void, onSave: (id: number) => void, onRepost: (id: number) => void, openCommentModal: (id: number) => void }) => {
   const trackRef = useTrackPostVisibility({
     post_id: post.id,
     interaction_type: 'post_view',
@@ -982,7 +982,7 @@ const ClientCard = ({ post, onLike, onSave, onRepost }: { post: Post, onLike: (i
           </div>
         </div>
 
-        <p className="text-xs sm:text-sm text-white/90 leading-relaxed">
+        <p className="text-xs sm:text-sm text-white/90 leading-relaxed break-words">
           {post.caption}
         </p>
 
@@ -1233,9 +1233,13 @@ export default function HomePage() {
     })
   }
 
+  const onRepost = (postId: number) => {
+    openRepost(postId)
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-24 text-white">
-      {/* Header Luxe - Inspiré de FriendKit */}
+      {/* Header Luxe Signare */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -1488,9 +1492,9 @@ export default function HomePage() {
       <main className="max-w-2xl mx-auto pt-6">
         {posts.map((post) => (
           post.type === 'tailor' ? (
-            <TailorCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={openRepost} />
+            <TailorCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={openRepost} openCommentModal={openCommentModal} />
           ) : (
-            <ClientCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={openRepost} />
+            <ClientCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={openRepost} openCommentModal={openCommentModal} />
           )
         ))}
 
@@ -1644,7 +1648,7 @@ export default function HomePage() {
             <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-[#D4AF37] uppercase tracking-[0.18em]">Commentaires</h3>
-                <p className="text-xs text-white/60 mt-0.5">{commentModal.comments.length} commentaire{commentModal.comments.length > 1 ? 's' : ''}</p>
+                <p className="text-xs text-white/60 mt-0.5">{commentModal?.comments.length || 0} commentaire{(commentModal?.comments.length || 0) > 1 ? 's' : ''}</p>
               </div>
               <button
                 onClick={() => {
@@ -1659,7 +1663,7 @@ export default function HomePage() {
             
             {/* Comments List */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-              {commentModal.comments.map((comment) => (
+              {commentModal?.comments.map((comment) => (
                 <div key={comment.id} className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-full bg-[#D4AF37]/20 flex-shrink-0 flex items-center justify-center">
                     <span className="text-xs text-[#D4AF37] font-bold">

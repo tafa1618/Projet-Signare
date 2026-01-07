@@ -111,6 +111,14 @@
     font-size: var(--text-body);
     line-height: 1.6;
     color: var(--color-text-primary);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Tous les éléments de texte doivent avoir break-words pour éviter le débordement */
+  h1, h2, h3, h4, h5, h6, p, span, div, a, button, label {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 }
 
