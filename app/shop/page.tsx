@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -18,6 +18,7 @@ import {
   Plus
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { useCart } from '@/hooks/useCart'
 
 // Types
 interface ShopProduct {
@@ -144,6 +145,8 @@ export default function ShopPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showSuccessToast, setShowSuccessToast] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+  const { addToCart } = useCart()
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -163,9 +166,29 @@ export default function ShopPage() {
   }
 
   const handleAddToCart = (productId: string) => {
-    // TODO: Implémenter l'ajout au panier
-    console.log('Add to cart:', productId)
+    const product = products.find(p => p.id === productId)
+    if (!product) return
+
+    addToCart({
+      productId: parseInt(productId.replace('p', '')) || 0,
+      title: product.title,
+      image: product.image,
+      price: product.price,
+      currency: product.currency,
+      seller: {
+        name: product.seller.name,
+        avatar: product.seller.avatar,
+      },
+    })
+
+    setToast('Produit ajouté au panier')
   }
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 2000)
+    return () => clearTimeout(t)
+  }, [toast])
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-24 text-white">
@@ -390,6 +413,23 @@ export default function ShopPage() {
           </div>
         )}
       </main>
+
+      {/* Toast pour ajout au panier */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] bg-[#D4AF37] text-[#0A0A0A] px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-[0_10px_40px_rgba(212,175,55,0.45)] max-w-sm mx-4"
+          >
+            <div className="flex items-center gap-3">
+              <CheckCircle2 size={20} className="flex-shrink-0" />
+              <p className="text-sm font-bold">{toast}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Success Toast */}
       <AnimatePresence>

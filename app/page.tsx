@@ -36,6 +36,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/shared/lib/utils'
+import CartDropdown from '@/components/CartDropdown'
+import { useCart } from '@/hooks/useCart'
 
 // Types pour les posts
 type PostType = 'tailor' | 'client'
@@ -1058,6 +1060,8 @@ export default function HomePage() {
   const [commentDraft, setCommentDraft] = useState('')
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
+  const { totalItems } = useCart()
   const router = useRouter()
 
   const currentRepostPost = repostModal ? posts.find((p) => p.id === repostModal.postId) : null
@@ -1282,17 +1286,24 @@ export default function HomePage() {
               </Link>
               
               {/* Panier */}
-              <Link href="/cart">
+              <div className="relative">
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setCartOpen(!cartOpen)
+                  }}
                   className="relative text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors p-2"
                   title="Panier"
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
+                  {totalItems > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
+                  )}
                 </motion.button>
-              </Link>
+                {cartOpen && <CartDropdown isOpen={cartOpen} onClose={() => setCartOpen(false)} />}
+              </div>
               
               {/* Notifications */}
               <motion.button
@@ -1414,15 +1425,19 @@ export default function HomePage() {
                   <span className="text-sm font-semibold text-white">Boutique</span>
                 </Link>
                 
-                <Link
-                  href="/cart"
-                  onClick={() => setMenuOpen(false)}
+                <motion.button
+                  onClick={() => {
+                    setCartOpen(true)
+                    setMenuOpen(false)
+                  }}
                   className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/10 transition-colors relative"
                 >
                   <ShoppingCart className="w-5 h-5 text-[#D4AF37]" />
                   <span className="text-sm font-semibold text-white">Panier</span>
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
-                </Link>
+                  {totalItems > 0 && (
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
+                  )}
+                </motion.button>
                 
                 <motion.button
                   onClick={() => {

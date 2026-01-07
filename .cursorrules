@@ -61,3 +61,9 @@
 - Les messages d'erreur et succès doivent être élégants (Toasts personnalisés).
 ## 7. Les genres dans l'application
 Le terme SIGNARE fera référence à Femme, et NDANANE aux Hommes, en tenir compte pour la segmentation et les suggessions.
+
+## 8. Image Restoration & Optimization
+- **Auto-Enhancement :** Intégrer un middleware de traitement d'image (via Cloudinary ou Sharp) pour ajuster automatiquement le contraste et la netteté des photos.
+- **Format Standard :** Convertir systématiquement tous les uploads en format WebP avec une compression de 80% pour maximiser la vitesse sur mobile.
+- **Client-Side Validation :** Implémenter un script de détection de flou (Blur detection) lors de l'upload pour avertir l'utilisateur si la qualité est insuffisante.
+- **Resolution Cap :** Redimensionner les images à un maximum de 1200px de large (suffisant pour le luxe, léger pour le réseau 4G).
