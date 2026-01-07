@@ -17,7 +17,6 @@ const navItems = [
   { label: 'ACCUEIL', icon: Home, href: '/' },
   { label: 'IA', icon: Sparkles, href: '/inspiration' },
   { label: 'EVENTS', icon: Ticket, href: '/events' },
-  { label: 'PROFIL', icon: User, href: '/profil' },
 ];
 
 export default function BottomNav() {

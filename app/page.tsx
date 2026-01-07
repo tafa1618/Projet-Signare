@@ -25,7 +25,13 @@ import {
   X,
   Send,
   MoreVertical,
-  Flag
+  Flag,
+  Video,
+  Play,
+  ChevronLeft,
+  ChevronRight,
+  ShoppingCart,
+  Store
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/shared/lib/utils'
@@ -1248,6 +1254,31 @@ export default function HomePage() {
                 </motion.button>
               </Link>
               
+              {/* Shop */}
+              <Link href="/shop">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors p-2"
+                  title="Boutique"
+                >
+                  <Store className="w-5 h-5" />
+                </motion.button>
+              </Link>
+              
+              {/* Panier */}
+              <Link href="/cart">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="relative text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors p-2"
+                  title="Panier"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
+                </motion.button>
+              </Link>
+              
               {/* Notifications */}
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -1270,6 +1301,20 @@ export default function HomePage() {
                 >
                   <MessageCircle className="w-5 h-5" />
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
+                </motion.button>
+              </Link>
+              
+              {/* Avatar Profil */}
+              <Link href="/profil">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative w-9 h-9 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/30 flex items-center justify-center overflow-hidden"
+                  title="Profil"
+                >
+                  <span className="text-sm text-[#D4AF37] font-bold">
+                    U
+                  </span>
                 </motion.button>
               </Link>
               
