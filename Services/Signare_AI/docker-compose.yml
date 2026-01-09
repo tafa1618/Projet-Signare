@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  signare-ai:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - AI_MODE=${AI_MODE:-mock}
+      - REPLICATE_API_TOKEN=${REPLICATE_API_TOKEN:-}
+      - MOCK_IMAGE_BASE_URL=${MOCK_IMAGE_BASE_URL:-https://images.unsplash.com/photo}
+    volumes:
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+

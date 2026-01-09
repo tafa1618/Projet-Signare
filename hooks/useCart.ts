@@ -67,6 +67,12 @@ export function useCart() {
 
   // Charger le panier depuis localStorage au montage
   useEffect(() => {
+    // Vérifier que localStorage est disponible (côté client)
+    if (typeof window === 'undefined') {
+      setIsLoading(false)
+      return
+    }
+    
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY)
       if (stored) {
@@ -95,7 +101,7 @@ export function useCart() {
 
   // Sauvegarder le panier dans localStorage à chaque modification
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && typeof window !== 'undefined') {
       try {
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems))
       } catch (error) {

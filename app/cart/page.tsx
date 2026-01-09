@@ -214,13 +214,6 @@ export default function CartPage() {
                   </span>
                 </div>
 
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/70">Frais de service (15%)</span>
-                  <span className="text-white font-semibold">
-                    {serviceFee.toLocaleString('fr-FR')} FCFA
-                  </span>
-                </div>
-
                 <div className="border-t border-[#D4AF37]/20 pt-3 mt-3">
                   <div className="flex justify-between items-center">
                     <span className="text-base font-bold text-[#D4AF37] uppercase tracking-[0.1em]">

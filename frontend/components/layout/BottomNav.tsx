@@ -27,9 +27,11 @@ export default function BottomNav() {
 
   // Ne pas afficher la barre sur les pages de bienvenue et d'authentification
   const hideNav = pathname === '/welcome' || pathname === '/login' || pathname === '/register' || pathname === '/onboarding' || pathname === '/publish';
-  if (hideNav) return null;
 
   useEffect(() => {
+    // Ne pas initialiser les event listeners si la nav est cachée ou côté serveur
+    if (hideNav || typeof window === 'undefined') return;
+    
     let scrollTimeout: NodeJS.Timeout;
     let touchTimeout: NodeJS.Timeout;
 
@@ -85,7 +87,10 @@ export default function BottomNav() {
       clearTimeout(scrollTimeout);
       clearTimeout(touchTimeout);
     };
-  }, [lastScrollY, isTouching]);
+  }, [lastScrollY, isTouching, hideNav]);
+
+  // Retourner null après tous les hooks
+  if (hideNav) return null;
 
   return (
     <AnimatePresence>
