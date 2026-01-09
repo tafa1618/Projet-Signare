@@ -4,9 +4,13 @@ Utilise l'API Replicate pour Stable Diffusion
 """
 
 import os
-import replicate
 from typing import Dict
 import asyncio
+
+try:
+    import replicate
+except ImportError:
+    replicate = None
 
 
 class ReplicateService:
@@ -19,11 +23,13 @@ class ReplicateService:
     """
     
     def __init__(self):
+        if replicate is None:
+            raise ImportError("Le package 'replicate' n'est pas installé. Installez-le avec: pip install replicate")
+        
         api_token = os.getenv("REPLICATE_API_TOKEN")
         if not api_token:
             raise ValueError("REPLICATE_API_TOKEN doit être défini en mode replicate")
         
-        replicate.Client(api_token=api_token)
         self.client = replicate.Client(api_token=api_token)
         
         # Modèles Replicate
