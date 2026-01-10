@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { 
@@ -1061,6 +1061,9 @@ export default function HomePage() {
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
+  const [headerVisible, setHeaderVisible] = useState(true)
+  const [lastScrollY, setLastScrollY] = useState(0)
+  const [isTouching, setIsTouching] = useState(false)
   const { totalItems } = useCart()
   const router = useRouter()
 
@@ -1071,6 +1074,67 @@ export default function HomePage() {
     const t = setTimeout(() => setToast(null), 2400)
     return () => clearTimeout(t)
   }, [toast])
+
+  // Logique de scroll pour le header (comme le footer)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    let scrollTimeout: NodeJS.Timeout
+    let touchTimeout: NodeJS.Timeout
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      
+      // Cacher si on scroll vers le bas (plus de 50px)
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        setHeaderVisible(false)
+        clearTimeout(scrollTimeout)
+        // Réafficher après 2 secondes d'inactivité de scroll
+        scrollTimeout = setTimeout(() => {
+          setHeaderVisible(true)
+        }, 2000)
+      } else if (currentScrollY < lastScrollY || currentScrollY < 30) {
+        // Afficher si on scroll vers le haut ou si on est en haut
+        setHeaderVisible(true)
+      }
+      
+      setLastScrollY(currentScrollY)
+    }
+
+    const handleTouchStart = () => {
+      setIsTouching(true)
+      setHeaderVisible(true)
+      clearTimeout(touchTimeout)
+    }
+
+    const handleTouchEnd = () => {
+      setIsTouching(false)
+      // Garder visible pendant 3 secondes après le touch
+      clearTimeout(touchTimeout)
+      touchTimeout = setTimeout(() => {
+        if (!isTouching && window.scrollY < 50) {
+          setHeaderVisible(false)
+        }
+      }, 3000)
+    }
+
+    // Afficher au chargement si on est déjà scrollé
+    if (window.scrollY > 50) {
+      setHeaderVisible(false)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    document.addEventListener('touchstart', handleTouchStart, { passive: true })
+    document.addEventListener('touchend', handleTouchEnd, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchend', handleTouchEnd)
+      clearTimeout(scrollTimeout)
+      clearTimeout(touchTimeout)
+    }
+  }, [lastScrollY, isTouching])
 
   const isAuthenticated = () => {
     // @ai-context Auth simulée : permet de tester le flow social (repost) sans backend.
@@ -1244,11 +1308,15 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-24 text-white">
       {/* Header Luxe Signare */}
-      <motion.header
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl"
-      >
+      <AnimatePresence>
+        {headerVisible && (
+          <motion.header
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed top-0 left-0 right-0 w-full z-50 bg-[#0A0A0A]/95 backdrop-blur-xl"
+          >
         <div className="max-w-2xl mx-auto">
           {/* Top Bar */}
           <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3">
@@ -1502,9 +1570,11 @@ export default function HomePage() {
           )}
         </div>
       </motion.header>
+        )}
+      </AnimatePresence>
 
       {/* Feed Principal */}
-      <main className="max-w-2xl mx-auto pt-6">
+      <main className="max-w-2xl mx-auto pt-20 sm:pt-24">
         {posts.map((post) => (
           post.type === 'tailor' ? (
             <TailorCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={openRepost} openCommentModal={openCommentModal} />

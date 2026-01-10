@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { Database } from '@/shared/types/database.types'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 /**
  * PAGE - Messagerie SIGNARE
@@ -146,6 +146,7 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function MessagesPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null)
   const [inputText, setInputText] = useState('')
   const [showQuickMenu, setShowQuickMenu] = useState(false)
@@ -337,95 +338,117 @@ export default function MessagesPage() {
               transition={{ duration: 0.25 }}
               className="flex flex-col h-full"
             >
-              {/* Header Chat (Feed-like) */}
-              <header className="px-3 sm:px-6 py-3 sm:py-4 border-b border-[#D4AF37]/20 bg-[#0A0A0A]/90 backdrop-blur-xl flex items-center justify-between gap-2 sm:gap-4">
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                  <button
-                    onClick={() => setSelectedConv(null)}
-                    className="md:hidden p-1.5 -ml-1 text-[#D4AF37] active:bg-[#D4AF37]/10 rounded-full flex-shrink-0"
-                    aria-label="Retour"
-                  >
-                    <ChevronLeft size={22} className="sm:w-6 sm:h-6" />
-                  </button>
+              {/* Header Chat (Feed-like) - Compact & Responsive */}
+              <header className="sticky top-0 z-10 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 border-b border-[#D4AF37]/20 bg-[#0A0A0A]/95 backdrop-blur-xl">
+                <div className="flex items-center justify-between gap-2 sm:gap-3">
+                  {/* Left: Back + Avatar + Info */}
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        // Vérifier si on vient d'un deeplink (tailor/user dans l'URL)
+                        const hasSearchParams = searchParams.get('tailor') || searchParams.get('user')
+                        
+                        // Sur mobile : retourner à la liste des conversations
+                        // Si on vient d'un deeplink, retourner à l'accueil
+                        if (hasSearchParams) {
+                          router.push('/')
+                        } else {
+                          // Sinon, simplement fermer la conversation pour voir la liste
+                          setSelectedConv(null)
+                        }
+                      }}
+                      className="p-1.5 -ml-1 text-[#D4AF37] active:bg-[#D4AF37]/10 hover:bg-[#D4AF37]/10 rounded-full flex-shrink-0 transition-colors"
+                      aria-label="Retour"
+                    >
+                      <ChevronLeft size={20} className="sm:w-5 sm:h-5" />
+                    </motion.button>
 
-                  <div className={cn(
-                    "w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border p-0.5 flex-shrink-0",
-                    selectedConv.user.isMasterTailor ? "border-[#D4AF37]/50" : "border-white/10"
-                  )}>
-                    <div className="w-full h-full rounded-full overflow-hidden relative bg-neutral-900">
-                      <Image src={selectedConv.user.avatar} alt={selectedConv.user.name} fill className="object-cover" />
+                    {/* Avatar */}
+                    <div className={cn(
+                      "w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full overflow-hidden border-2 flex-shrink-0",
+                      selectedConv.user.isMasterTailor ? "border-[#D4AF37]/50" : "border-white/10"
+                    )}>
+                      <div className="w-full h-full rounded-full overflow-hidden relative bg-neutral-900">
+                        <Image 
+                          src={selectedConv.user.avatar} 
+                          alt={selectedConv.user.name} 
+                          fill 
+                          className="object-cover"
+                          sizes="48px"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                      <h2 className="font-serif font-bold text-xs sm:text-sm text-[#D4AF37] tracking-[0.15em] sm:tracking-[0.18em] uppercase truncate">
+                    {/* Name + Rank + Rating */}
+                    <div className="min-w-0 flex-1">
+                      <h2 className="font-serif font-bold text-[11px] sm:text-xs md:text-sm text-[#D4AF37] tracking-[0.12em] sm:tracking-[0.15em] md:tracking-[0.18em] uppercase truncate mb-0.5">
                         {selectedConv.user.name}
                       </h2>
-                      {selectedConv.user.status === 'atelier' && (
-                        <div className="flex items-center gap-1 text-[#D4AF37] flex-shrink-0">
-                          <Scissors size={10} className="sm:w-3 sm:h-3" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <p className="text-[8px] sm:text-[9px] text-white/40 uppercase tracking-[0.18em] sm:tracking-[0.22em] font-black truncate">
-                        {selectedConv.user.rankLabel}
-                      </p>
-                      {typeof selectedConv.user.rating === 'number' && <StarRating rating={selectedConv.user.rating} />}
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <p className="text-[8px] sm:text-[9px] text-white/60 uppercase tracking-[0.15em] sm:tracking-[0.18em] font-black truncate">
+                          {selectedConv.user.rankLabel}
+                        </p>
+                        {typeof selectedConv.user.rating === 'number' && (
+                          <div className="flex items-center gap-0.5">
+                            <StarRating rating={selectedConv.user.rating} />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-1.5 sm:gap-3 ml-2 sm:ml-4 flex-shrink-0">
-                  <motion.button
-                    whileTap={{ scale: 0.94 }}
-                    onClick={() => {
-                      trackInteraction({
-                        user_id: currentUserId,
-                        post_id: null,
-                        interaction_type: 'click',
-                        session_id: sessionId,
-                        duration_seconds: null,
-                        scroll_depth: null,
-                        came_from: 'messages:call_audio',
-                        device_type: 'web',
-                        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-                      })
-                    }}
-                    className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] bg-[#0A0A0A] hover:bg-[#D4AF37]/10 transition-colors text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.18em] flex items-center gap-1 sm:gap-1.5"
-                  >
-                    <Phone size={12} className="sm:w-[14px] sm:h-[14px]" />
-                    <span className="hidden xs:inline">Appel</span>
-                  </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.94 }}
-                    onClick={() => {
-                      trackInteraction({
-                        user_id: currentUserId,
-                        post_id: null,
-                        interaction_type: 'click',
-                        session_id: sessionId,
-                        duration_seconds: null,
-                        scroll_depth: null,
-                        came_from: 'messages:call_video',
-                        device_type: 'web',
-                        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-                      })
-                    }}
-                    className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] bg-[#0A0A0A] hover:bg-[#D4AF37]/10 transition-colors text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.18em] flex items-center gap-1 sm:gap-1.5"
-                  >
-                    <Video size={12} className="sm:w-[14px] sm:h-[14px]" />
-                    <span className="hidden xs:inline">Vidéo</span>
-                  </motion.button>
-                  <button className="p-1.5 sm:p-2 text-white/30 hover:text-[#D4AF37] transition-colors flex-shrink-0">
-                    <MoreVertical size={16} className="sm:w-[18px] sm:h-[18px]" />
-                  </button>
+                  {/* Right: Call + Video Buttons (Always Visible) */}
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                    <motion.button
+                      whileTap={{ scale: 0.94 }}
+                      onClick={() => {
+                        trackInteraction({
+                          user_id: currentUserId,
+                          post_id: null,
+                          interaction_type: 'click',
+                          session_id: sessionId,
+                          duration_seconds: null,
+                          scroll_depth: null,
+                          came_from: 'messages:call_audio',
+                          device_type: 'web',
+                          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                        })
+                      }}
+                      className="px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 rounded-lg md:rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] bg-[#0A0A0A] hover:bg-[#D4AF37]/10 transition-colors text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-[0.12em] sm:tracking-[0.15em] md:tracking-[0.18em] flex items-center gap-1"
+                    >
+                      <Phone size={12} className="sm:w-[13px] sm:h-[13px] md:w-[14px] md:h-[14px]" />
+                      <span className="hidden sm:inline">APPEL</span>
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.94 }}
+                      onClick={() => {
+                        trackInteraction({
+                          user_id: currentUserId,
+                          post_id: null,
+                          interaction_type: 'click',
+                          session_id: sessionId,
+                          duration_seconds: null,
+                          scroll_depth: null,
+                          came_from: 'messages:call_video',
+                          device_type: 'web',
+                          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                        })
+                      }}
+                      className="px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 rounded-lg md:rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] bg-[#0A0A0A] hover:bg-[#D4AF37]/10 transition-colors text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-[0.12em] sm:tracking-[0.15em] md:tracking-[0.18em] flex items-center gap-1"
+                    >
+                      <Video size={12} className="sm:w-[13px] sm:h-[13px] md:w-[14px] md:h-[14px]" />
+                      <span className="hidden sm:inline">VIDÉO</span>
+                    </motion.button>
+                    <button className="hidden md:block p-1.5 sm:p-2 text-white/30 hover:text-[#D4AF37] transition-colors flex-shrink-0">
+                      <MoreVertical size={16} className="sm:w-[18px] sm:h-[18px]" />
+                    </button>
+                  </div>
                 </div>
               </header>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 sm:py-4 space-y-3 sm:space-y-4">
+              <div className="flex-1 overflow-y-auto px-2.5 sm:px-4 md:px-6 py-3 sm:py-4 space-y-2.5 sm:space-y-3 md:space-y-4">
                 {selectedConv.messages.map((msg) => {
                   const isMe = msg.senderId === currentUserId
                   return (
@@ -437,26 +460,26 @@ export default function MessagesPage() {
                       className={cn("flex", isMe ? "justify-end" : "justify-start")}
                     >
                       <div className={cn(
-                        "max-w-[78%] md:max-w-[60%] px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed border",
+                        "max-w-[85%] sm:max-w-[75%] md:max-w-[60%] px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-[13px] leading-relaxed border",
                         isMe
-                          ? "bg-[#141414] text-white/90 border-white/10 rounded-tr-none"
-                          : "bg-[#0A0A0A] text-white/90 border-[#D4AF37]/20 rounded-tl-none"
+                          ? "bg-[#141414] text-white/90 border-white/10 rounded-tr-sm sm:rounded-tr-none"
+                          : "bg-[#0A0A0A] text-white/90 border-[#D4AF37]/20 rounded-tl-sm sm:rounded-tl-none"
                       )}>
                         {msg.type === 'post_share' && msg.postData ? (
                           <div className="space-y-2">
-                            <p className="text-[9px] uppercase tracking-[0.22em] font-black text-[#D4AF37]/80">
+                            <p className="text-[8px] sm:text-[9px] uppercase tracking-[0.18em] sm:tracking-[0.22em] font-black text-[#D4AF37]/80">
                               Modèle de référence
                             </p>
-                            <div className="relative aspect-[4/5] w-full max-h-[180px] rounded-xl overflow-hidden border border-[#D4AF37]/20">
-                              <Image src={msg.postData.image} alt={msg.postData.title} fill className="object-cover" />
+                            <div className="relative aspect-[4/5] w-full max-h-[160px] sm:max-h-[180px] rounded-lg sm:rounded-xl overflow-hidden border border-[#D4AF37]/20">
+                              <Image src={msg.postData.image} alt={msg.postData.title} fill className="object-cover" sizes="(max-width: 640px) 200px, 250px" />
                             </div>
-                            <div className="flex items-center justify-between gap-3">
-                              <p className="text-sm font-bold truncate">{msg.postData.title}</p>
-                              <p className="text-sm font-serif text-[#D4AF37] flex-shrink-0">{msg.postData.price}</p>
+                            <div className="flex items-center justify-between gap-2 sm:gap-3">
+                              <p className="text-xs sm:text-sm font-bold truncate">{msg.postData.title}</p>
+                              <p className="text-xs sm:text-sm font-serif text-[#D4AF37] flex-shrink-0">{msg.postData.price}</p>
                             </div>
                           </div>
                         ) : (
-                          msg.text
+                          <p className="break-words">{msg.text}</p>
                         )}
                       </div>
                     </motion.div>
@@ -464,10 +487,10 @@ export default function MessagesPage() {
                 })}
               </div>
 
-              {/* Input compact (no-scroll global) */}
-              <div className="sticky bottom-0 border-t border-[#D4AF37]/20 bg-[#0A0A0A]/95 backdrop-blur-xl px-3 sm:px-6 py-2.5 sm:py-3">
+              {/* Input compact (no-scroll global) - Responsive */}
+              <div className="sticky bottom-0 border-t border-[#D4AF37]/20 bg-[#0A0A0A]/95 backdrop-blur-xl px-2.5 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3">
                 <div className="relative">
-                  <div className="flex items-center gap-1.5 sm:gap-2 bg-white/[0.03] border border-white/10 rounded-xl sm:rounded-2xl px-2 sm:px-3 py-1.5 sm:py-2">
+                  <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 bg-white/[0.03] border border-white/10 rounded-lg sm:rounded-xl md:rounded-2xl px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2">
                     <button
                       onClick={() => {
                         setShowQuickMenu((v) => !v)
@@ -483,10 +506,10 @@ export default function MessagesPage() {
                           user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
                         })
                       }}
-                      className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl text-[#D4AF37]/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all flex-shrink-0"
+                      className="p-1.5 sm:p-2 rounded-lg md:rounded-xl text-[#D4AF37]/80 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all flex-shrink-0"
                       aria-label="Actions rapides"
                     >
-                      <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      <Plus size={14} className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" />
                     </button>
 
                     <input
@@ -494,11 +517,11 @@ export default function MessagesPage() {
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
                       placeholder="VOTRE MESSAGE..."
-                      className="flex-1 bg-transparent text-[10px] sm:text-[11px] font-black tracking-[0.18em] sm:tracking-[0.22em] uppercase outline-none placeholder:text-white/15 min-w-0"
+                      className="flex-1 bg-transparent text-[9px] sm:text-[10px] md:text-[11px] font-black tracking-[0.15em] sm:tracking-[0.18em] md:tracking-[0.22em] uppercase outline-none placeholder:text-white/20 min-w-0"
                     />
 
                     <button
-                      className="p-1.5 sm:p-2 text-white/20 hover:text-[#D4AF37] transition-colors flex-shrink-0"
+                      className="p-1.5 sm:p-2 text-white/30 hover:text-[#D4AF37] transition-colors flex-shrink-0"
                       aria-label="Message vocal"
                       onClick={() => {
                         trackInteraction({
@@ -515,11 +538,11 @@ export default function MessagesPage() {
                         // TODO: implémenter enregistrement audio (MediaRecorder) + upload Supabase Storage
                       }}
                     >
-                      <Mic size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      <Mic size={14} className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" />
                     </button>
 
-                    <button className="p-1.5 sm:p-2 text-white/20 hover:text-[#D4AF37] transition-colors flex-shrink-0" aria-label="Photo">
-                      <Camera size={16} className="sm:w-[18px] sm:h-[18px]" />
+                    <button className="p-1.5 sm:p-2 text-white/30 hover:text-[#D4AF37] transition-colors flex-shrink-0" aria-label="Photo">
+                      <Camera size={14} className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" />
                     </button>
 
                     <motion.button
@@ -539,10 +562,10 @@ export default function MessagesPage() {
                         })
                         setInputText('')
                       }}
-                      className="bg-[#D4AF37] text-[#0A0A0A] p-2 sm:p-2.5 rounded-lg sm:rounded-xl shadow-[0_0_18px_rgba(212,175,55,0.35)] flex-shrink-0"
+                      className="bg-[#D4AF37] text-[#0A0A0A] p-1.5 sm:p-2 md:p-2.5 rounded-lg md:rounded-xl shadow-[0_0_12px_rgba(212,175,55,0.3)] sm:shadow-[0_0_18px_rgba(212,175,55,0.35)] flex-shrink-0"
                       aria-label="Envoyer"
                     >
-                      <Send size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      <Send size={14} className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" />
                     </motion.button>
                   </div>
 
@@ -553,7 +576,7 @@ export default function MessagesPage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 8 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute bottom-[56px] left-0 w-[240px] bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl overflow-hidden shadow-2xl"
+                        className="absolute bottom-[52px] sm:bottom-[56px] md:bottom-[60px] left-0 w-[200px] sm:w-[240px] bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-lg sm:rounded-xl overflow-hidden shadow-2xl z-10"
                       >
                         {quickActions.map((action) => {
                           const Icon = action.icon
