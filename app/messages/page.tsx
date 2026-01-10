@@ -24,6 +24,7 @@ import {
 import { cn } from '@/shared/lib/utils'
 import type { Database } from '@/shared/types/database.types'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { logMLInteraction } from '@/lib/logger'
 
 /**
  * PAGE - Messagerie SIGNARE
@@ -125,7 +126,12 @@ type UserInteractionInsert = Database['public']['Tables']['user_interactions']['
 function trackInteraction(payload: UserInteractionInsert) {
   // TODO: Brancher sur Supabase (insert) quand l'auth est active.
   // Respect du schéma: pas de metadata arbitraire ici; on encode le contexte dans `came_from`.
-  console.log('[ML] user_interactions.insert', payload)
+  // ✅ Utilisation du logger sécurisé
+  import('@/lib/logger').then(({ logMLInteraction }) => {
+    logMLInteraction(payload)
+  }).catch(() => {
+    // Fallback silencieux si le logger n'est pas disponible
+  })
 }
 
 function StarRating({ rating }: { rating: number }) {

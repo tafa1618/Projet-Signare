@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -15,10 +15,12 @@ import {
   ChevronLeft,
   X,
   CheckCircle2,
-  Plus
+  Plus,
+  Loader2
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { useCart } from '@/hooks/useCart'
+import { useInfiniteScrollPagination } from '@/hooks/usePagination'
 
 // Types
 interface ShopProduct {
@@ -124,6 +126,55 @@ const MOCK_PRODUCTS: ShopProduct[] = [
   }
 ]
 
+// Fonction de fetch pour pagination (compatible mock + API)
+const fetchProducts = async (page: number, pageSize: number): Promise<{
+  data: ShopProduct[]
+  total?: number
+  hasMore: boolean
+}> => {
+  // TODO: Remplacer par appel API Supabase quand disponible
+  const USE_API = false // Flag pour activer l'API Supabase
+  
+  if (USE_API) {
+    const response = await fetch(`/api/products?page=${page}&pageSize=${pageSize}`)
+    if (!response.ok) {
+      throw new Error('Erreur lors du chargement des produits')
+    }
+    const data = await response.json()
+    return {
+      data: data.data as ShopProduct[],
+      total: data.total,
+      hasMore: data.hasMore,
+    }
+  } else {
+    // Pagination côté client avec MOCK_PRODUCTS (transition)
+    // Répéter les produits pour simuler un grand catalogue
+    const allProducts: ShopProduct[] = []
+    for (let i = 0; i < 50; i++) {
+      MOCK_PRODUCTS.forEach(p => {
+        allProducts.push({
+          ...p,
+          id: `${p.id}-${i}`,
+        })
+      })
+    }
+    
+    const startIndex = (page - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    const paginatedProducts = allProducts.slice(startIndex, endIndex)
+    const hasMore = endIndex < allProducts.length
+    
+    // Simuler un délai réseau pour UX réaliste
+    await new Promise(resolve => setTimeout(resolve, 300))
+    
+    return {
+      data: paginatedProducts,
+      total: allProducts.length,
+      hasMore,
+    }
+  }
+}
+
 function StarRating({ rating }: { rating: number }) {
   const rounded = Math.round(rating)
   return (
@@ -140,7 +191,32 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function ShopPage() {
-  const [products, setProducts] = useState<ShopProduct[]>(MOCK_PRODUCTS)
+  // ✅ Pagination automatique avec infinite scroll
+  const {
+    data: paginatedProducts,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    error: paginationError,
+    observerTarget,
+  } = useInfiniteScrollPagination<ShopProduct>(fetchProducts, {
+    pageSize: 12, // 12 produits par page pour shop (grille 3x4 sur mobile)
+    initialPage: 1,
+    enabled: true,
+    threshold: 0.1,
+  })
+
+  // État local pour gérer les modifications (likes, etc.)
+  const [productModifications, setProductModifications] = useState<Map<string, Partial<ShopProduct>>>(new Map())
+  
+  // Combiner les produits paginés avec les modifications locales
+  const products = useMemo(() => {
+    return paginatedProducts.map(product => {
+      const modifications = productModifications.get(product.id)
+      return modifications ? { ...product, ...modifications } : product
+    })
+  }, [paginatedProducts, productModifications])
+
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -148,29 +224,51 @@ export default function ShopPage() {
   const [toast, setToast] = useState<string | null>(null)
   const { addToCart } = useCart()
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = !selectedCategory || product.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+  // Filtrer les produits (après pagination, côté client pour transition)
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
+      const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           product.description.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesCategory = !selectedCategory || product.category === selectedCategory
+      return matchesSearch && matchesCategory
+    })
+  }, [products, searchQuery, selectedCategory])
 
-  const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean)))
+  const categories = useMemo(() => {
+    return Array.from(new Set(products.map(p => p.category).filter(Boolean))) as string[]
+  }, [products])
 
   const handleLike = (productId: string) => {
-    setProducts(products.map(p => 
-      p.id === productId 
-        ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 }
-        : p
-    ))
+    const product = products.find(p => p.id === productId)
+    if (!product) return
+    
+    setProductModifications(prev => {
+      const newMap = new Map(prev)
+      const currentMods = newMap.get(productId) || {}
+      const wasLiked = currentMods.isLiked ?? product.isLiked
+      const currentLikes = currentMods.likes ?? product.likes
+      
+      newMap.set(productId, {
+        ...currentMods,
+        isLiked: !wasLiked,
+        likes: wasLiked ? currentLikes - 1 : currentLikes + 1,
+      })
+      return newMap
+    })
   }
 
   const handleAddToCart = (productId: string) => {
     const product = products.find(p => p.id === productId)
     if (!product) return
 
+    // Convertir l'ID en format compatible avec le panier (UUID ou number)
+    // Pour transition, on génère un UUID temporaire à partir de l'ID
+    const cartProductId = productId.includes('-') 
+      ? productId // Garder l'ID tel quel si déjà formaté
+      : `00000000-0000-0000-0000-${productId.replace(/[^0-9]/g, '').padStart(12, '0')}` // UUID temporaire
+
     addToCart({
-      productId: parseInt(productId.replace('p', '')) || 0,
+      productId: cartProductId, // UUID temporaire pour compatibilité
       title: product.title,
       image: product.image,
       price: product.price,
@@ -296,11 +394,20 @@ export default function ShopPage() {
 
       {/* Products Grid */}
       <main className="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        <div className="mb-4 sm:mb-6">
-          <p className="text-xs sm:text-sm text-white/50">
-            {filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''} trouvé{filteredProducts.length > 1 ? 's' : ''}
-          </p>
-        </div>
+        {/* Indicateur de chargement initial */}
+        {isLoading && filteredProducts.length === 0 && (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+          </div>
+        )}
+
+        {!isLoading && filteredProducts.length > 0 && (
+          <div className="mb-4 sm:mb-6">
+            <p className="text-xs sm:text-sm text-white/50">
+              {filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''} trouvé{filteredProducts.length > 1 ? 's' : ''}
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {filteredProducts.map((product, idx) => (
@@ -406,10 +513,65 @@ export default function ShopPage() {
           ))}
         </div>
 
-        {filteredProducts.length === 0 && (
+        {/* Indicateur de chargement pour infinite scroll (automatique) */}
+        {isLoadingMore && (
+          <div className="flex items-center justify-center py-8" ref={observerTarget}>
+            <Loader2 className="w-6 h-6 text-[#D4AF37] animate-spin" />
+            <span className="ml-2 text-sm text-white/60">Chargement...</span>
+          </div>
+        )}
+
+        {/* Élément déclencheur pour infinite scroll (visible seulement si on charge plus) */}
+        {!isLoadingMore && hasMore && (
+          <div ref={observerTarget} className="h-20 flex items-center justify-center">
+            <div className="w-1 h-1 bg-transparent" aria-hidden="true" />
+          </div>
+        )}
+
+        {/* Message d'erreur */}
+        {paginationError && (
+          <div className="flex items-center justify-center py-8 px-4">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-center">
+              <p className="text-sm text-red-400">
+                {paginationError instanceof Error && 'getUserMessage' in paginationError
+                  ? (paginationError as any).getUserMessage()
+                  : 'Erreur lors du chargement des produits'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Message "Fin du catalogue" (quand tout est chargé) */}
+        {!hasMore && filteredProducts.length > 0 && !isLoading && (
+          <div className="text-center py-12 sm:py-16">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <div className="w-16 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+              <Sparkles className="w-5 h-5 text-[#D4AF37]/60" />
+              <div className="w-16 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+            </div>
+            <p className="text-[10px] text-[#D4AF37]/50 font-serif tracking-[0.4em] uppercase">
+              Signare • Dakar Luxe
+            </p>
+            <p className="text-[9px] text-white/30 mt-2">Vous avez vu tous les produits</p>
+          </div>
+        )}
+
+        {/* Message "Aucun produit trouvé" (recherche/filtres) */}
+        {filteredProducts.length === 0 && !isLoading && (
           <div className="text-center py-12 sm:py-16">
             <Store className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-[#D4AF37]/40" />
             <p className="text-sm sm:text-base text-white/50">Aucun produit trouvé</p>
+            {(searchQuery || selectedCategory) && (
+              <button
+                onClick={() => {
+                  setSearchQuery('')
+                  setSelectedCategory(null)
+                }}
+                className="mt-4 text-xs text-[#D4AF37] hover:underline"
+              >
+                Réinitialiser les filtres
+              </button>
+            )}
           </div>
         )}
       </main>

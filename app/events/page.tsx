@@ -125,8 +125,9 @@ export default function EventsPage() {
   const activeStory = STORIES.find((s) => s.id === activeStoryId) ?? null
 
   const trackInterest = (targetId: string) => {
-    // @ai-context Tracking des vues d’événement pour le dataset de recommandation
-    console.log('[ML] event_view', { targetId, score: 2, timestamp: new Date().toISOString() })
+    // @ai-context Tracking des vues d'événement pour le dataset de recommandation
+    // ✅ Utilisation du logger sécurisé
+    logMLInteraction({ targetId, score: 2, timestamp: new Date().toISOString() })
   }
 
   const openStory = (id: string) => {

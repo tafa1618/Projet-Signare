@@ -222,7 +222,7 @@ export default function InspirationPage() {
       }
     } catch (err) {
       setToast('Erreur lors de la génération d\'inspiration')
-      console.error('Erreur inspiration:', err)
+      logError(err, 'Inspiration generation')
     }
   }
 
@@ -267,7 +267,7 @@ export default function InspirationPage() {
       }
     } catch (err) {
       setToast('Erreur lors de l\'essayage virtuel')
-      console.error('Erreur try-on:', err)
+      logError(err, 'Try-on generation')
     }
   }
 

@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import type { Database, Post as DbPost } from '@/shared/types/database.types'
 import { cn } from '@/shared/lib/utils'
+import { logMLInteraction } from '@/lib/logger'
 
 type UserInteractionInsert = Database['public']['Tables']['user_interactions']['Insert']
 
@@ -38,7 +39,8 @@ type UserInteractionInsert = Database['public']['Tables']['user_interactions']['
  */
 function trackProductDetailView(payload: UserInteractionInsert) {
   // TODO: connecter à Supabase quand auth active (insert user_interactions).
-  console.log('[ML] user_interactions.insert', payload)
+  // ✅ Utilisation du logger sécurisé
+  logMLInteraction(payload)
 }
 
 type ProductDetail = Pick<

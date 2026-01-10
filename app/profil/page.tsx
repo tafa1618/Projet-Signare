@@ -26,9 +26,12 @@ type UserInteractionInsert = Database['public']['Tables']['user_interactions']['
  * Tracking d'interactions Profil (ML Ready)
  * @ai-context Les vues de profil et clics sur mensurations/galerie alimentent le dataset de recommandation.
  */
+import { logMLInteraction } from '@/lib/logger'
+
 function trackProfileInteraction(payload: UserInteractionInsert) {
-  // TODO: brancher vers Supabase quand l’auth est active.
-  console.log('[ML] user_interactions.insert', payload)
+  // TODO: brancher vers Supabase quand l'auth est active.
+  // ✅ Utilisation du logger sécurisé
+  logMLInteraction(payload)
 }
 
 type ClientProfile = {

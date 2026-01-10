@@ -16,6 +16,8 @@ import {
 } from 'lucide-react'
 import type { Database, Mesure, Order } from '@/shared/types/database.types'
 
+import { logMLInteraction } from '@/lib/logger'
+
 type UserInteractionInsert = Database['public']['Tables']['user_interactions']['Insert']
 
 /**
@@ -23,7 +25,8 @@ type UserInteractionInsert = Database['public']['Tables']['user_interactions']['
  * @ai-context Permet de capturer les commandes hors-app (source externe) pour enrichir le dataset business.
  */
 function trackManualOrder(payload: UserInteractionInsert) {
-  console.log('[ML] user_interactions.insert', payload)
+  // ✅ Utilisation du logger sécurisé
+  logMLInteraction(payload)
 }
 
 type ManualOrderDraft = {

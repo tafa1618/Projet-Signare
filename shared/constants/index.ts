@@ -5,9 +5,10 @@
 
 /**
  * Configuration de livraison (Modèle Yango)
+ * @security Ces valeurs sont utilisées uniquement côté serveur pour le calcul des prix
  */
 export const SHIPPING_CONFIG = {
-  BASE_PRICE: 500, // FCFA
+  BASE_PRICE: 1500, // FCFA (selon .cursorrules section 3)
   PRICE_PER_KM: 100, // FCFA
   SIGNARE_FEE_PERCENT: 0.15, // 15%
 } as const

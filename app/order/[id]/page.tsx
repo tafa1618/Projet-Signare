@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import type { Database, Order } from '@/shared/types/database.types'
 import { cn } from '@/shared/lib/utils'
+import { logMLInteraction } from '@/lib/logger'
 
 type UserInteractionInsert = Database['public']['Tables']['user_interactions']['Insert']
 
@@ -24,9 +25,12 @@ type UserInteractionInsert = Database['public']['Tables']['user_interactions']['
  * Tracking - Commander ce modèle
  * @ai-context Capture l'intention d'achat (conversion) et les préférences logistiques.
  */
+import { logMLInteraction } from '@/lib/logger'
+
 function trackOrderInteraction(payload: UserInteractionInsert) {
   // TODO: connecter à Supabase quand auth active (insert user_interactions).
-  console.log('[ML] user_interactions.insert', payload)
+  // ✅ Utilisation du logger sécurisé
+  logMLInteraction(payload)
 }
 
 type OrderProduct = {

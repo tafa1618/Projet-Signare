@@ -11,14 +11,21 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Calcul du prix de livraison selon le modèle Yango
- * @ai-context Base: 500 FCFA + 100 FCFA/km + 15% frais SIGNARE
+ * @security CRITIQUE : Cette fonction ne doit être appelée QUE côté serveur (API route)
+ * @ai-context Base: 1500 FCFA + 100 FCFA/km + 15% frais SIGNARE
  * @param distanceKm Distance en kilomètres
  * @returns Prix total en FCFA avec frais inclus
  */
 export function calculateShippingPrice(distanceKm: number): number {
-  const BASE_PRICE = 500
-  const PRICE_PER_KM = 100
-  const SIGNARE_FEE_PERCENT = 0.15
+  // Constantes de pricing (selon .cursorrules section 3)
+  const BASE_PRICE = 1500 // FCFA
+  const PRICE_PER_KM = 100 // FCFA
+  const SIGNARE_FEE_PERCENT = 0.15 // 15%
+
+  // Validation : distance doit être positive
+  if (distanceKm < 0) {
+    throw new Error('Distance ne peut pas être négative')
+  }
 
   const subtotal = BASE_PRICE + distanceKm * PRICE_PER_KM
   const signareFee = subtotal * SIGNARE_FEE_PERCENT

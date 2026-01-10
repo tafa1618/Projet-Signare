@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { useInfiniteScrollPagination } from '@/hooks/usePagination'
+import { Loader2 } from 'lucide-react'
 import { 
   Heart, 
   MessageCircle, 
@@ -38,6 +40,8 @@ import Link from 'next/link'
 import { cn } from '@/shared/lib/utils'
 import CartDropdown from '@/components/CartDropdown'
 import { useCart } from '@/hooks/useCart'
+import { useAuth } from '@/frontend/hooks/useAuth'
+import { logMLInteraction } from '@/lib/logger'
 
 // Types pour les posts
 type PostType = 'tailor' | 'client'
@@ -81,6 +85,7 @@ interface Post {
   quote_media?: string | null
 }
 
+// Données mockées pour transition (sera remplacé par API Supabase)
 const mockPosts: Post[] = [
   {
     id: 0,
@@ -107,7 +112,7 @@ const mockPosts: Post[] = [
     },
     garment_type: 'Boubou',
     quality_rating: 5,
-    quote_comment: '🔥 À voir absolument — finitions dignes d’un défilé.',
+    quote_comment: '🔥 À voir absolument — finitions dignes d'un défilé.',
     quote_media: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&h=1200&fit=crop',
   },
   {
@@ -327,6 +332,46 @@ const mockPosts: Post[] = [
   },
 ]
 
+// Fonction de fetch pour pagination (compatible mock + API)
+const fetchPosts = async (page: number, pageSize: number): Promise<{
+  data: Post[]
+  total?: number
+  hasMore: boolean
+}> => {
+  // TODO: Remplacer par appel API Supabase quand disponible
+  // Pour l'instant, pagination côté client avec mockPosts pour transition
+  const USE_API = false // Flag pour activer l'API Supabase
+  
+  if (USE_API) {
+    // Appel API Supabase
+    const response = await fetch(`/api/posts?page=${page}&pageSize=${pageSize}`)
+    if (!response.ok) {
+      throw new Error('Erreur lors du chargement des posts')
+    }
+    const data = await response.json()
+    return {
+      data: data.data as Post[],
+      total: data.total,
+      hasMore: data.hasMore,
+    }
+  } else {
+    // Pagination côté client avec mockPosts (transition)
+    const startIndex = (page - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    const paginatedPosts = mockPosts.slice(startIndex, endIndex)
+    const hasMore = endIndex < mockPosts.length
+    
+    // Simuler un délai réseau pour UX réaliste
+    await new Promise(resolve => setTimeout(resolve, 300))
+    
+    return {
+      data: paginatedPosts,
+      total: mockPosts.length,
+      hasMore,
+    }
+  }
+}
+
 // Helper component for Ratings (Stars)
 const StarRating = ({ rating, color = "#D4AF37" }: { rating: number, color?: string }) => (
   <div className="flex gap-0.5">
@@ -371,8 +416,8 @@ function useTrackPostVisibility(payload: InteractionPayload) {
           timerRef.current = setTimeout(() => {
             if (hasTrackedRef.current) return
             hasTrackedRef.current = true
-            // Placeholder ML tracking (à connecter à Supabase user_interactions)
-            console.log('[ML] trackInteraction', {
+            // ✅ ML tracking sécurisé (sanitization automatique)
+            logMLInteraction({
               ...payload,
               timestamp: new Date().toISOString(),
             })
@@ -1053,7 +1098,32 @@ const ClientCard = ({ post, onLike, onSave, onRepost, openCommentModal }: { post
 }
 
 export default function HomePage() {
-  const [posts, setPosts] = useState(mockPosts)
+  // ✅ Pagination automatique avec infinite scroll (scroll infini automatique)
+  const {
+    data: paginatedPosts,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    error: paginationError,
+    observerTarget,
+  } = useInfiniteScrollPagination<Post>(fetchPosts, {
+    pageSize: 5, // 5 posts par page pour UX mobile
+    initialPage: 1,
+    enabled: true,
+    threshold: 0.1, // Déclencher à 10% du bas de l'écran
+  })
+
+  // État local pour gérer les modifications (likes, saves, reposts, etc.)
+  const [postModifications, setPostModifications] = useState<Map<number, Partial<Post>>>(new Map())
+  
+  // Combiner les posts paginés avec les modifications locales
+  const posts = useMemo(() => {
+    return paginatedPosts.map(post => {
+      const modifications = postModifications.get(post.id)
+      return modifications ? { ...post, ...modifications } : post
+    })
+  }, [paginatedPosts, postModifications])
+
   const [repostModal, setRepostModal] = useState<{ postId: number; comment: string; media: string | null } | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [commentModal, setCommentModal] = useState<{ postId: number; comments: Array<{ id: number; user: string; avatar: string; text: string; time: string; likes: number }> } | null>(null)
@@ -1136,31 +1206,49 @@ export default function HomePage() {
     }
   }, [lastScrollY, isTouching])
 
-  const isAuthenticated = () => {
-    // @ai-context Auth simulée : permet de tester le flow social (repost) sans backend.
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem('signare_auth_demo') === '1'
-  }
+  // ✅ Utilisation de Supabase Auth au lieu de localStorage
+  const { user, isLoading: authLoading, signOut } = useAuth()
 
-  const handleLogout = () => {
-    // Simulation de déconnexion
+  const handleLogout = async () => {
+    // ✅ Déconnexion via Supabase Auth
+    await signOut()
     router.push('/welcome')
   }
 
   const handleLike = (postId: number) => {
-    setPosts(posts.map(post => 
-      post.id === postId 
-        ? { ...post, isLiked: !post.isLiked, likes: post.isLiked ? post.likes - 1 : post.likes + 1 }
-        : post
-    ))
+    const post = posts.find(p => p.id === postId)
+    if (!post) return
+    
+    setPostModifications(prev => {
+      const newMap = new Map(prev)
+      const currentMods = newMap.get(postId) || {}
+      const wasLiked = currentMods.isLiked ?? post.isLiked
+      const currentLikes = currentMods.likes ?? post.likes
+      
+      newMap.set(postId, {
+        ...currentMods,
+        isLiked: !wasLiked,
+        likes: wasLiked ? currentLikes - 1 : currentLikes + 1,
+      })
+      return newMap
+    })
   }
 
   const handleSave = (postId: number) => {
-    setPosts(posts.map(post => 
-      post.id === postId 
-        ? { ...post, isSaved: !post.isSaved }
-        : post
-    ))
+    const post = posts.find(p => p.id === postId)
+    if (!post) return
+    
+    setPostModifications(prev => {
+      const newMap = new Map(prev)
+      const currentMods = newMap.get(postId) || {}
+      const wasSaved = currentMods.isSaved ?? post.isSaved
+      
+      newMap.set(postId, {
+        ...currentMods,
+        isSaved: !wasSaved,
+      })
+      return newMap
+    })
   }
 
   const openCommentModal = (postId: number) => {
@@ -1195,21 +1283,32 @@ export default function HomePage() {
     })
     
     // Mettre à jour le nombre de commentaires du post
-    setPosts(posts.map(post => 
-      post.id === commentModal.postId 
-        ? { ...post, comments: post.comments + 1 }
-        : post
-    ))
+    const post = posts.find(p => p.id === commentModal.postId)
+    if (post) {
+      setPostModifications(prev => {
+        const newMap = new Map(prev)
+        const currentMods = newMap.get(commentModal.postId) || {}
+        const currentComments = currentMods.comments ?? post.comments
+        
+        newMap.set(commentModal.postId, {
+          ...currentMods,
+          comments: currentComments + 1,
+        })
+        return newMap
+      })
+    }
     
     setCommentDraft('')
   }
 
   const openRepost = (postId: number) => {
-    const authed = isAuthenticated()
-    if (!authed) {
-      // @ai-context Sauvegarde de l'intention (repost) pour reprise après login.
+    // ✅ Vérification d'authentification via Supabase Auth
+    if (!user) {
+      // Sauvegarde de l'intention (repost) pour reprise après login
       try {
-        localStorage.setItem('signare_intent', JSON.stringify({ type: 'repost', postId, created_at: new Date().toISOString() }))
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('signare_intent', JSON.stringify({ type: 'repost', postId, created_at: new Date().toISOString() }))
+        }
       } catch {
         // ignore
       }
@@ -1222,83 +1321,71 @@ export default function HomePage() {
   }
 
   const applyRepost = (postId: number, action: 'instant' | 'quote' | 'remove', comment?: string, media?: string | null) => {
-    setPosts((prev) => {
-      const base = prev.map((post) => {
-        if (post.id !== postId) return post
+    const post = posts.find(p => p.id === postId)
+    if (!post) return
 
-        const wasReposted = post.isReposted ?? false
-        const willRepost = action === 'remove' ? false : true
-        const currentCount = post.reposts ?? 0
-        const nextCount =
-          action === 'remove'
-            ? Math.max(0, currentCount - (wasReposted ? 1 : 0))
-            : currentCount + (wasReposted ? 0 : 1)
+    const wasReposted = post.isReposted ?? false
+    const willRepost = action === 'remove' ? false : true
+    const currentCount = post.reposts ?? 0
+    const nextCount =
+      action === 'remove'
+        ? Math.max(0, currentCount - (wasReposted ? 1 : 0))
+        : currentCount + (wasReposted ? 0 : 1)
 
-        const payloadType =
-          action === 'remove' ? 'unrepost' : action === 'quote' ? 'repost_quote' : 'repost'
-        const interactionScore = action === 'remove' ? 1 : action === 'quote' ? 4 : 3
+    const payloadType =
+      action === 'remove' ? 'unrepost' : action === 'quote' ? 'repost_quote' : 'repost'
+    const interactionScore = action === 'remove' ? 1 : action === 'quote' ? 4 : 3
 
-        console.log('[ML] trackInteraction', {
-          post_id: postId,
-          interaction_type: payloadType,
-          interaction_score: interactionScore,
-          metadata: { source: 'feed', role: post.type, garment_type: post.garment_type, quote: comment?.length ? true : false, media: !!media },
-          timestamp: new Date().toISOString(),
-        })
-
-        try {
-          const raw = localStorage.getItem('signare_reposts')
-          const current = raw ? (JSON.parse(raw) as any[]) : []
-          const actor = 'demo-user'
-          if (action === 'remove') {
-            const next = Array.isArray(current)
-              ? current.filter((r) => !(r.user_id === actor && r.post_id === String(postId)))
-              : []
-            localStorage.setItem('signare_reposts', JSON.stringify(next))
-          } else {
-            const item = { user_id: actor, post_id: String(postId), comment: comment ?? null, media: media ?? null, created_at: new Date().toISOString() }
-            const next = [item, ...(Array.isArray(current) ? current.filter((r) => !(r.user_id === actor && r.post_id === String(postId))) : [])]
-            localStorage.setItem('signare_reposts', JSON.stringify(next))
-          }
-        } catch {
-          // ignore
-        }
-
-        return {
-          ...post,
-          isReposted: willRepost,
-          reposts: nextCount,
-          quote_comment: action === 'remove' ? null : comment ?? null,
-          quote_media: action === 'remove' ? null : media ?? null,
-        }
-      })
-
-      if (action === 'remove') {
-        setToast('Republication retirée')
-        return base
-      }
-
-      const target = base.find((p) => p.id === postId)
-      if (!target) return base
-
-      const repostEntry: Post = {
-        ...target,
-        id: Date.now(),
-        repostOfId: postId,
-        repostedByMe: true,
-        quote_comment: comment ?? null,
-        quote_media: media ?? null,
-        user: {
-          ...target.user,
-          name: 'Vous',
-          role: 'Repost',
-        },
-        isReposted: true,
-      }
-
-      setToast('Republié sur votre feed')
-      return [repostEntry, ...base]
+    // ✅ ML tracking sécurisé
+    logMLInteraction({
+      post_id: postId,
+      interaction_type: payloadType,
+      interaction_score: interactionScore,
+      metadata: { source: 'feed', role: post.type, garment_type: post.garment_type, quote: comment?.length ? true : false, media: !!media },
+      timestamp: new Date().toISOString(),
     })
+
+    try {
+      const raw = localStorage.getItem('signare_reposts')
+      const current = raw ? (JSON.parse(raw) as any[]) : []
+      const actor = 'demo-user'
+      if (action === 'remove') {
+        const next = Array.isArray(current)
+          ? current.filter((r) => !(r.user_id === actor && r.post_id === String(postId)))
+          : []
+        localStorage.setItem('signare_reposts', JSON.stringify(next))
+      } else {
+        const item = { user_id: actor, post_id: String(postId), comment: comment ?? null, media: media ?? null, created_at: new Date().toISOString() }
+        const next = [item, ...(Array.isArray(current) ? current.filter((r) => !(r.user_id === actor && r.post_id === String(postId))) : [])]
+        localStorage.setItem('signare_reposts', JSON.stringify(next))
+      }
+    } catch {
+      // ignore
+    }
+
+    // Mettre à jour les modifications locales
+    setPostModifications(prev => {
+      const newMap = new Map(prev)
+      const currentMods = newMap.get(postId) || {}
+      
+      newMap.set(postId, {
+        ...currentMods,
+        isReposted: willRepost,
+        reposts: nextCount,
+        quote_comment: action === 'remove' ? null : comment ?? null,
+        quote_media: action === 'remove' ? null : media ?? null,
+      })
+      return newMap
+    })
+
+    if (action === 'remove') {
+      setToast('Republication retirée')
+      return
+    }
+
+    // Pour les reposts avec quote, on peut ajouter un nouveau post dans le feed
+    // TODO: Implémenter l'ajout d'un nouveau post de repost dans le feed si nécessaire
+    setToast('Republié sur votre feed')
   }
 
   const onRepost = (postId: number) => {
@@ -1575,6 +1662,14 @@ export default function HomePage() {
 
       {/* Feed Principal */}
       <main className="max-w-2xl mx-auto pt-20 sm:pt-24">
+        {/* Indicateur de chargement initial */}
+        {isLoading && posts.length === 0 && (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+          </div>
+        )}
+
+        {/* Liste des posts */}
         {posts.map((post) => (
           post.type === 'tailor' ? (
             <TailorCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={openRepost} openCommentModal={openCommentModal} />
@@ -1582,6 +1677,49 @@ export default function HomePage() {
             <ClientCard key={post.id} post={post} onLike={handleLike} onSave={handleSave} onRepost={openRepost} openCommentModal={openCommentModal} />
           )
         ))}
+
+        {/* Indicateur de chargement pour infinite scroll (automatique) */}
+        {isLoadingMore && (
+          <div className="flex items-center justify-center py-8" ref={observerTarget}>
+            <Loader2 className="w-6 h-6 text-[#D4AF37] animate-spin" />
+            <span className="ml-2 text-sm text-white/60">Chargement...</span>
+          </div>
+        )}
+
+        {/* Élément déclencheur pour infinite scroll (visible seulement si on charge plus) */}
+        {!isLoadingMore && hasMore && (
+          <div ref={observerTarget} className="h-20 flex items-center justify-center">
+            <div className="w-1 h-1 bg-transparent" aria-hidden="true" />
+          </div>
+        )}
+
+        {/* Message d'erreur */}
+        {paginationError && (
+          <div className="flex items-center justify-center py-8 px-4">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-center">
+              <p className="text-sm text-red-400">
+                {paginationError instanceof Error && 'getUserMessage' in paginationError
+                  ? (paginationError as any).getUserMessage()
+                  : 'Erreur lors du chargement des posts'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Footer de fin de feed (quand tout est chargé) */}
+        {!hasMore && posts.length > 0 && !isLoading && (
+          <div className="py-20 flex flex-col items-center">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-16 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
+              <Sparkles className="w-5 h-5 text-[#D4AF37]/60" />
+              <div className="w-16 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
+            </div>
+            <p className="text-[10px] text-[#D4AF37]/50 font-serif tracking-[0.4em] uppercase">
+              Signare • Dakar Luxe
+            </p>
+            <p className="text-[9px] text-white/30 mt-2">Vous avez vu tous les posts</p>
+          </div>
+        )}
 
         {repostModal && (
           <motion.div
@@ -1696,18 +1834,6 @@ export default function HomePage() {
           </motion.div>
         )}
 
-        {/* Footer de fin de feed */}
-        <div className="py-20 flex flex-col items-center">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-px bg-gradient-to-r from-transparent to-[#D4AF37]/40" />
-            <Sparkles className="w-5 h-5 text-[#D4AF37]/60" />
-            <div className="w-16 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
-          </div>
-          <p className="text-[10px] text-[#D4AF37]/50 font-serif tracking-[0.4em] uppercase">
-            Signare • Dakar Luxe
-          </p>
-        </div>
-      </main>
 
       {/* Modal Commentaires - Inspiré de FriendKit */}
       {commentModal && (

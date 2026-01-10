@@ -67,3 +67,63 @@ Le terme SIGNARE fera référence à Femme, et NDANANE aux Hommes, en tenir comp
 - **Format Standard :** Convertir systématiquement tous les uploads en format WebP avec une compression de 80% pour maximiser la vitesse sur mobile.
 - **Client-Side Validation :** Implémenter un script de détection de flou (Blur detection) lors de l'upload pour avertir l'utilisateur si la qualité est insuffisante.
 - **Resolution Cap :** Redimensionner les images à un maximum de 1200px de large (suffisant pour le luxe, léger pour le réseau 4G).
+
+## 9. Règles Globales d'Ingénierie (OBLIGATOIRES)
+- **Ordre de Priorité :**
+  1. Justesse fonctionnelle
+  2. Sécurité
+  3. Maintenabilité
+  4. Scalabilité
+  5. Performance
+  6. Expérience développeur
+
+- **Principes d'Architecture :**
+  - Respecter une séparation stricte des responsabilités : Frontend (affichage uniquement), Backend (logique métier), Base de données (persistance), Services IA (microservices isolés)
+  - Ne JAMAIS placer de logique métier critique côté client
+  - Concevoir toutes les APIs comme stateless par défaut
+  - Garantir une source unique de vérité pour les règles métier
+  - Aucune logique dupliquée entre les couches
+
+- **Données & Algorithmes :**
+  - Choisir explicitement les structures de données (Map pour accès par clé, Set pour l'unicité)
+  - Éviter les parcours linéaires quand un accès en temps constant est possible
+  - Éviter les boucles imbriquées sur des données susceptibles de croître
+  - Implémenter une pagination pour toute collection pouvant grandir
+  - Éviter les tris ou recalculs inutiles à chaque requête
+
+- **Gestion des Erreurs & Robustesse :**
+  - Toute erreur doit être explicite, prévisible et exploitable
+  - Utiliser les codes HTTP appropriés
+  - Ne jamais masquer silencieusement une erreur
+
+- **Sécurité par Défaut :**
+  - Considérer toutes les entrées client comme malveillantes
+  - Valider et nettoyer toutes les entrées
+  - Ne jamais faire confiance à la validation côté frontend
+  - Ne pas exposer d'informations sensibles dans les réponses
+
+- **Scalabilité & Performance :**
+  - Concevoir pour une scalabilité horizontale
+  - Éviter les sessions côté serveur
+  - Identifier les points de blocage potentiels
+  - Préférer des solutions simples à des solutions complexes
+
+- **Qualité du Code :**
+  - Les fonctions doivent être courtes et focalisées
+  - Les noms de variables et de fonctions doivent être explicites
+  - Éviter les effets de bord cachés
+  - Le code doit être compréhensible sans commentaires
+
+- **Anti-Patterns (Interdits) :**
+  - Logique métier dans les composants UI
+  - Validation dupliquée entre frontend et backend
+  - Secrets ou identifiants en dur
+  - Sur-ingénierie sans justification
+  - Optimisation prématurée sans données
+
+- **Vérification Finale :**
+  Avant de proposer du code, vérifier :
+  - Où se situe la logique métier ?
+  - Est-ce que cela scale avec 10× plus d'utilisateurs ?
+  - Les modes d'échec sont-ils sûrs ?
+  - Un nouveau développeur peut-il comprendre en 10 minutes ?

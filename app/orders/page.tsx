@@ -15,14 +15,17 @@ import {
 import type { Database, Order } from '@/shared/types/database.types'
 import { cn } from '@/shared/lib/utils'
 
+import { logMLInteraction } from '@/lib/logger'
+
 type UserInteractionInsert = Database['public']['Tables']['user_interactions']['Insert']
 
 /**
  * Tracking - Orders (tailleur)
- * @ai-context Capture l’activité business (consultation liste, filtres, ouverture détail).
+ * @ai-context Capture l'activité business (consultation liste, filtres, ouverture détail).
  */
 function trackOrdersInteraction(payload: UserInteractionInsert) {
-  console.log('[ML] user_interactions.insert', payload)
+  // ✅ Utilisation du logger sécurisé
+  logMLInteraction(payload)
 }
 
 type OrderWithPreview = Order & {
