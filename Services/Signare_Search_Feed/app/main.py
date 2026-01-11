@@ -8,6 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.routes import feed, search, recommend, track
 
+# Import dev routes uniquement en développement
+import os
+if os.getenv("ENVIRONMENT", "development") == "development":
+    from app.api.routes import dev
+
 app = FastAPI(
     title="SIGNARE Search, Feed & Recommendation Engine",
     version=settings.service_version,
@@ -30,6 +35,14 @@ app.include_router(feed.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
 app.include_router(recommend.router, prefix="/api/v1")
 app.include_router(track.router, prefix="/api/v1")
+
+# Routes DEV (uniquement en développement)
+if os.getenv("ENVIRONMENT", "development") == "development":
+    app.include_router(dev.router, prefix="/api/v1")
+
+# Routes DEV (uniquement en développement)
+if os.getenv("ENVIRONMENT", "development") == "development":
+    app.include_router(dev.router, prefix="/api/v1")
 
 
 @app.get("/")

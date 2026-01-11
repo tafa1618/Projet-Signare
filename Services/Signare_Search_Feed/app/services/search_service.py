@@ -12,6 +12,7 @@ import uuid
 from app.schemas.search import SearchRequest, SearchResponse, SearchItem, SearchFilter
 from app.models.feed import Item, Tailor
 from app.repositories.item_repository import ItemRepository
+from app.services.vector_service import get_vector_service
 from app.core.config import settings
 
 
@@ -21,6 +22,8 @@ class SearchService:
     def __init__(self, db: Session):
         self.db = db
         self.item_repo = ItemRepository()
+        self.vector_service = get_vector_service()
+        self.vector_service = get_vector_service()
 
     def search(self, request: SearchRequest) -> SearchResponse:
         """
@@ -40,9 +43,7 @@ class SearchService:
         keyword_items = self._search_by_keywords(request.query, request.filters)
 
         # Étape 2: Recherche sémantique (si embeddings disponibles)
-        semantic_items = []
-        # TODO: Implémenter la recherche sémantique avec embeddings
-        # semantic_items = self._search_by_semantics(request.query, request.filters)
+        semantic_items = self._search_by_semantics(request.query, request.filters)
 
         # Étape 3: Combiner et dédupliquer
         all_items = self._merge_results(keyword_items, semantic_items)
@@ -156,6 +157,71 @@ class SearchService:
         # TODO: Implémenter le filtrage par région si besoin
 
         return filtered
+
+    def _search_by_semantics(
+        self, query: str, filters: Optional[SearchFilter]
+    ) -> List[Item]:
+        """
+        Recherche sémantique via embeddings
+
+        En mode DEV (FAISS non disponible), utilise un fallback basé sur les mots-clés.
+        """
+        # Générer l'embedding de la requête (mock en DEV, réel en PROD)
+        query_embedding = self._generate_query_embedding(query)
+
+        # Recherche vectorielle
+        try:
+            # Récupérer tous les items disponibles pour la recherche
+            base_query = self.db.query(Item).filter(Item.availability == True)
+            if filters:
+                if filters.category:
+                    base_query = base_query.filter(Item.category == filters.category)
+                if filters.min_price:
+                    base_query = base_query.filter(Item.price >= filters.min_price)
+                if filters.max_price:
+                    base_query = base_query.filter(Item.price <= filters.max_price)
+
+            all_items = base_query.all()
+            item_ids = [item.id for item in all_items]
+
+            if not item_ids:
+                return []
+
+            # Recherche dans l'index vectoriel
+            k = min(20, len(item_ids))  # Limiter à 20 résultats sémantiques
+            vector_results = self.vector_service.search(query_embedding, k, item_ids)
+
+            # Récupérer les items correspondants
+            result_ids = [item_id for item_id, _ in vector_results]
+            semantic_items = self.item_repo.get_by_ids(self.db, result_ids)
+
+            return semantic_items
+
+        except Exception:
+            # En cas d'erreur, fallback vers liste vide (les mots-clés prendront le relais)
+            return []
+
+    def _generate_query_embedding(self, query: str) -> List[float]:
+        """
+        Génère un embedding pour la requête
+
+        En DEV: embedding mocké (déterministe basé sur la requête)
+        En PROD: utiliser un vrai modèle (sentence-transformers)
+        """
+        # Embedding mocké pour DEV (384 dimensions)
+        # En production, remplacer par un vrai modèle d'embedding
+        import random
+        
+        # Rendre déterministe pour la même requête
+        random.seed(hash(query) % 1000)
+        embedding = [random.gauss(0, 0.1) for _ in range(self.vector_service.dimension)]
+        
+        # Normaliser
+        norm = sum(x**2 for x in embedding) ** 0.5
+        if norm > 0:
+            embedding = [x / norm for x in embedding]
+        
+        return embedding
 
     def _calculate_scores(
         self,

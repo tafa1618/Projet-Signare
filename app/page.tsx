@@ -39,6 +39,7 @@ import {
 import Link from 'next/link'
 import { cn } from '@/shared/lib/utils'
 import CartDropdown from '@/components/CartDropdown'
+import SearchModal from '@/components/SearchModal'
 import { useCart } from '@/hooks/useCart'
 import { useAuth } from '@/frontend/hooks/useAuth'
 import { logMLInteraction } from '@/lib/logger'
@@ -1131,6 +1132,7 @@ export default function HomePage() {
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const [headerVisible, setHeaderVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isTouching, setIsTouching] = useState(false)
@@ -1394,6 +1396,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-24 text-white">
+      {/* Search Modal */}
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+
       {/* Header Luxe Signare */}
       <AnimatePresence>
         {headerVisible && (
@@ -1417,16 +1422,15 @@ export default function HomePage() {
             {/* Desktop: Tous les boutons visibles */}
             <div className="hidden md:flex items-center gap-2">
               {/* Search Button */}
-              <Link href="/search">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors p-2"
-                  title="Rechercher"
-                >
-                  <Search className="w-5 h-5" />
-                </motion.button>
-              </Link>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setSearchOpen(true)}
+                className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors p-2"
+                title="Rechercher"
+              >
+                <Search className="w-5 h-5" />
+              </motion.button>
               
               {/* Shop */}
               <Link href="/shop">
@@ -1526,6 +1530,18 @@ export default function HomePage() {
                 </motion.button>
               </Link>
               
+              {/* Search Button - Visible à côté du + */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setSearchOpen(true)}
+                className="text-[#D4AF37] hover:text-[#D4AF37]/80 transition-colors p-1.5"
+                title="Rechercher"
+                aria-label="Rechercher"
+              >
+                <Search className="w-5 h-5" />
+              </motion.button>
+              
               {/* Avatar Profil - Toujours visible */}
               <Link href="/profil">
                 <motion.button
@@ -1562,14 +1578,7 @@ export default function HomePage() {
               className="md:hidden border-t border-[#D4AF37]/20 bg-[#0A0A0A] px-4 py-3"
             >
               <div className="grid grid-cols-2 gap-3">
-                <Link
-                  href="/search"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/10 transition-colors"
-                >
-                  <Search className="w-5 h-5 text-[#D4AF37]" />
-                  <span className="text-sm font-semibold text-white">Rechercher</span>
-                </Link>
+                {/* Le bouton Rechercher n'est plus dans le menu, mais reste pour accès rapide */}
                 
                 <Link
                   href="/shop"

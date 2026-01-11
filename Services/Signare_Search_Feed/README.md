@@ -67,8 +67,25 @@ cp .env.example .env
 # Créer la base de données
 psql -U postgres -d signare_search_feed < migrations/001_initial_schema.sql
 
+# Seeder avec des données mockées (DEV)
+python scripts/seed_mock_data.py
+
 # Lancer le service
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8003
+```
+
+### 🧪 Données Mockées (DEV)
+
+Pour tester rapidement sans données réelles, utilisez le script de seeding :
+
+```bash
+# Seeder manuellement
+python scripts/seed_mock_data.py
+
+# Ou via l'API (si ENVIRONMENT=development)
+POST /api/v1/dev/seed
+GET /api/v1/dev/stats  # Voir les statistiques
+DELETE /api/v1/dev/reset  # Réinitialiser (⚠️ supprime tout)
 ```
 
 ## 📡 Endpoints
@@ -333,7 +350,7 @@ Voir `HYPOTHESES.md` pour les hypothèses et choix architecturaux.
 
 ```bash
 docker build -t signare-search-feed .
-docker run -p 8000:8000 --env-file .env signare-search-feed
+docker run -p 8003:8003 --env-file .env signare-search-feed
 ```
 
 ## ✅ Statut d'Implémentation
@@ -349,5 +366,10 @@ docker run -p 8000:8000 --env-file .env signare-search-feed
   - ✅ Fallback anti-cold-start
   - ✅ Diversification automatique
   - ✅ Raisons de recommandation explicables
+- ✅ Script de seeding avec données mockées (DEV)
+  - ✅ Génération de 50 items réalistes
+  - ✅ 5 tailleurs avec scores de performance
+  - ✅ 100 événements de test
+  - ✅ Endpoints DEV pour gestion des données (`/dev/seed`, `/dev/stats`, `/dev/reset`)
 - ⏳ Intégration FAISS pour vector search
 - ⏳ Synchronisation des données depuis le backend métier

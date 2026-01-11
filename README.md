@@ -30,6 +30,9 @@ SUPABASE_SERVICE_ROLE_KEY=votre_cle_service_role_secrete
 
 # Delivery Engine (microservice Python)
 DELIVERY_ENGINE_URL=http://localhost:8002
+
+# Search/Feed/Recommendation Engine (microservice Python)
+NEXT_PUBLIC_SEARCH_ENGINE_URL=http://localhost:8003/api/v1
 ```
 
 ### 3. Lancement
