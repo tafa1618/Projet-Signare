@@ -4,11 +4,10 @@ Routes API pour le Tracking
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-import uuid
 
 from app.schemas.tracking import TrackingRequest, TrackingResponse
+from app.services.tracking_service import TrackingService
 from app.core.database import get_db
-from app.models.feed import UserEvent
 
 router = APIRouter(prefix="/track", tags=["tracking"])
 
@@ -16,37 +15,50 @@ router = APIRouter(prefix="/track", tags=["tracking"])
 @router.post("", response_model=TrackingResponse)
 def track_events(request: TrackingRequest, db: Session = Depends(get_db)):
     """
-    Enregistre des événements utilisateur (append-only)
+    Enregistre des événements utilisateur et met à jour les signaux business
 
-    Types d'événements:
-    - view_item
-    - search
-    - click
-    - add_to_cart
-    - purchase
+    Types d'événements supportés:
+    - view_item : Incrémente view_count de l'item
+    - click : Incrémente click_count de l'item
+    - add_to_cart : Incrémente click_count de l'item
+    - purchase : Incrémente purchase_count de l'item
+    - search : Enregistré mais ne met pas à jour les compteurs
+    - share, like, save : Enregistrés mais ne mettent pas à jour les compteurs
+
+    Les compteurs sont mis à jour atomiquement pour garantir la cohérence.
     """
     try:
-        events_to_save = []
-        for event in request.events:
-            db_event = UserEvent(
-                id=str(uuid.uuid4()),
-                event_type=event.event_type,
-                entity_id=event.entity_id,
-                user_id=event.user_id,
-                session_id=event.session_id,
-                timestamp=event.timestamp,
-                context=event.context,
-            )
-            events_to_save.append(db_event)
-
-        db.add_all(events_to_save)
-        db.commit()
+        tracking_service = TrackingService(db)
+        events_processed = tracking_service.track_events(request.events)
 
         return TrackingResponse(
-            events_processed=len(events_to_save),
+            events_processed=events_processed,
             status="success",
         )
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Erreur lors de l'enregistrement: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erreur lors de l'enregistrement: {str(e)}"
+        )
+
+
+@router.get("/item/{item_id}/stats")
+def get_item_stats(item_id: str, db: Session = Depends(get_db)):
+    """
+    Récupère les statistiques d'un item (view_count, click_count, purchase_count, conversion_rate)
+    """
+    try:
+        tracking_service = TrackingService(db)
+        stats = tracking_service.get_item_statistics(item_id)
+
+        if not stats:
+            raise HTTPException(status_code=404, detail="Item non trouvé")
+
+        return stats
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Erreur lors de la récupération: {str(e)}"
+        )
 

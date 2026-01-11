@@ -122,17 +122,134 @@ Génère un feed personnalisé structuré par sections.
 }
 ```
 
-### `POST /api/v1/search` (À implémenter)
+### `POST /api/v1/search`
 
-Recherche hybride orientée conversion.
+Recherche hybride (sémantique + mots-clés) orientée conversion.
 
-### `POST /api/v1/recommend` (À implémenter)
+**Request:**
+```json
+{
+  "query": "boubou traditionnel",
+  "filters": {
+    "category": "boubou",
+    "min_price": 10000,
+    "max_price": 50000,
+    "color": "blanc",
+    "availability": true
+  },
+  "context": {
+    "user_id": "user123",
+    "device_type": "mobile",
+    "location": {
+      "city": "Dakar",
+      "country": "SN"
+    }
+  },
+  "max_results": 50,
+  "offset": 0
+}
+```
 
-Recommandations contextuelles.
+**Response:**
+```json
+{
+  "query": "boubou traditionnel",
+  "total_results": 45,
+  "items": [
+    {
+      "id": "item123",
+      "title": "Boubou traditionnel brodé",
+      "description": "...",
+      "image_url": "...",
+      "price": 35000,
+      "tailor_id": "tailor456",
+      "tailor_name": "Maison Aïda",
+      "tailor_rating": 4.8,
+      "rating": 4.5,
+      "availability": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "relevance_score": 0.85,
+      "business_score": 0.92,
+      "final_score": 0.892
+    }
+  ],
+  "suggestions": ["boubou traditionnel mariage", "boubou traditionnel bazin"],
+  "filters_applied": {...},
+  "search_id": "uuid"
+}
+```
+
+**Fonctionnalités:**
+- Recherche par mots-clés (titre, description)
+- Filtres structurés (catégorie, prix, couleur, disponibilité)
+- Ranking hybride (similarité sémantique 40% + signaux business 60%)
+- Orientation conversion (favorise récence, qualité tailleur, performance)
+- Suggestions de recherche
+
+### `GET /api/v1/search/suggestions`
+
+Récupère des suggestions de recherche basées sur la requête.
+
+### `POST /api/v1/recommend`
+
+Recommandations contextuelles basées sur le contexte utilisateur ou item.
+
+**Request (basé sur utilisateur):**
+```json
+{
+  "user_context": {
+    "user_id": "user123",
+    "recent_item_ids": ["item1", "item2", "item3"],
+    "interaction_count": 15
+  },
+  "max_results": 20,
+  "diversify": true
+}
+```
+
+**Request (items similaires):**
+```json
+{
+  "item_context": {
+    "item_id": "item123",
+    "category": "boubou",
+    "price_range": [20000, 50000]
+  },
+  "max_results": 20,
+  "diversify": true
+}
+```
+
+**Response:**
+```json
+{
+  "items": [
+    {
+      "id": "item456",
+      "title": "Boubou traditionnel",
+      "image_url": "...",
+      "price": 35000,
+      "tailor_id": "tailor789",
+      "tailor_name": "Maison Aïda",
+      "rating": 4.5,
+      "relevance_score": 0.85,
+      "recommendation_reason": "Basé sur vos préférences • Très populaire • Tailleur de qualité"
+    }
+  ],
+  "strategy_used": "content-based",
+  "total_results": 20
+}
+```
+
+**Stratégies:**
+- `content-based` : Basé sur l'historique et préférences utilisateur
+- `similarity` : Items similaires à un item donné
+- `fallback` : Trending + New Arrivals si contexte insuffisant
+- `content-based+fallback` : Combinaison des deux
 
 ### `POST /api/v1/track`
 
-Enregistre des événements utilisateur.
+Enregistre des événements utilisateur **et met à jour automatiquement les signaux business**.
 
 **Request:**
 ```json
@@ -144,10 +261,29 @@ Enregistre des événements utilisateur.
       "user_id": "user123",
       "session_id": "session456",
       "context": {}
+    },
+    {
+      "event_type": "click",
+      "entity_id": "item123",
+      "user_id": "user123",
+      "session_id": "session456",
+      "context": {}
     }
   ]
 }
 ```
+
+**Mise à jour automatique des compteurs** :
+- `view_item` → Incrémente `view_count`
+- `click` → Incrémente `click_count`
+- `add_to_cart` → Incrémente `click_count`
+- `purchase` → Incrémente `purchase_count`
+
+**Les mises à jour sont atomiques** pour garantir la cohérence.
+
+### `GET /api/v1/track/item/{item_id}/stats`
+
+Récupère les statistiques d'un item (view_count, click_count, purchase_count, conversion_rate).
 
 ## 🔄 Synchronisation des Données (Read Model)
 
@@ -206,7 +342,12 @@ docker run -p 8000:8000 --env-file .env signare-search-feed
 - ✅ Modèles de données
 - ✅ Endpoint `/feed` (version minimale)
 - ✅ Endpoint `/track`
-- ⏳ Endpoint `/search` (à implémenter)
-- ⏳ Endpoint `/recommend` (à implémenter)
+- ✅ Endpoint `/search` (recherche hybride orientée conversion)
+- ✅ Endpoint `/recommend` (recommandations contextuelles)
+  - ✅ Content-based (basé sur historique utilisateur)
+  - ✅ Similarity (items similaires)
+  - ✅ Fallback anti-cold-start
+  - ✅ Diversification automatique
+  - ✅ Raisons de recommandation explicables
 - ⏳ Intégration FAISS pour vector search
 - ⏳ Synchronisation des données depuis le backend métier

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.schemas.search import SearchRequest, SearchResponse
+from app.services.search_service import SearchService
 from app.core.database import get_db
 
 router = APIRouter(prefix="/search", tags=["search"])
@@ -17,21 +18,34 @@ def search(request: SearchRequest, db: Session = Depends(get_db)):
     Recherche hybride (sémantique + mots-clés) orientée conversion
 
     Le ranking favorise:
-    - Récence des modèles
-    - Qualité/talent du tailleur
-    - Performance historique
-    - Disponibilité
-    - Cohérence du prix
+    - Récence des modèles (30%)
+    - Qualité/talent du tailleur (20%)
+    - Performance historique (20%)
+    - Disponibilité (15%)
+    - Cohérence du prix (15%)
 
-    La similarité sémantique n'est pas dominante.
+    La similarité sémantique (40%) n'est pas dominante.
+    Les signaux business (60%) priment pour maximiser la conversion.
     """
-    # TODO: Implémenter la logique de recherche
-    raise HTTPException(status_code=501, detail="Endpoint en cours d'implémentation")
+    try:
+        search_service = SearchService(db)
+        result = search_service.search(request)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Erreur lors de la recherche: {str(e)}"
+        )
 
 
-@router.post("/suggestions")
+@router.get("/suggestions")
 def get_suggestions(query: str, db: Session = Depends(get_db)):
     """Récupère des suggestions de recherche"""
-    # TODO: Implémenter les suggestions
-    return {"suggestions": []}
+    try:
+        search_service = SearchService(db)
+        suggestions = search_service.generate_suggestions(query)
+        return {"suggestions": suggestions}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Erreur lors de la génération de suggestions: {str(e)}"
+        )
 

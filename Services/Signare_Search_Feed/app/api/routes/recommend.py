@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.schemas.recommendation import RecommendationRequest, RecommendationResponse
+from app.services.recommendation_service import RecommendationService
 from app.core.database import get_db
 
 router = APIRouter(prefix="/recommend", tags=["recommendation"])
@@ -17,10 +18,18 @@ def recommend(request: RecommendationRequest, db: Session = Depends(get_db)):
     Génère des recommandations contextuelles
 
     Stratégies:
-    - Content-based (prioritaire)
-    - Fallback anti-cold-start
-    - Prise en compte du contexte (temps, localisation, budget)
+    - Content-based (prioritaire) : Basé sur l'historique utilisateur
+    - Similarity : Items similaires à un item donné
+    - Fallback anti-cold-start : Trending + New Arrivals si contexte insuffisant
+
+    Le système diversifie automatiquement les résultats pour éviter la redondance.
     """
-    # TODO: Implémenter la logique de recommandation
-    raise HTTPException(status_code=501, detail="Endpoint en cours d'implémentation")
+    try:
+        recommendation_service = RecommendationService(db)
+        result = recommendation_service.recommend(request)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Erreur lors de la génération de recommandations: {str(e)}"
+        )
 
