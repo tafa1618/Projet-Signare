@@ -115,6 +115,7 @@ export default function PublishPage() {
 
   // Publication (Simulation)
   const handlePublish = async () => {
+    // Seuls les médias, tailleur et événement sont obligatoires
     if (mediaFiles.length === 0 || !selectedTailorId || !eventStyle) return
     
     setIsPublishing(true)
@@ -341,30 +342,9 @@ export default function PublishPage() {
           />
         </section>
 
-        {/* 2. DESCRIPTION (NLP Ready) */}
+        {/* 2. TAILLEUR + STYLE (grille 2 colonnes) */}
         <AnimatePresence>
           {mediaFiles.length > 0 && (
-            <motion.section
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.25 }}
-              className="space-y-3"
-            >
-              <label className="text-[10px] uppercase tracking-[0.22em] text-[#D4AF37] font-black">L’histoire</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Occasion, compliments reçus, finitions du tailleur…"
-                className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/40 transition-all text-sm leading-relaxed placeholder:text-white/20 resize-none min-h-[84px]"
-              />
-            </motion.section>
-          )}
-        </AnimatePresence>
-
-        {/* 3. TAILLEUR + STYLE (grille 2 colonnes) */}
-        <AnimatePresence>
-          {mediaFiles.length > 0 && description.trim().length > 0 && (
             <motion.section
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -472,9 +452,9 @@ export default function PublishPage() {
           )}
         </AnimatePresence>
 
-        {/* 4. QUALITY RATING (Sentiment Analysis Ready) */}
+        {/* 3. QUALITY RATING (Sentiment Analysis Ready) */}
         <AnimatePresence>
-          {mediaFiles.length > 0 && description.trim().length > 0 && selectedTailorId && eventStyle && (
+          {mediaFiles.length > 0 && selectedTailorId && eventStyle && (
             <motion.section
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -518,6 +498,29 @@ export default function PublishPage() {
           )}
         </AnimatePresence>
 
+        {/* 4. DESCRIPTION (NLP Ready) - Déplacée en bas et non obligatoire */}
+        <AnimatePresence>
+          {mediaFiles.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.25 }}
+              className="space-y-3"
+            >
+              <label className="text-[10px] uppercase tracking-[0.22em] text-white/60 font-black">
+                L'histoire (optionnel)
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Occasion, compliments reçus, finitions du tailleur… (optionnel)"
+                className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/30 transition-all text-sm leading-relaxed placeholder:text-white/20 resize-none min-h-[84px]"
+              />
+            </motion.section>
+          )}
+        </AnimatePresence>
+
         <div className="h-10" />
       </motion.main>
 
@@ -529,6 +532,7 @@ export default function PublishPage() {
             whileTap={{ scale: 0.98 }}
             onClick={handlePublish}
             disabled={isPublishing || mediaFiles.length === 0 || !selectedTailorId || !eventStyle}
+            // La description n'est plus obligatoire
             className="w-full bg-[#D4AF37] text-[#0A0A0A] font-black tracking-[0.22em] uppercase py-4 rounded-2xl shadow-xl transition-all relative overflow-hidden disabled:opacity-50 disabled:grayscale"
           >
             <span className="relative z-10 flex items-center justify-center gap-3">

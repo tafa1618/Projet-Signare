@@ -13,9 +13,23 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  Info
+  Info,
+  Shirt,
+  Calendar,
+  Users,
+  Palette
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import {
+  FABRIC_TAGS,
+  EVENT_TAGS,
+  GENDER_TAGS,
+  COLOR_TAGS,
+  type FabricTag,
+  type EventTag,
+  type GenderTag,
+  type ColorTag,
+} from '@/shared/constants/ai-tags'
 
 type SellerType = 'tailleur' | 'consumer'
 
@@ -35,6 +49,12 @@ export default function ShopPublishPage() {
   const [sellerType, setSellerType] = useState<SellerType>('consumer')
   const [showSuccess, setShowSuccess] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Métadonnées optionnelles pour améliorer les recommandations IA
+  const [selectedFabric, setSelectedFabric] = useState<FabricTag | null>(null)
+  const [selectedEvent, setSelectedEvent] = useState<EventTag | null>(null)
+  const [selectedGender, setSelectedGender] = useState<GenderTag | null>(null)
+  const [selectedColor, setSelectedColor] = useState<ColorTag | null>(null)
 
   // Récupérer l'image depuis les query params si c'est un tailleur
   useEffect(() => {
@@ -88,6 +108,27 @@ export default function ShopPublishPage() {
     if (!title.trim() || !price.trim() || mediaPreviews.length === 0) return
 
     setIsSubmitting(true)
+
+    // Préparer les données avec métadonnées optionnelles
+    const productData = {
+      title: title.trim(),
+      description: description.trim() || null, // Optionnel
+      price: parseFloat(price),
+      category: category || null,
+      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+      // Métadonnées optionnelles pour améliorer les recommandations IA
+      metadata: {
+        fabric: selectedFabric || null,
+        event: selectedEvent || null,
+        gender: selectedGender || null,
+        color: selectedColor || null,
+      },
+      sellerType,
+      mediaFiles: mediaPreviews.length,
+    }
+
+    // TODO: Envoyer les données à l'API
+    // await fetch('/api/products', { method: 'POST', body: JSON.stringify(productData) })
 
     // Simuler l'envoi
     await new Promise(resolve => setTimeout(resolve, 1500))
@@ -243,20 +284,6 @@ export default function ShopPublishPage() {
             />
           </div>
 
-          {/* Description */}
-          <div className="space-y-1.5 sm:space-y-2">
-            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-[0.15em]">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Décrivez votre produit..."
-              rows={3}
-              className="w-full bg-white/5 border border-[#D4AF37]/20 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-colors resize-none"
-            />
-          </div>
-
           {/* Price & Category */}
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             <div className="space-y-1.5 sm:space-y-2">
@@ -289,17 +316,161 @@ export default function ShopPublishPage() {
             </div>
           </div>
 
-          {/* Tags */}
+          {/* Métadonnées optionnelles pour améliorer les recommandations IA */}
+          <div className="bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2">
+              <Sparkles size={14} className="text-[#D4AF37]" />
+              <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-[0.15em]">
+                Métadonnées (optionnel) - Pour améliorer les recommandations IA
+              </label>
+            </div>
+            <p className="text-[10px] sm:text-[11px] text-white/50">
+              Ces informations aident notre IA à mieux recommander votre produit aux clients intéressés
+            </p>
+
+            {/* Tissu */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Shirt size={12} className="text-[#D4AF37]" />
+                <label className="text-[10px] sm:text-[11px] text-white/70 uppercase tracking-[0.1em]">
+                  Tissu
+                </label>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {FABRIC_TAGS.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => setSelectedFabric(selectedFabric === tag.id ? null : tag.id)}
+                    className={cn(
+                      "px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-[11px] font-semibold border transition-all",
+                      selectedFabric === tag.id
+                        ? "bg-[#D4AF37] text-[#0A0A0A] border-[#D4AF37]"
+                        : "bg-white/5 text-white/70 border-white/10 hover:border-[#D4AF37]/30"
+                    )}
+                  >
+                    {tag.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Événement */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Calendar size={12} className="text-[#D4AF37]" />
+                <label className="text-[10px] sm:text-[11px] text-white/70 uppercase tracking-[0.1em]">
+                  Événement
+                </label>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {EVENT_TAGS.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => setSelectedEvent(selectedEvent === tag.id ? null : tag.id)}
+                    className={cn(
+                      "px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-[11px] font-semibold border transition-all",
+                      selectedEvent === tag.id
+                        ? "bg-[#D4AF37] text-[#0A0A0A] border-[#D4AF37]"
+                        : "bg-white/5 text-white/70 border-white/10 hover:border-[#D4AF37]/30"
+                    )}
+                  >
+                    {tag.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Genre */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Users size={12} className="text-[#D4AF37]" />
+                <label className="text-[10px] sm:text-[11px] text-white/70 uppercase tracking-[0.1em]">
+                  Genre / Âge
+                </label>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {GENDER_TAGS.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => setSelectedGender(selectedGender === tag.id ? null : tag.id)}
+                    className={cn(
+                      "px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-[11px] font-semibold border transition-all",
+                      selectedGender === tag.id
+                        ? "bg-[#D4AF37] text-[#0A0A0A] border-[#D4AF37]"
+                        : "bg-white/5 text-white/70 border-white/10 hover:border-[#D4AF37]/30"
+                    )}
+                  >
+                    {tag.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Couleur */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Palette size={12} className="text-[#D4AF37]" />
+                <label className="text-[10px] sm:text-[11px] text-white/70 uppercase tracking-[0.1em]">
+                  Couleur
+                </label>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {COLOR_TAGS.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => setSelectedColor(selectedColor === tag.id ? null : tag.id)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-[11px] font-semibold border transition-all",
+                      selectedColor === tag.id
+                        ? "bg-[#D4AF37] text-[#0A0A0A] border-[#D4AF37]"
+                        : "bg-white/5 text-white/70 border-white/10 hover:border-[#D4AF37]/30"
+                    )}
+                  >
+                    {tag.id !== 'multicolore' && (
+                      <div
+                        className="w-3 h-3 rounded-full border border-white/30"
+                        style={{ backgroundColor: tag.color }}
+                      />
+                    )}
+                    {tag.id === 'multicolore' && (
+                      <div className="w-3 h-3 rounded-full bg-gradient-to-br from-red-400 via-blue-400 to-orange-400 border border-white/30" />
+                    )}
+                    <span>{tag.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Tags (ancien champ) */}
           <div className="space-y-1.5 sm:space-y-2">
             <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-[0.15em]">
-              Tags (séparés par des virgules)
+              Tags supplémentaires (séparés par des virgules)
             </label>
             <input
               type="text"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
-              placeholder="Ex: Wax, Cérémonie, Premium"
+              placeholder="Ex: Premium, Broderie, Main"
               className="w-full bg-white/5 border border-[#D4AF37]/20 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-colors"
+            />
+          </div>
+
+          {/* Description - Déplacée en bas et non obligatoire */}
+          <div className="space-y-1.5 sm:space-y-2">
+            <label className="text-xs font-bold text-white/60 uppercase tracking-[0.15em]">
+              Description (optionnel)
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Décrivez votre produit (optionnel)..."
+              rows={3}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37]/30 transition-colors resize-none"
             />
           </div>
 
