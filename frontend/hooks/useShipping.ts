@@ -17,6 +17,7 @@ export function useShipping(
   const [shippingPrice, setShippingPrice] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isOutsideDeliveryZone, setIsOutsideDeliveryZone] = useState<boolean>(false)
 
   useEffect(() => {
     // Ne pas calculer si les coordonnées utilisateur ne sont pas disponibles
@@ -49,7 +50,47 @@ export function useShipping(
         
         return res.json()
       })
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}))
+          
+          // Gérer spécifiquement les erreurs de zone géographique
+          if (errorData.code === 'OUTSIDE_DELIVERY_ZONE' || errorData.message?.includes('hors de la zone')) {
+            // Pour les clients hors Dakar : permettre la commande mais sans livraison
+            setIsOutsideDeliveryZone(true)
+            setDistance(0)
+            setShippingPrice(0) // Pas de frais de livraison
+            setError(null) // Pas d'erreur bloquante, juste un message informatif
+            return
+          }
+          
+          const error = await handleHTTPError(res, 'Shipping calculate')
+          throw error
+        }
+        
+        return res.json()
+      })
       .then((data) => {
+        if (data.error) {
+          // Vérifier si c'est une erreur de zone géographique
+          if (data.code === 'OUTSIDE_DELIVERY_ZONE' || data.message?.includes('hors de la zone')) {
+            setIsOutsideDeliveryZone(true)
+            setDistance(0)
+            setShippingPrice(0)
+            setError(null)
+            return
+          }
+          
+          // Autres erreurs
+          setError(data.message || data.error)
+          setDistance(0)
+          setShippingPrice(0)
+          setIsOutsideDeliveryZone(false)
+          return
+        }
+        
+        // Succès : commande dans Dakar
+        setIsOutsideDeliveryZone(false)
         setDistance(data.distanceKm)
         setShippingPrice(data.price)
         setError(null)
@@ -67,7 +108,13 @@ export function useShipping(
       .finally(() => setIsLoading(false))
   }, [userLatitude, userLongitude, destinationLatitude, destinationLongitude])
 
-  return { distance, shippingPrice, isLoading, error }
+  return { 
+    distance, 
+    shippingPrice, 
+    isLoading, 
+    error,
+    isOutsideDeliveryZone // Flag indiquant si la commande est hors zone de livraison
+  }
 }
 
 /**

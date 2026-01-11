@@ -1,119 +1,171 @@
-from datetime import datetime
+"""
+Service de calcul de livraison selon le modèle Yango
+Modèle : Base 1500 FCFA + 100 FCFA/km + 15% frais SIGNARE
+⚠️ IMPORTANT : Livraison uniquement disponible à Dakar, Sénégal
+"""
+
 from math import radians, sin, cos, sqrt, atan2
 
 from delivery_engine.app.core.config import settings
 from delivery_engine.app.schemas.cost import (
-    CostBreakdown,
-    CostRequest,
-    RouteScoreRequest,
-    RouteScoreResponse,
-    TrafficLevel,
-    ZoneType,
+    ShippingCalculateRequest,
+    ShippingCalculateResponse,
+    Position,
 )
 
-# Pénalités fixes définies par la règle métier
-TRAFFIC_PENALTIES = {
-    TrafficLevel.low: 0,
-    TrafficLevel.medium: 150,
-    TrafficLevel.high: 300,
+# Zone de livraison : Dakar uniquement (bounding box approximative)
+DAKAR_BOUNDS = {
+    "min_lat": 14.60,   # Sud (vers Rufisque)
+    "max_lat": 14.85,   # Nord (vers Yoff)
+    "min_lng": -17.55,  # Ouest (côte atlantique)
+    "max_lng": -17.35,  # Est (vers Thiès)
 }
 
-ZONE_PENALTIES = {
-    ZoneType.normal: 0,
-    ZoneType.dense: 200,
-    ZoneType.very_dense: 400,
-}
 
-TIME_PENALTY_AFTER_18H = 150
-TIME_PENALTY_WEEKEND = 200
-
-
-def calculate_cost(payload: CostRequest) -> CostBreakdown:
+def calculate_shipping_price(payload: ShippingCalculateRequest) -> ShippingCalculateResponse:
     """
-    Calcule le coût total selon la formule métier.
-    La batterie est conservée pour extension future (pénalités dynamiques).
+    Calcule le prix de livraison selon le modèle Yango.
+    
+    ⚠️ IMPORTANT : Livraison uniquement disponible à Dakar, Sénégal.
+    Pour les clients internationaux ou hors Dakar, une autre stratégie sera utilisée.
+    
+    Formule :
+    - Prix de base : 1500 FCFA
+    - Coût kilométrique : 100 FCFA/km
+    - Sous-total : BASE_PRICE + (distance_km * PRICE_PER_KM)
+    - Frais SIGNARE : 15% du sous-total
+    - Prix total : Sous-total + Frais SIGNARE
+    
+    @param payload: Requête contenant soit distance_km, soit origin+destination
+    @return: Détail du calcul avec prix total
+    @raises ValueError: Si les coordonnées sont hors de Dakar
     """
-    base_cost = payload.distance_km * settings.BASE_COST_PER_KM
-    penalty_traffic = TRAFFIC_PENALTIES[payload.traffic_level]
-    penalty_zone = ZONE_PENALTIES[payload.zone_type]
-    penalty_time = _compute_time_penalty(payload.delivery_datetime)
-    penalty_battery = _compute_battery_penalty(payload.battery_level)
+    # Calculer la distance si elle n'est pas fournie
+    origin = None
+    destination = None
+    
+    if payload.distance_km is None:
+        if payload.origin is None or payload.destination is None:
+            raise ValueError("Coordonnées GPS manquantes pour calculer la distance")
+        origin = payload.origin
+        destination = payload.destination
+        distance_km = _haversine_km(
+            origin.lat,
+            origin.lng,
+            destination.lat,
+            destination.lng,
+        )
+    else:
+        distance_km = payload.distance_km
+        # Si distance fournie directement, on ne peut pas valider la zone géographique
+        # On suppose que l'appelant a déjà validé que c'est dans Dakar
+        if payload.origin is not None and payload.destination is not None:
+            origin = payload.origin
+            destination = payload.destination
 
-    total_cost = (
-        base_cost
-        + penalty_traffic
-        + penalty_battery
-        + penalty_zone
-        + penalty_time
+    # Validation géographique : vérifier que les coordonnées sont dans Dakar
+    if origin is not None and destination is not None:
+        if not _is_in_dakar(origin.lat, origin.lng):
+            raise ValueError(
+                f"Livraison non disponible : l'origine ({origin.lat}, {origin.lng}) "
+                f"est hors de la zone de livraison (Dakar uniquement). "
+                f"Pour les clients internationaux ou hors Dakar, veuillez contacter le support."
+            )
+        if not _is_in_dakar(destination.lat, destination.lng):
+            raise ValueError(
+                f"Livraison non disponible : la destination ({destination.lat}, {destination.lng}) "
+                f"est hors de la zone de livraison (Dakar uniquement). "
+                f"Pour les clients internationaux ou hors Dakar, veuillez contacter le support."
+            )
+
+    # Validation : distance doit être positive
+    if distance_km <= 0:
+        raise ValueError("La distance doit être positive")
+
+    # Validation : distance maximale raisonnable pour Dakar (50km devrait suffire)
+    MAX_DISTANCE_KM = 50  # Dakar fait environ 20km de large, 50km est une marge de sécurité
+    if distance_km > MAX_DISTANCE_KM:
+        raise ValueError(
+            f"Distance trop importante ({distance_km:.2f}km). "
+            f"La zone de livraison (Dakar) a une distance maximale de {MAX_DISTANCE_KM}km. "
+            f"Veuillez vérifier les coordonnées."
+        )
+
+    # Calcul selon le modèle Yango
+    base_price = settings.BASE_PRICE  # 1500 FCFA
+    distance_cost = distance_km * settings.PRICE_PER_KM  # 100 FCFA/km
+    subtotal = base_price + distance_cost
+    
+    # Frais SIGNARE (15%)
+    signare_fee = subtotal * settings.SIGNARE_FEE_PERCENT
+    
+    # Prix total
+    total_price = subtotal + signare_fee
+
+    return ShippingCalculateResponse(
+        distance_km=round(distance_km, 2),
+        base_price=round(base_price, 2),
+        distance_cost=round(distance_cost, 2),
+        subtotal=round(subtotal, 2),
+        signare_fee=round(signare_fee, 2),
+        total_price=round(total_price, 2),
+        currency="FCFA",
     )
 
-    return CostBreakdown(
-        base_cost=base_cost,
-        penalty_traffic=penalty_traffic,
-        penalty_battery=penalty_battery,
-        penalty_zone=penalty_zone,
-        penalty_time=penalty_time,
-        total_cost=total_cost,
-    )
 
-
-def score_route(payload: RouteScoreRequest) -> RouteScoreResponse:
+def calculate_distance(origin: Position, destination: Position) -> float:
     """
-    Score de tournée : plus bas = meilleur.
-    On réutilise le modèle économique (coût estimé) et on y ajoute une pondération
-    sur la distance pour prioriser les trajets courts.
+    Calcule la distance en kilomètres entre deux points GPS (formule Haversine).
+    
+    @param origin: Position d'origine
+    @param destination: Position de destination
+    @return: Distance en kilomètres
     """
-    distance_km = _haversine_km(
-        payload.current_position.lat,
-        payload.current_position.lng,
-        payload.candidate_position.lat,
-        payload.candidate_position.lng,
-    )
-
-    synthetic_cost_request = CostRequest(
-        distance_km=distance_km,
-        traffic_level=payload.traffic_level,
-        zone_type=payload.zone_type,
-        delivery_datetime=datetime.utcnow(),
-    )
-    cost_breakdown = calculate_cost(synthetic_cost_request)
-
-    # Score = coût estimé + bonus distance (favorise les tournées courtes)
-    score = cost_breakdown.total_cost + distance_km * 10
-
-    return RouteScoreResponse(
-        distance_km=round(distance_km, 3),
-        estimated_cost=round(cost_breakdown.total_cost, 2),
-        score=round(score, 2),
+    return _haversine_km(
+        origin.lat,
+        origin.lng,
+        destination.lat,
+        destination.lng,
     )
 
 
-def _compute_time_penalty(delivery_datetime: datetime) -> float:
-    penalty = 0
-    if delivery_datetime.hour >= 18:
-        penalty += TIME_PENALTY_AFTER_18H
-    if delivery_datetime.weekday() >= 5:  # 5 = samedi, 6 = dimanche
-        penalty += TIME_PENALTY_WEEKEND
-    return penalty
-
-
-def _compute_battery_penalty(battery_level: float | None) -> float:
-    # Placeholder pour futures règles (ex: ajout d'un coût si batterie < 20%)
-    if battery_level is not None and battery_level < 20:
-        return 100.0
-    return 0.0
+def _is_in_dakar(lat: float, lng: float) -> bool:
+    """
+    Vérifie si les coordonnées GPS sont dans la zone de livraison (Dakar).
+    
+    @param lat: Latitude
+    @param lng: Longitude
+    @return: True si les coordonnées sont dans Dakar, False sinon
+    """
+    return (
+        DAKAR_BOUNDS["min_lat"] <= lat <= DAKAR_BOUNDS["max_lat"]
+        and DAKAR_BOUNDS["min_lng"] <= lng <= DAKAR_BOUNDS["max_lng"]
+    )
 
 
 def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """
+    Calcule la distance entre deux points GPS en utilisant la formule Haversine.
+    
+    @param lat1: Latitude du point 1
+    @param lon1: Longitude du point 1
+    @param lat2: Latitude du point 2
+    @param lon2: Longitude du point 2
+    @return: Distance en kilomètres
+    """
     # Rayon moyen de la Terre en km
     R = 6371.0
+    
+    # Conversion en radians
     dlat = radians(lat2 - lat1)
     dlon = radians(lon2 - lon1)
-
+    
+    # Formule Haversine
     a = (
         sin(dlat / 2) ** 2
         + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
     )
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    
     return R * c
 

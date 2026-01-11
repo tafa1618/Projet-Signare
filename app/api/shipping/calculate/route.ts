@@ -6,17 +6,20 @@
  * Body: { userLat, userLon, destLat, destLon }
  * 
  * Retourne: { distanceKm, price, currency }
+ * 
+ * Cette route fait office de proxy vers le microservice Delivery Engine (Python)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { calculateDistance, calculateShippingPrice } from '@/shared/lib/utils'
 import { ShippingCalculateSchema } from '@/lib/validations/schemas'
-import { logError, logSecurity } from '@/lib/logger'
+import { logError, logSecurity, logPerformance } from '@/lib/logger'
 
-// Limites de sécurité
-const MAX_DISTANCE_KM = 500 // Distance maximale raisonnable (500km)
+// URL du microservice Delivery Engine
+const DELIVERY_ENGINE_URL = process.env.DELIVERY_ENGINE_URL || 'http://localhost:8002'
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+
   try {
     // Parser et valider le body avec Zod
     const body = await request.json()
@@ -41,47 +44,93 @@ export async function POST(request: NextRequest) {
 
     const { userLat, userLon, destLat, destLon } = validation.data
 
-    // Calcul de la distance (formule Haversine) - côté serveur uniquement
-    const distanceKm = calculateDistance(userLat, userLon, destLat, destLon)
-
-    // Validation : distance raisonnable (sécurité contre manipulation)
-    if (distanceKm > MAX_DISTANCE_KM) {
-      logSecurity('Shipping calculation distance exceeded', {
-        distanceKm,
-        maxAllowed: MAX_DISTANCE_KM,
-        coordinates: { userLat, userLon, destLat, destLon }, // Sanitizé automatiquement
-      })
-      return NextResponse.json(
-        {
-          error: 'Distance trop importante',
-          message: `La distance maximale autorisée est de ${MAX_DISTANCE_KM}km`,
+    // Appeler le microservice Delivery Engine
+    const deliveryEngineResponse = await fetch(`${DELIVERY_ENGINE_URL}/api/shipping/calculate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        origin: {
+          lat: userLat,
+          lng: userLon,
         },
-        { status: 400 }
-      )
-    }
-
-    // Validation : distance minimale (éviter calculs inutiles)
-    if (distanceKm < 0) {
-      logSecurity('Shipping calculation negative distance', {
-        distanceKm,
-        coordinates: { userLat, userLon, destLat, destLon },
-      })
-      return NextResponse.json(
-        { error: 'Distance invalide' },
-        { status: 400 }
-      )
-    }
-
-    // Calcul du prix - côté serveur uniquement (CRITIQUE pour sécurité)
-    const price = calculateShippingPrice(distanceKm)
-
-    // Retourner le résultat avec 2 décimales pour la distance
-    return NextResponse.json({
-      distanceKm: Math.round(distanceKm * 100) / 100,
-      price,
-      currency: 'FCFA',
-      calculatedAt: new Date().toISOString(),
+        destination: {
+          lat: destLat,
+          lng: destLon,
+        },
+      }),
     })
+
+    // Gérer les erreurs du delivery engine
+    if (!deliveryEngineResponse.ok) {
+      const errorData = await deliveryEngineResponse.json().catch(() => ({}))
+      const errorMessage = errorData.detail || errorData.error || 'Erreur du delivery engine'
+
+      // Si c'est une erreur de zone géographique (400), permettre la commande mais sans livraison
+      if (deliveryEngineResponse.status === 400 && errorMessage.includes('hors de la zone')) {
+        logSecurity('Shipping calculation - Outside Dakar zone', {
+          coordinates: { userLat, userLon, destLat, destLon },
+        })
+        // Retourner une réponse avec shippingPrice = 0 pour permettre la commande
+        return NextResponse.json({
+          distanceKm: 0,
+          price: 0,
+          currency: 'FCFA',
+          calculatedAt: new Date().toISOString(),
+          isOutsideDeliveryZone: true,
+          message: 'Le support vous contactera pour la livraison',
+        })
+      }
+
+      // Autres erreurs : fallback sur calcul local (pour compatibilité)
+      logError(
+        new Error(`Delivery Engine returned ${deliveryEngineResponse.status}: ${errorMessage}`),
+        'Shipping calculation - Delivery Engine unavailable'
+      )
+      
+      // Fallback : utiliser le calcul local (pour compatibilité)
+      const { calculateDistance, calculateShippingPrice } = await import('@/shared/lib/utils')
+      const distanceKm = calculateDistance(userLat, userLon, destLat, destLon)
+      const price = calculateShippingPrice(distanceKm)
+
+      return NextResponse.json({
+        distanceKm: Math.round(distanceKm * 100) / 100,
+        price,
+        currency: 'FCFA',
+        calculatedAt: new Date().toISOString(),
+        fallback: true, // Indique que c'est un fallback
+      })
+    }
+
+    // Parser la réponse du delivery engine
+    const deliveryData = await deliveryEngineResponse.json()
+
+    // Adapter le format pour rester compatible avec le frontend
+    const response = {
+      distanceKm: deliveryData.distance_km,
+      price: deliveryData.total_price,
+      currency: deliveryData.currency || 'FCFA',
+      calculatedAt: new Date().toISOString(),
+      // Détails supplémentaires du calcul (optionnel, pour debug)
+      ...(process.env.NODE_ENV === 'development' && {
+        breakdown: {
+          basePrice: deliveryData.base_price,
+          distanceCost: deliveryData.distance_cost,
+          subtotal: deliveryData.subtotal,
+          signareFee: deliveryData.signare_fee,
+        },
+      }),
+    }
+
+    // Logger la performance
+    const duration = Date.now() - startTime
+    logPerformance('shipping-calculation-delivery-engine', duration, {
+      distanceKm: response.distanceKm,
+      price: response.price,
+    })
+
+    return NextResponse.json(response)
   } catch (error) {
     // Ne pas exposer les détails de l'erreur en production
     const isDev = process.env.NODE_ENV === 'development'

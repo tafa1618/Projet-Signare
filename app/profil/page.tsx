@@ -16,7 +16,11 @@ import {
   Package,
   Bike,
   Store,
-  Upload
+  Upload,
+  UserPlus,
+  Camera,
+  Heart,
+  Eye
 } from 'lucide-react'
 import type { Database, Mesure } from '@/shared/types/database.types'
 
@@ -38,8 +42,12 @@ type ClientProfile = {
   id: string
   name: string
   avatar: string
+  coverImage?: string
   bio: string
   outfitCount: number
+  followersCount: number
+  followingCount: number
+  postsCount: number
   latestMesure: Mesure
 }
 
@@ -47,8 +55,12 @@ const MOCK_CLIENT_PROFILE: ClientProfile = {
   id: 'c1',
   name: 'Fatou Dia',
   avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fatou',
+  coverImage: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=1200&h=400&fit=crop',
   bio: "Inspirée par l'élégance traditionnelle du Sénégal. J'aime les coupes nettes, le wax premium et les finitions couture.",
   outfitCount: 13,
+  followersCount: 1247,
+  followingCount: 89,
+  postsCount: 87,
   latestMesure: {
     id: 'm-1',
     user_id: 'c1',
@@ -82,22 +94,30 @@ type TailorProfile = {
   id: string
   name: string
   avatar: string
+  coverImage?: string
   bio: string
   rating: number
   activeOrders: number
   monthlyRevenue: string
   creationsCount: number
+  followersCount: number
+  followingCount: number
+  postsCount: number
 }
 
 const MOCK_TAILOR_PROFILE: TailorProfile = {
   id: 't1',
   name: 'Maison Aïda Sow',
   avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aida',
+  coverImage: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&h=400&fit=crop',
   bio: 'Maîtresse Couturière — Spécialiste boubous de cérémonie & finitions couture.',
   rating: 4.9,
   activeOrders: 8,
   monthlyRevenue: '1.2M FCFA',
   creationsCount: 24,
+  followersCount: 3421,
+  followingCount: 156,
+  postsCount: 124,
 }
 
 const MOCK_TAILOR_ORDERS = [
@@ -159,12 +179,20 @@ export default function ProfilPage() {
         id: profileOverride?.id ?? MOCK_CLIENT_PROFILE.id,
         name: profileOverride?.name ?? MOCK_CLIENT_PROFILE.name,
         avatar: profileOverride?.avatar ?? MOCK_CLIENT_PROFILE.avatar,
+        coverImage: MOCK_CLIENT_PROFILE.coverImage,
+        followersCount: MOCK_CLIENT_PROFILE.followersCount,
+        followingCount: MOCK_CLIENT_PROFILE.followingCount,
+        postsCount: MOCK_CLIENT_PROFILE.postsCount,
       }
     : {
         ...MOCK_TAILOR_PROFILE,
         id: profileOverride?.id ?? MOCK_TAILOR_PROFILE.id,
         name: profileOverride?.name ?? MOCK_TAILOR_PROFILE.name,
         avatar: profileOverride?.avatar ?? MOCK_TAILOR_PROFILE.avatar,
+        coverImage: MOCK_TAILOR_PROFILE.coverImage,
+        followersCount: MOCK_TAILOR_PROFILE.followersCount,
+        followingCount: MOCK_TAILOR_PROFILE.followingCount,
+        postsCount: MOCK_TAILOR_PROFILE.postsCount,
       }
 
   const isOwnProfile = mode === 'client' && profile.id === actorUserId
@@ -259,38 +287,48 @@ export default function ProfilPage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white pb-24">
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-6 py-5">
-        <button
-          onClick={() => {
-            const nextMode: ProfileMode = mode === 'client' ? 'tailleur' : 'client'
-            setMode(nextMode)
-            trackProfileInteraction({
-              user_id: actorUserId,
-              post_id: null,
-              interaction_type: 'click',
-              session_id: sessionId,
-              duration_seconds: null,
-              scroll_depth: null,
-              came_from: `profil:toggle_mode:${mode}->${nextMode}`,
-              device_type: 'web',
-              user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-            })
-          }}
-          className="text-[10px] tracking-[0.22em] text-[#D4AF37] border border-[#D4AF37]/30 px-3 py-1 rounded-full uppercase font-black hover:bg-[#D4AF37]/10 transition-colors active:scale-[0.98]"
-        >
-          MODE {mode === 'client' ? 'CLIENT' : 'TAILLEUR'}
-        </button>
-        <div className="flex items-center gap-4">
-          <button className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors" aria-label="Paramètres">
-            <Settings className="w-5 h-5" />
-          </button>
+      <div className="sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-[#D4AF37]/10">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
           <button
-            onClick={handleLogout}
-            className="flex items-center justify-center p-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/20 transition-all"
-            aria-label="Déconnexion"
+            onClick={() => {
+              const nextMode: ProfileMode = mode === 'client' ? 'tailleur' : 'client'
+              setMode(nextMode)
+              trackProfileInteraction({
+                user_id: actorUserId,
+                post_id: null,
+                interaction_type: 'click',
+                session_id: sessionId,
+                duration_seconds: null,
+                scroll_depth: null,
+                came_from: `profil:toggle_mode:${mode}->${nextMode}`,
+                device_type: 'web',
+                user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+              })
+            }}
+            className="text-[10px] tracking-[0.22em] text-[#D4AF37] border border-[#D4AF37]/30 px-3 py-1.5 rounded-full uppercase font-black hover:bg-[#D4AF37]/10 transition-colors active:scale-[0.98]"
           >
-            <LogOut className="w-4 h-4 text-[#D4AF37]" />
+            MODE {mode === 'client' ? 'CLIENT' : 'TAILLEUR'}
           </button>
+          <div className="flex items-center gap-3 sm:gap-4">
+            {isOwnProfile && (
+              <button 
+                onClick={() => router.push('/settings')}
+                className="text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors" 
+                aria-label="Paramètres"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            )}
+            {isOwnProfile && (
+              <button
+                onClick={handleLogout}
+                className="flex items-center justify-center p-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/20 transition-all"
+                aria-label="Déconnexion"
+              >
+                <LogOut className="w-4 h-4 text-[#D4AF37]" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -299,32 +337,118 @@ export default function ProfilPage() {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        className="max-w-2xl mx-auto px-6 space-y-6"
+        className="max-w-2xl mx-auto"
       >
-        {/* Header de prestige (compact) */}
-        <section className="flex flex-col items-center text-center">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-full border-2 border-[#D4AF37] p-1 shadow-[0_0_22px_rgba(212,175,55,0.18)]">
-              <div className="w-full h-full rounded-full overflow-hidden relative bg-neutral-900">
-                <Image src={profile.avatar} alt={profile.name} fill className="object-cover" />
+        {/* Cover Image + Profile Header (inspiré FriendKit) */}
+        <section className="relative">
+          {/* Cover Image */}
+          <div className="relative w-full h-48 sm:h-56 bg-gradient-to-br from-[#D4AF37]/20 to-[#0A0A0A] overflow-hidden">
+            {profile.coverImage ? (
+              <Image 
+                src={profile.coverImage} 
+                alt={`Couverture ${profile.name}`}
+                fill
+                className="object-cover opacity-40"
+                priority
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-[#D4AF37]/10 via-[#0A0A0A] to-[#0A0A0A]" />
+            )}
+            {isOwnProfile && (
+              <button
+                className="absolute top-3 right-3 bg-[#0A0A0A]/80 backdrop-blur-sm border border-[#D4AF37]/30 text-[#D4AF37] p-2 rounded-lg hover:bg-[#D4AF37]/10 transition-all"
+                aria-label="Modifier la couverture"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Profile Avatar (centré sur la couverture) */}
+          <div className="relative -mt-16 sm:-mt-20 flex flex-col items-center">
+            <div className="relative">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-[#0A0A0A] p-1 shadow-[0_0_30px_rgba(212,175,55,0.3)] bg-[#0A0A0A]">
+                <div className="w-full h-full rounded-full overflow-hidden relative bg-neutral-900">
+                  <Image src={profile.avatar} alt={profile.name} fill className="object-cover" />
+                </div>
               </div>
+              {isOwnProfile && (
+                <button
+                  className="absolute bottom-0 right-0 bg-[#D4AF37] text-[#0A0A0A] p-2 rounded-full border-2 border-[#0A0A0A] hover:bg-[#D4AF37]/90 transition-all shadow-lg"
+                  aria-label="Modifier la photo de profil"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#D4AF37] text-[#0A0A0A] px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-[0.18em]">
+
+            {/* Badge */}
+            <div className="mt-2 bg-[#D4AF37] text-[#0A0A0A] px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.18em]">
               {mode === 'client' ? 'MEMBRE SIGNARE' : 'ATELIER VÉRIFIÉ'}
             </div>
           </div>
 
-          <h1 className="mt-5 text-2xl font-serif text-[#D4AF37]">{profile.name}</h1>
-          <p className="mt-2 text-xs text-white/50 italic line-clamp-2 max-w-[320px]">
-            {profile.bio}
-          </p>
-        </section>
+          {/* Profile Info */}
+          <div className="px-4 sm:px-6 mt-4 text-center">
+            <h1 className="text-2xl sm:text-3xl font-serif text-[#D4AF37] font-bold">{profile.name}</h1>
+            <p className="mt-2 text-sm text-white/70 max-w-md mx-auto leading-relaxed">
+              {profile.bio}
+            </p>
+          </div>
 
-        {mode === 'client' ? (
-          <>
-            {/* CTA: Discuter (seulement si profil d'un autre client) */}
-            {!isOwnProfile && (
-              <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
+          {/* Stats (inspiré FriendKit) */}
+          <div className="px-4 sm:px-6 mt-6 flex items-center justify-center gap-6 sm:gap-8 border-t border-[#D4AF37]/10 pt-6">
+            <div className="flex flex-col items-center">
+              <span className="text-xl sm:text-2xl font-serif text-[#D4AF37] font-bold">
+                {mode === 'client' 
+                  ? (profile as ClientProfile).outfitCount 
+                  : (profile as TailorProfile).creationsCount}
+              </span>
+              <span className="text-[10px] text-white/50 uppercase tracking-[0.2em] font-black mt-1">
+                {mode === 'client' ? 'Tenues' : 'Créations'}
+              </span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-xl sm:text-2xl font-serif text-[#D4AF37] font-bold">
+                {(profile as ClientProfile | TailorProfile).followersCount}
+              </span>
+              <span className="text-[10px] text-white/50 uppercase tracking-[0.2em] font-black mt-1">
+                Abonnés
+              </span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-xl sm:text-2xl font-serif text-[#D4AF37] font-bold">
+                {(profile as ClientProfile | TailorProfile).followingCount}
+              </span>
+              <span className="text-[10px] text-white/50 uppercase tracking-[0.2em] font-black mt-1">
+                Abonnements
+              </span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="px-4 sm:px-6 mt-6 flex items-center gap-3">
+            {!isOwnProfile ? (
+              <>
+                <button
+                  onClick={() => {
+                    trackProfileInteraction({
+                      user_id: actorUserId,
+                      post_id: null,
+                      interaction_type: 'click',
+                      session_id: sessionId,
+                      duration_seconds: null,
+                      scroll_depth: null,
+                      came_from: `profil:follow:${profile.name}`,
+                      device_type: 'web',
+                      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                    })
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#D4AF37] text-[#0A0A0A] py-3 rounded-xl text-sm font-black uppercase tracking-[0.18em] shadow-[0_0_14px_rgba(212,175,55,0.25)] hover:bg-[#D4AF37]/90 transition-all active:scale-[0.98]"
+                >
+                  <UserPlus size={18} />
+                  Suivre
+                </button>
                 <button
                   onClick={() => {
                     trackProfileInteraction({
@@ -340,22 +464,37 @@ export default function ProfilPage() {
                     })
                     router.push(`/messages?user=${encodeURIComponent(profile.name)}`)
                   }}
-                  className="w-full flex items-center justify-center gap-2 bg-[#0A0A0A] border border-[#D4AF37]/30 text-[#D4AF37] py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.22em] hover:bg-[#D4AF37]/10 transition-all active:scale-[0.98]"
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#0A0A0A] border border-[#D4AF37]/30 text-[#D4AF37] py-3 rounded-xl text-sm font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-[0.98]"
                 >
                   <MessageCircle size={18} />
-                  Discuter
+                  Message
                 </button>
-              </section>
+              </>
+            ) : (
+              <button
+                onClick={() => router.push('/settings')}
+                className="w-full flex items-center justify-center gap-2 bg-[#0A0A0A] border border-[#D4AF37]/30 text-[#D4AF37] py-3 rounded-xl text-sm font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-[0.98]"
+              >
+                <Settings size={18} />
+                Modifier le profil
+              </button>
             )}
+          </div>
+        </section>
 
-            {/* Mes Mensurations (compact + typé Mesure) */}
-            <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-                  <h2 className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Mes mensurations</h2>
-                </div>
-                {isOwnProfile && (
+        <div className="px-4 sm:px-6 mt-8 space-y-6">
+
+        {mode === 'client' ? (
+          <>
+
+            {/* Mes Mensurations (compact + typé Mesure) - Uniquement si c'est mon profil */}
+            {isOwnProfile && (
+              <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                    <h2 className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Mes mensurations</h2>
+                  </div>
                   <button
                     onClick={() => {
                       trackProfileInteraction({
@@ -376,10 +515,8 @@ export default function ProfilPage() {
                     <Ruler className="w-4 h-4" />
                     Mettre à jour
                   </button>
-                )}
-              </div>
+                </div>
 
-              {isOwnProfile ? (
                 <div className="grid grid-cols-2 gap-3">
                   {([
                     { k: 'tour_poitrine', label: 'Poitrine', v: MOCK_CLIENT_PROFILE.latestMesure.tour_poitrine },
@@ -393,33 +530,29 @@ export default function ProfilPage() {
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/40">
-                    Mensurations privées
-                  </p>
-                  <p className="mt-1 text-xs text-white/50">
-                    Seul le propriétaire du profil peut consulter ses mesures.
-                  </p>
-                </div>
-              )}
-            </section>
+              </section>
+            )}
 
             {/* Patrimoine Style (compact) */}
-            <section className="bg-gradient-to-r from-[#D4AF37]/10 to-transparent rounded-xl p-4 border-l-2 border-[#D4AF37]">
+            <section className="bg-gradient-to-r from-[#D4AF37]/10 to-transparent rounded-xl p-4 sm:p-5 border-l-2 border-[#D4AF37]">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black">Patrimoine style</p>
-                  <p className="text-xl font-serif text-white">{MOCK_CLIENT_PROFILE.outfitCount} tenues enregistrées</p>
+                  <p className="text-xl sm:text-2xl font-serif text-white mt-1">{MOCK_CLIENT_PROFILE.outfitCount} tenues enregistrées</p>
                 </div>
-                <Award className="w-8 h-8 text-[#D4AF37]/40" />
+                <Award className="w-8 h-8 sm:w-10 sm:h-10 text-[#D4AF37]/40" />
               </div>
             </section>
 
             {/* Galerie compacte */}
             <section>
-              <h2 className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase mb-3">Galerie</h2>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm sm:text-base font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Galerie</h2>
+                <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-black">
+                  {gallery.length} photos
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {gallery.map((img) => (
                   <button
                     key={img.id}
@@ -436,9 +569,10 @@ export default function ProfilPage() {
                         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
                       })
                     }}
-                    className="relative aspect-square rounded-lg overflow-hidden border border-white/5 hover:border-[#D4AF37]/40 transition-colors"
+                    className="relative aspect-square rounded-lg overflow-hidden border border-white/5 hover:border-[#D4AF37]/40 transition-all group"
                   >
-                    <Image src={img.src} alt="Tenue" fill className="object-cover opacity-90 hover:opacity-100 transition-opacity" />
+                    <Image src={img.src} alt="Tenue" fill className="object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 ))}
               </div>
@@ -446,6 +580,36 @@ export default function ProfilPage() {
           </>
         ) : (
           <>
+            {/* Stats Atelier (compact) - En haut pour tailleur */}
+            <section className="grid grid-cols-3 gap-3">
+              <div className="bg-[#D4AF37] text-[#0A0A0A] rounded-xl p-4 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-80">Commandes</p>
+                <p className="mt-1 text-2xl font-black">{MOCK_TAILOR_PROFILE.activeOrders}</p>
+              </div>
+              <div className="bg-white/[0.03] border border-[#D4AF37]/20 rounded-xl p-4 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/50">Revenus</p>
+                <p className="mt-1 text-lg font-serif text-[#D4AF37]">{MOCK_TAILOR_PROFILE.monthlyRevenue}</p>
+              </div>
+              <div className="bg-white/[0.03] border border-[#D4AF37]/20 rounded-xl p-4 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/50">Note</p>
+                <div className="mt-1 flex items-center justify-center gap-1">
+                  <StarRating rating={MOCK_TAILOR_PROFILE.rating} />
+                  <span className="text-sm font-bold text-[#D4AF37] ml-1">{MOCK_TAILOR_PROFILE.rating.toFixed(1)}</span>
+                </div>
+              </div>
+            </section>
+
+            {/* Rating + badge */}
+            <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <Scissors className="w-5 h-5 text-[#D4AF37]" />
+                <div className="flex-1">
+                  <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black">Maître Tailleur</p>
+                  <p className="text-xs text-white/50 mt-0.5">Qualité basée sur avis & réactivité</p>
+                </div>
+              </div>
+            </section>
+
             {/* Commandes atelier : accès direct + aperçu détaillé */}
             <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
@@ -538,31 +702,6 @@ export default function ProfilPage() {
               </button>
             </section>
 
-            {/* Stats Atelier (compact) */}
-            <section className="grid grid-cols-2 gap-3">
-              <div className="bg-[#D4AF37] text-[#0A0A0A] rounded-xl p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-80">Commandes</p>
-                <p className="mt-1 text-2xl font-black">{MOCK_TAILOR_PROFILE.activeOrders}</p>
-              </div>
-              <div className="bg-white/[0.03] border border-[#D4AF37]/20 rounded-xl p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/50">Revenus</p>
-                <p className="mt-1 text-lg font-serif text-[#D4AF37]">{MOCK_TAILOR_PROFILE.monthlyRevenue}</p>
-              </div>
-            </section>
-
-            {/* Rating + badge */}
-            <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4 flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black flex items-center gap-2">
-                  <Scissors size={14} /> Maître Tailleur
-                </p>
-                <p className="text-xs text-white/50">Qualité basée sur avis & réactivité</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <StarRating rating={MOCK_TAILOR_PROFILE.rating} />
-                <span className="text-sm font-bold text-[#D4AF37]">{MOCK_TAILOR_PROFILE.rating.toFixed(1)}</span>
-              </div>
-            </section>
 
             {/* Créations (galerie compacte) */}
             <section>
@@ -620,6 +759,7 @@ export default function ProfilPage() {
             </section>
           </>
         )}
+        </div>
       </motion.div>
     </div>
   )

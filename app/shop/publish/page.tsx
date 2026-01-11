@@ -127,11 +127,32 @@ export default function ShopPublishPage() {
       mediaFiles: mediaPreviews.length,
     }
 
-    // TODO: Envoyer les données à l'API
-    // await fetch('/api/products', { method: 'POST', body: JSON.stringify(productData) })
+    // Envoyer les données à l'API
+    try {
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData),
+      })
 
-    // Simuler l'envoi
-    await new Promise(resolve => setTimeout(resolve, 1500))
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erreur lors de la publication')
+      }
+
+      // Afficher le message de succès
+      setShowSuccess(true)
+      setTimeout(() => {
+        router.push('/shop')
+      }, 2000)
+    } catch (error) {
+      console.error('Erreur publication:', error)
+      // TODO: Afficher un toast d'erreur
+      setIsSubmitting(false)
+    }
 
     setIsSubmitting(false)
     setShowSuccess(true)

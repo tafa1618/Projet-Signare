@@ -18,14 +18,18 @@ SIGNARE est une plateforme mobile-first alliant artisanat traditionnel sénégal
 npm install
 ```
 
-### 2. Configuration Supabase
+### 2. Configuration
 
 Créez un fichier `.env.local` à la racine du projet :
 
 ```env
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://votre-projet.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_cle_anon_publique
 SUPABASE_SERVICE_ROLE_KEY=votre_cle_service_role_secrete
+
+# Delivery Engine (microservice Python)
+DELIVERY_ENGINE_URL=http://localhost:8002
 ```
 
 ### 3. Lancement

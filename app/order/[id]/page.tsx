@@ -14,10 +14,12 @@ import {
   Truck,
   LockKeyhole,
   Check,
+  Info,
 } from 'lucide-react'
 import type { Database, Order } from '@/shared/types/database.types'
 import { cn } from '@/shared/lib/utils'
 import { logMLInteraction } from '@/lib/logger'
+import { useShipping } from '@/frontend/hooks/useShipping'
 
 type UserInteractionInsert = Database['public']['Tables']['user_interactions']['Insert']
 
@@ -173,20 +175,43 @@ export default function OrderPage() {
     return MOCK_TAILOR_LOCATIONS[product.sellerId] ?? null
   }, [product])
 
+  // Utiliser useShipping pour les coordonnées GPS réelles
+  const resolvedCoords = autoPosition ?? clientLocation
+  const { 
+    distance: shippingDistance, 
+    shippingPrice: shippingPriceFromAPI, 
+    isLoading: isShippingLoading,
+    isOutsideDeliveryZone 
+  } = useShipping(
+    tailorLocation ? resolvedCoords.lat : null,
+    tailorLocation ? resolvedCoords.lng : null,
+    tailorLocation?.lat ?? 0,
+    tailorLocation?.lng ?? 0
+  )
+
   const computedDistanceKm = useMemo(() => {
     if (!product) return manualDistanceKm
+    // Priorité : distance depuis useShipping si disponible
+    if (shippingDistance > 0 && !isOutsideDeliveryZone) return shippingDistance
     if (deliveryEngineQuote) return clampNumber(deliveryEngineQuote.distance, 0, 200)
     if (distanceMode === 'manual') return clampNumber(manualDistanceKm, 0, 200)
     if (!tailorLocation) return clampNumber(manualDistanceKm, 0, 200)
     const km = haversineKm(clientLocation, tailorLocation)
     // arrondi 0.1 km pour UI
     return clampNumber(Math.round(km * 10) / 10, 0, 200)
-  }, [clientLocation, deliveryEngineQuote, distanceMode, manualDistanceKm, product, tailorLocation])
+  }, [clientLocation, deliveryEngineQuote, distanceMode, manualDistanceKm, product, tailorLocation, shippingDistance, isOutsideDeliveryZone])
 
   const shippingPrice = useMemo(() => {
+    // Priorité : API useShipping si disponible et pas hors zone
+    if (shippingPriceFromAPI > 0 && !isOutsideDeliveryZone) {
+      return shippingPriceFromAPI
+    }
+    // Fallback : deliveryEngineQuote ou calcul local
     if (deliveryEngineQuote) return Math.round(deliveryEngineQuote.cost)
+    // Si hors zone, prix = 0
+    if (isOutsideDeliveryZone) return 0
     return computeShipping(computedDistanceKm)
-  }, [computedDistanceKm, deliveryEngineQuote])
+  }, [computedDistanceKm, deliveryEngineQuote, shippingPriceFromAPI, isOutsideDeliveryZone])
   const totalPrice = useMemo(() => {
     if (!product) return 0
     return computeTotal(product.productPrice, shippingPrice)
@@ -689,8 +714,24 @@ export default function OrderPage() {
               </div>
               <div className="flex items-center justify-between text-white/70">
                 <span>Livraison</span>
-                <span className="font-semibold text-white/90">{formatFCFA(shippingPrice)}</span>
+                <span className="font-semibold text-white/90">
+                  {isOutsideDeliveryZone ? (
+                    <span className="text-[#D4AF37]">À confirmer</span>
+                  ) : (
+                    formatFCFA(shippingPrice)
+                  )}
+                </span>
               </div>
+              {isOutsideDeliveryZone && (
+                <div className="mt-2 p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl">
+                  <div className="flex items-start gap-2">
+                    <Info size={14} className="text-[#D4AF37] mt-0.5 flex-shrink-0" />
+                    <p className="text-[11px] text-[#D4AF37] leading-relaxed">
+                      Le support vous contactera pour organiser la livraison.
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="pt-2 mt-2 border-t border-[#D4AF37]/20 flex items-center justify-between">
                 <span className="text-[10px] uppercase tracking-[0.22em] font-black text-white/40">Total</span>
                 <span className="text-lg font-serif text-[#D4AF37] font-bold">{formatFCFA(totalPrice)}</span>

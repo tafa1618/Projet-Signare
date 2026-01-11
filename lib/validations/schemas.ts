@@ -24,17 +24,19 @@ export type ShippingCalculateInput = z.infer<typeof ShippingCalculateSchema>
  */
 export const ProductPublishSchema = z.object({
   title: z.string().min(3, 'Titre trop court').max(200, 'Titre trop long').trim(),
-  description: z.string().max(2000, 'Description trop longue').trim(),
+  description: z.string().max(2000, 'Description trop longue').trim().nullable().optional(),
   price: z.number().positive('Prix doit être positif').max(10000000, 'Prix trop élevé'),
-  currency: z.enum(['FCFA', 'EUR', 'USD'], {
-    errorMap: () => ({ message: 'Devise invalide' })
-  }),
-  category: z.enum(['boubou', 'kaftan', 'robe', 'ensemble', 'autre'], {
-    errorMap: () => ({ message: 'Catégorie invalide' })
-  }),
-  images: z.array(z.string().url('URL invalide')).min(1, 'Au moins une image requise').max(10, 'Trop d\'images'),
-  fabric_type: z.string().optional(),
+  category: z.enum(['boubou', 'kaftan', 'robe', 'ensemble', 'autre']).nullable().optional(),
   tags: z.array(z.string()).optional(),
+  sellerType: z.enum(['tailleur', 'consumer']).optional(),
+  // Métadonnées optionnelles pour améliorer les recommandations IA
+  metadata: z.object({
+    fabric: z.enum(['wax', 'getzner', 'bazin', 'soie', 'coton']).nullable().optional(),
+    event: z.enum(['tabaski', 'mariage', 'baptême', 'travail', 'sortie']).nullable().optional(),
+    gender: z.enum(['homme', 'femme', 'garçon', 'fille']).nullable().optional(),
+    color: z.enum(['blanc', 'beige', 'bleu', 'vert', 'marron', 'noir', 'multicolore']).nullable().optional(),
+  }).optional(),
+  mediaFiles: z.number().optional(), // Nombre de fichiers médias
 })
 
 export type ProductPublishInput = z.infer<typeof ProductPublishSchema>

@@ -9,7 +9,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/backend/lib/supabase'
-import { logError, logPerformance } from '@/lib/logger'
+import { logError, logPerformance, logSecurity } from '@/lib/logger'
+import { ProductPublishSchema } from '@/lib/validations/schemas'
 import { z } from 'zod'
 
 // Schéma de validation pour les paramètres de pagination et filtres
@@ -225,6 +226,127 @@ export async function GET(request: NextRequest) {
     logError(error, 'Products pagination')
     return NextResponse.json(
       { error: 'Erreur serveur lors de la récupération des produits' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * API Route pour créer un nouveau produit
+ * @security Validation stricte côté serveur, authentification requise
+ * 
+ * POST /api/products
+ * Body: { title, description, price, category, tags, metadata: { fabric, event, gender, color }, sellerType }
+ * 
+ * Retourne: { success: boolean, productId?: string, message?: string }
+ */
+export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+
+  try {
+    // Récupérer le body de la requête
+    const body = await request.json()
+
+    // ✅ Valider les données avec Zod
+    const validation = ProductPublishSchema.safeParse(body)
+    if (!validation.success) {
+      logSecurity('Invalid product publish data', { errors: validation.error.errors })
+      return NextResponse.json(
+        {
+          error: 'Données invalides',
+          details: validation.error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message,
+          })),
+        },
+        { status: 400 }
+      )
+    }
+
+    const { title, description, price, category, tags, metadata, sellerType } = validation.data
+
+    // TODO: Récupérer l'ID utilisateur depuis l'authentification Supabase
+    // Pour l'instant, on utilise un placeholder (à remplacer par l'auth réelle)
+    const userId = request.headers.get('x-user-id') || '00000000-0000-0000-0000-000000000000'
+
+    // Obtenir client Supabase
+    const supabase = getSupabaseAdmin()
+
+    // Mapper les métadonnées vers les champs de la base de données
+    const fabricType = metadata?.fabric || null
+    const genderTarget = metadata?.gender || null
+    const occasionTags = metadata?.event ? [metadata.event] : []
+    const colorPalette = metadata?.color ? [metadata.color] : []
+
+    // Déterminer garment_type depuis category ou utiliser 'autre' par défaut
+    const garmentType = category || 'autre'
+
+    // Déterminer complexity par défaut (simple si non spécifié)
+    const complexity = 'simple'
+
+    // Préparer les données pour l'insertion
+    const postData = {
+      user_id: userId,
+      image_url: '', // TODO: Remplacer par l'URL réelle après upload
+      caption: description || null,
+      price: price || null,
+      garment_type: garmentType,
+      complexity: complexity,
+      fabric_type: fabricType,
+      gender_target: genderTarget as 'homme' | 'femme' | 'mixte' | 'enfant' | null,
+      occasion_tags: occasionTags,
+      color_palette: colorPalette,
+      style_tags: tags || [],
+      cultural_tags: [],
+      season_tags: [],
+      is_available: true,
+      is_commissioned: sellerType === 'tailleur',
+      likes_count: 0,
+      comments_count: 0,
+      views_count: 0,
+      shares_count: 0,
+      reposts_count: 0,
+      saves_count: 0,
+      inquiries_count: 0,
+      has_embroidery: false,
+      has_beading: false,
+      has_print: false,
+      has_lace: false,
+    }
+
+    // Insérer dans la base de données
+    const { data: newPost, error: insertError } = await supabase
+      .from('posts')
+      .insert(postData)
+      .select('id')
+      .single()
+
+    if (insertError) {
+      logError(insertError, 'Product creation')
+      return NextResponse.json(
+        { error: 'Erreur lors de la création du produit', details: insertError.message },
+        { status: 500 }
+      )
+    }
+
+    // Logger la performance
+    const duration = Date.now() - startTime
+    logPerformance('product-creation', duration, {
+      productId: newPost.id,
+      hasMetadata: !!metadata,
+    })
+
+    return NextResponse.json({
+      success: true,
+      productId: newPost.id,
+      message: sellerType === 'consumer' 
+        ? 'Publication réussie, en attente de validation'
+        : 'Produit publié avec succès',
+    })
+  } catch (error) {
+    logError(error, 'Product creation')
+    return NextResponse.json(
+      { error: 'Erreur serveur lors de la création du produit' },
       { status: 500 }
     )
   }
