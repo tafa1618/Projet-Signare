@@ -25,8 +25,6 @@ type UserInteractionInsert = Database['public']['Tables']['user_interactions']['
  * Tracking - Commander ce modèle
  * @ai-context Capture l'intention d'achat (conversion) et les préférences logistiques.
  */
-import { logMLInteraction } from '@/lib/logger'
-
 function trackOrderInteraction(payload: UserInteractionInsert) {
   // TODO: connecter à Supabase quand auth active (insert user_interactions).
   // ✅ Utilisation du logger sécurisé

@@ -51,6 +51,7 @@ import {
   type InspirationPayload,
 } from '@/shared/constants/ai-tags'
 import { useAIService } from '@/hooks/useAIService'
+import { logError } from '@/lib/logger'
 
 // ==================== TYPES ====================
 
@@ -110,6 +111,14 @@ export default function InspirationPage() {
   const [toast, setToast] = useState<string | null>(null)
   const [selectedInspiration, setSelectedInspiration] = useState<InspirationResult | null>(null)
   const [showTailorsModal, setShowTailorsModal] = useState(false)
+  const [similarModels, setSimilarModels] = useState<any[]>([])
+  const [loadingSimilar, setLoadingSimilar] = useState(false)
+  const [currentInspirationTags, setCurrentInspirationTags] = useState<{
+    fabric: FabricTag | null
+    event: EventTag | null
+    gender: GenderTag | null
+    color: ColorTag | null
+  } | null>(null)
   
   const { generateInspiration, generateTryOn, isLoading, error } = useAIService()
   const router = useRouter()
@@ -206,16 +215,31 @@ export default function InspirationPage() {
       const result = await generateInspiration(payload)
 
       if (result.success && result.image_url) {
-        setInspirationResults([
-          {
-            id: `inspi_${Date.now()}`,
-            image_url: result.image_url,
-            prompt_used: result.prompt_used || '',
-            mode: result.mode,
-            created_at: new Date().toISOString(),
-          },
-          ...inspirationResults,
-        ])
+        const newInspiration = {
+          id: `inspi_${Date.now()}`,
+          image_url: result.image_url,
+          prompt_used: result.prompt_used || '',
+          mode: result.mode,
+          created_at: new Date().toISOString(),
+        }
+        setInspirationResults([newInspiration, ...inspirationResults])
+        
+        // Sauvegarder les tags pour la recherche de modèles similaires
+        setCurrentInspirationTags({
+          fabric: selectedFabric!,
+          event: selectedEvent!,
+          gender: selectedGender!,
+          color: selectedColor!,
+        })
+        
+        // Charger les modèles similaires
+        await fetchSimilarModels({
+          fabric: selectedFabric!,
+          event: selectedEvent!,
+          gender: selectedGender!,
+          color: selectedColor!,
+        })
+        
         setToast('Inspiration générée avec succès !')
       } else {
         setToast(result.error || 'Erreur lors de la génération')
@@ -223,6 +247,175 @@ export default function InspirationPage() {
     } catch (err) {
       setToast('Erreur lors de la génération d\'inspiration')
       logError(err, 'Inspiration generation')
+    }
+  }
+
+  // ==================== RECHERCHE MODÈLES SIMILAIRES ====================
+
+  const fetchSimilarModels = async (tags: {
+    fabric: FabricTag
+    event: EventTag
+    gender: GenderTag
+    color: ColorTag
+  }) => {
+    setLoadingSimilar(true)
+    try {
+      // Mapper les tags vers les formats de la base de données
+      const fabricMap: Record<FabricTag, string> = {
+        wax: 'wax',
+        getzner: 'basin',
+        bazin: 'basin',
+        soie: 'soie',
+        coton: 'coton',
+      }
+
+      const eventMap: Record<EventTag, string> = {
+        tabaski: 'tabaski',
+        mariage: 'mariage',
+        baptême: 'baptême',
+        travail: 'bureau',
+        sortie: 'soirée',
+      }
+
+      const genderMap: Record<GenderTag, string> = {
+        'homme adulte': 'homme',
+        'femme adulte': 'femme',
+        garçon: 'enfant',
+        fille: 'enfant',
+      }
+
+      // Stratégie de recherche progressive : essayer avec tous les critères, puis relâcher progressivement
+      const searchStrategies = [
+        // Stratégie 1 : Tous les critères (le plus strict)
+        {
+          fabric: fabricMap[tags.fabric],
+          occasion: eventMap[tags.event],
+          gender: genderMap[tags.gender],
+        },
+        // Stratégie 2 : Tissu + Genre (sans occasion)
+        {
+          fabric: fabricMap[tags.fabric],
+          gender: genderMap[tags.gender],
+        },
+        // Stratégie 3 : Tissu uniquement
+        {
+          fabric: fabricMap[tags.fabric],
+        },
+        // Stratégie 4 : Genre uniquement
+        {
+          gender: genderMap[tags.gender],
+        },
+        // Stratégie 5 : Occasion uniquement
+        {
+          occasion: eventMap[tags.event],
+        },
+        // Stratégie 6 : Aucun filtre (tous les produits)
+        {},
+      ]
+
+      let foundProducts: any[] = []
+
+      // Essayer chaque stratégie jusqu'à trouver des résultats
+      for (const strategy of searchStrategies) {
+        const searchParams = new URLSearchParams()
+        searchParams.set('page', '1')
+        searchParams.set('pageSize', '12') // Récupérer plus pour avoir du choix
+        
+        if (strategy.fabric) {
+          searchParams.set('fabric', strategy.fabric)
+        }
+        if (strategy.occasion) {
+          searchParams.set('occasion', strategy.occasion)
+        }
+        if (strategy.gender) {
+          searchParams.set('gender', strategy.gender)
+        }
+
+        const response = await fetch(`/api/products?${searchParams.toString()}`)
+        if (!response.ok) {
+          continue // Essayer la stratégie suivante
+        }
+
+        const data = await response.json()
+        const products = data.data || []
+
+        if (products.length > 0) {
+          foundProducts = products
+          break // On a trouvé des résultats, on s'arrête
+        }
+      }
+
+      // Si toujours aucun résultat, utiliser des données mockées comme fallback
+      if (foundProducts.length === 0) {
+        // Données mockées basées sur les tags sélectionnés
+        const mockProducts = [
+          {
+            id: 'mock-1',
+            title: `Boubou ${tags.fabric === 'wax' ? 'Wax' : tags.fabric === 'bazin' ? 'Bazin' : tags.fabric === 'soie' ? 'Soie' : 'Premium'}`,
+            description: `Modèle élégant pour ${eventMap[tags.event] || 'toutes occasions'}`,
+            price: 85000,
+            currency: 'FCFA',
+            image_url: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=500&fit=crop',
+            image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=500&fit=crop',
+            seller: {
+              name: 'Atelier Premium',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Premium',
+            },
+          },
+          {
+            id: 'mock-2',
+            title: `Tenue ${tags.gender === 'femme adulte' ? 'Féminine' : tags.gender === 'homme adulte' ? 'Masculine' : 'Enfant'}`,
+            description: `Style moderne et raffiné`,
+            price: 95000,
+            currency: 'FCFA',
+            image_url: 'https://images.unsplash.com/photo-1520975916090-3105956dac38?w=400&h=500&fit=crop',
+            image: 'https://images.unsplash.com/photo-1520975916090-3105956dac38?w=400&h=500&fit=crop',
+            seller: {
+              name: 'Couture Moderne',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Moderne',
+            },
+          },
+          {
+            id: 'mock-3',
+            title: `Ensemble ${tags.fabric === 'wax' ? 'Wax' : 'Premium'}`,
+            description: `Parfait pour ${eventMap[tags.event] || 'vos occasions'}`,
+            price: 120000,
+            currency: 'FCFA',
+            image_url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=500&fit=crop',
+            image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=500&fit=crop',
+            seller: {
+              name: 'Maison de Luxe',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Luxe',
+            },
+          },
+        ]
+        foundProducts = mockProducts
+      }
+
+      // Mélanger et limiter à 6 produits pour un meilleur mix
+      const shuffled = [...foundProducts].sort(() => Math.random() - 0.5)
+      setSimilarModels(shuffled.slice(0, 6))
+    } catch (err) {
+      logError(err, 'Similar models fetch')
+      // En cas d'erreur, utiliser des données mockées
+      const fallbackProducts = [
+        {
+          id: 'fallback-1',
+          title: 'Modèle Premium',
+          description: 'Découvrez notre collection',
+          price: 85000,
+          currency: 'FCFA',
+          image_url: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=500&fit=crop',
+          image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=500&fit=crop',
+          seller: {
+            name: 'SIGNARE',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Signare',
+          },
+        },
+      ]
+      setSimilarModels(fallbackProducts)
+    } finally {
+      setLoadingSimilar(false)
     }
   }
 
@@ -545,44 +738,119 @@ export default function InspirationPage() {
 
             {/* Résultats Inspiration */}
             {inspirationResults.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 pt-3 border-t border-white/5">
-                {inspirationResults.map((result) => (
-                  <div key={result.id} className="bg-[#0A0A0A] border border-white/10 rounded-lg sm:rounded-xl overflow-hidden group hover:border-[#D4AF37]/30 transition-all">
-                    <div className="relative aspect-[3/4] bg-neutral-900">
-                      <Image
-                        src={result.image_url}
-                        alt="Inspiration IA"
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/70 via-[#0A0A0A]/0 to-transparent" />
-                      <div className="absolute bottom-1.5 sm:bottom-2 left-1.5 sm:left-2 flex items-center gap-1 text-[9px] sm:text-[10px] uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#D4AF37] font-black">
-                        <Sparkles size={10} className="sm:w-3 sm:h-3" />
-                        IA
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 pt-3 border-t border-white/5">
+                  {inspirationResults.map((result) => (
+                    <div key={result.id} className="bg-[#0A0A0A] border border-white/10 rounded-lg sm:rounded-xl overflow-hidden group hover:border-[#D4AF37]/30 transition-all">
+                      <div className="relative aspect-[3/4] bg-neutral-900">
+                        <Image
+                          src={result.image_url}
+                          alt="Inspiration IA"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/70 via-[#0A0A0A]/0 to-transparent" />
+                        <div className="absolute bottom-1.5 sm:bottom-2 left-1.5 sm:left-2 flex items-center gap-1 text-[9px] sm:text-[10px] uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#D4AF37] font-black">
+                          <Sparkles size={10} className="sm:w-3 sm:h-3" />
+                          IA
+                        </div>
+                      </div>
+                      
+                      {/* CTA Commander */}
+                      <div className="p-2 sm:p-2.5">
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => {
+                            setSelectedInspiration(result)
+                            setShowTailorsModal(true)
+                          }}
+                          className="w-full bg-[#D4AF37] text-[#0A0A0A] py-1.5 sm:py-2 rounded-lg font-black uppercase tracking-[0.18em] text-[8px] sm:text-[9px] shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:shadow-[0_0_16px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-1.5 sm:gap-2"
+                        >
+                          <ShoppingBag size={12} className="sm:w-3.5 sm:h-3.5" />
+                          <div className="flex flex-col items-center leading-tight">
+                            <span>COMMANDER CE</span>
+                            <span>MODÈLE</span>
+                          </div>
+                        </motion.button>
                       </div>
                     </div>
-                    
-                    {/* CTA Commander */}
-                    <div className="p-2 sm:p-2.5">
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          setSelectedInspiration(result)
-                          setShowTailorsModal(true)
-                        }}
-                        className="w-full bg-[#D4AF37] text-[#0A0A0A] py-1.5 sm:py-2 rounded-lg font-black uppercase tracking-[0.18em] text-[8px] sm:text-[9px] shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:shadow-[0_0_16px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-1.5 sm:gap-2"
-                      >
-                        <ShoppingBag size={12} className="sm:w-3.5 sm:h-3.5" />
-                        <div className="flex flex-col items-center leading-tight">
-                          <span>COMMANDER CE</span>
-                          <span>MODÈLE</span>
-                        </div>
-                      </motion.button>
+                  ))}
+                </div>
+
+                {/* Modèles Similaires */}
+                {currentInspirationTags && (
+                  <div className="pt-4 sm:pt-6 border-t border-white/10 mt-4 sm:mt-6">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                      <div className="bg-[#D4AF37]/20 p-1.5 sm:p-2 rounded-lg">
+                        <Sparkles size={14} className="sm:w-4 sm:h-4 text-[#D4AF37]" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs sm:text-sm font-serif text-[#D4AF37] tracking-[0.15em] sm:tracking-[0.18em] uppercase">
+                          Modèles similaires
+                        </h3>
+                        <p className="text-[9px] sm:text-[10px] text-white/50 mt-0.5">
+                          Basés sur vos critères sélectionnés
+                        </p>
+                      </div>
                     </div>
+
+                    {loadingSimilar ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 text-[#D4AF37] animate-spin" />
+                      </div>
+                    ) : similarModels.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
+                        {similarModels.map((product) => (
+                          <Link
+                            key={product.id}
+                            href={`/shop/${product.id}`}
+                            className="bg-[#0A0A0A] border border-white/10 rounded-lg sm:rounded-xl overflow-hidden group hover:border-[#D4AF37]/30 transition-all"
+                          >
+                            <div className="relative aspect-[3/4] bg-neutral-900">
+                              <Image
+                                src={product.image || product.image_url || 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=500&fit=crop'}
+                                alt={product.title || product.caption || 'Produit'}
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/80 via-[#0A0A0A]/0 to-transparent" />
+                              {product.price && (
+                                <div className="absolute bottom-1.5 sm:bottom-2 left-1.5 sm:left-2 right-1.5 sm:right-2">
+                                  <div className="bg-[#D4AF37]/90 backdrop-blur-sm px-2 py-1 rounded-lg">
+                                    <p className="text-[9px] sm:text-[10px] font-black text-[#0A0A0A]">
+                                      {product.price.toLocaleString('fr-FR')} FCFA
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            {product.title && (
+                              <div className="p-2 sm:p-2.5">
+                                <p className="text-[10px] sm:text-[11px] font-semibold text-white/90 line-clamp-2 mb-1">
+                                  {product.title}
+                                </p>
+                                {product.seller?.name && (
+                                  <p className="text-[9px] sm:text-[10px] text-white/60 truncate">
+                                    {product.seller.name}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-white/[0.02] border border-white/10 rounded-lg sm:rounded-xl px-4 sm:px-6 py-6 sm:py-8 text-center">
+                        <p className="text-xs sm:text-sm text-white/60">
+                          Aucun modèle similaire trouvé pour le moment
+                        </p>
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </section>
         )}

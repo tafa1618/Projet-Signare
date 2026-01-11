@@ -112,7 +112,7 @@ const mockPosts: Post[] = [
     },
     garment_type: 'Boubou',
     quality_rating: 5,
-    quote_comment: '🔥 À voir absolument — finitions dignes d'un défilé.',
+    quote_comment: "🔥 À voir absolument — finitions dignes d'un défilé.",
     quote_media: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&h=1200&fit=crop',
   },
   {
@@ -1259,7 +1259,7 @@ export default function HomePage() {
     const mockComments = [
       { id: 1, user: 'Awa Ndiaye', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Awa', text: 'Magnifique ! Où puis-je commander ?', time: '2h', likes: 12 },
       { id: 2, user: 'Mariama Diallo', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mariama', text: 'Les finitions sont impeccables ✨', time: '5h', likes: 8 },
-      { id: 3, user: 'Khadija Sy', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Khadija', text: 'J\'adore le tissu !', time: '1j', likes: 15 },
+      { id: 3, user: 'Khadija Sy', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Khadija', text: "J'adore le tissu !", time: '1j', likes: 15 },
     ]
     
     setCommentModal({ postId, comments: mockComments })
@@ -1720,8 +1720,9 @@ export default function HomePage() {
             <p className="text-[9px] text-white/30 mt-2">Vous avez vu tous les posts</p>
           </div>
         )}
+      </main>
 
-        {repostModal && (
+      {repostModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

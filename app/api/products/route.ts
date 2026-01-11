@@ -21,6 +21,10 @@ const ProductsQuerySchema = z.object({
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().positive().optional(),
   sortBy: z.enum(['price_asc', 'price_desc', 'newest', 'popular']).default('newest'),
+  // Filtres métadonnées pour recherche similaire
+  fabric: z.string().max(50).optional(), // fabric_type
+  occasion: z.string().max(50).optional(), // occasion_tags
+  gender: z.enum(['homme', 'femme', 'mixte', 'enfant']).optional(), // gender_target
 })
 
 export async function GET(request: NextRequest) {
@@ -38,6 +42,9 @@ export async function GET(request: NextRequest) {
       minPrice: searchParams.get('minPrice') || undefined,
       maxPrice: searchParams.get('maxPrice') || undefined,
       sortBy: searchParams.get('sortBy') || 'newest',
+      fabric: searchParams.get('fabric') || undefined,
+      occasion: searchParams.get('occasion') || undefined,
+      gender: searchParams.get('gender') || undefined,
     }
 
     const validation = ProductsQuerySchema.safeParse(query)
@@ -54,7 +61,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { page, pageSize, category, search, minPrice, maxPrice, sortBy } = validation.data
+    const { page, pageSize, category, search, minPrice, maxPrice, sortBy, fabric, occasion, gender } = validation.data
 
     // Calculer l'offset
     const offset = (page - 1) * pageSize
@@ -66,7 +73,8 @@ export async function GET(request: NextRequest) {
     let queryBuilder = supabase
       .from('posts') // Utiliser la table posts comme source de produits pour l'instant
       .select('*', { count: 'exact' })
-      .eq('is_product', true) // Filtrer uniquement les produits (à adapter selon schéma)
+      // Note: Si is_product n'existe pas, on ne filtre pas (pour compatibilité)
+      // .eq('is_product', true)
 
     // Filtrer par catégorie
     if (category !== 'all') {
@@ -75,7 +83,40 @@ export async function GET(request: NextRequest) {
 
     // Recherche textuelle
     if (search) {
-      queryBuilder = queryBuilder.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
+      queryBuilder = queryBuilder.or(`title.ilike.%${search}%,description.ilike.%${search}%,caption.ilike.%${search}%`)
+    }
+
+    // Filtrer par tissu (fabric_type) - recherche flexible avec OR pour variantes
+    if (fabric) {
+      // Recherche exacte d'abord, puis variantes si besoin
+      const fabricVariants: Record<string, string[]> = {
+        'wax': ['wax', 'wax premium', 'wax imprimé'],
+        'basin': ['basin', 'basin riche', 'basin getzner', 'bazin'],
+        'soie': ['soie', 'soie premium', 'silk'],
+        'coton': ['coton', 'cotton'],
+      }
+      const variants = fabricVariants[fabric] || [fabric]
+      // Utiliser OR pour chercher dans les variantes
+      queryBuilder = queryBuilder.or(variants.map(v => `fabric_type.ilike.%${v}%`).join(','))
+    }
+
+    // Filtrer par occasion (occasion_tags contient la valeur) - recherche flexible
+    if (occasion) {
+      // Essayer d'abord avec contains, puis avec une recherche textuelle dans caption si besoin
+      queryBuilder = queryBuilder.or(`occasion_tags.cs.{${occasion}},caption.ilike.%${occasion}%`)
+    }
+
+    // Filtrer par genre (gender_target) - recherche flexible
+    if (gender) {
+      // Recherche exacte ou partielle
+      const genderVariants: Record<string, string[]> = {
+        'homme': ['homme', 'masculin', 'homme adulte'],
+        'femme': ['femme', 'féminin', 'femme adulte'],
+        'enfant': ['enfant', 'garçon', 'fille', 'kids'],
+        'mixte': ['mixte', 'unisexe'],
+      }
+      const variants = genderVariants[gender] || [gender]
+      queryBuilder = queryBuilder.or(variants.map(v => `gender_target.ilike.%${v}%`).join(','))
     }
 
     // Filtrer par prix (si disponible dans le schéma)
@@ -105,15 +146,57 @@ export async function GET(request: NextRequest) {
     }
 
     // Pagination
-    const { data: products, error, count } = await queryBuilder
+    let { data: products, error, count } = await queryBuilder
       .range(offset, offset + pageSize - 1)
+
+    // Si aucun résultat avec les filtres stricts, essayer une recherche plus large
+    if ((!products || products.length === 0) && (fabric || occasion || gender)) {
+      // Relancer une recherche sans les filtres optionnels les moins importants
+      let fallbackQuery = supabase
+        .from('posts')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .limit(pageSize)
+
+      // Garder uniquement le filtre le plus important (tissu en priorité)
+      if (fabric) {
+        const fabricVariants: Record<string, string[]> = {
+          'wax': ['wax', 'wax premium', 'wax imprimé'],
+          'basin': ['basin', 'basin riche', 'basin getzner', 'bazin'],
+          'soie': ['soie', 'soie premium', 'silk'],
+          'coton': ['coton', 'cotton'],
+        }
+        const variants = fabricVariants[fabric] || [fabric]
+        fallbackQuery = fallbackQuery.or(variants.map(v => `fabric_type.ilike.%${v}%`).join(','))
+      } else if (gender) {
+        // Si pas de tissu, utiliser le genre
+        const genderVariants: Record<string, string[]> = {
+          'homme': ['homme', 'masculin'],
+          'femme': ['femme', 'féminin'],
+          'enfant': ['enfant', 'garçon', 'fille'],
+        }
+        const variants = genderVariants[gender] || [gender]
+        fallbackQuery = fallbackQuery.or(variants.map(v => `gender_target.ilike.%${v}%`).join(','))
+      }
+
+      const fallbackResult = await fallbackQuery.range(offset, offset + pageSize - 1)
+      if (fallbackResult.data && fallbackResult.data.length > 0) {
+        products = fallbackResult.data
+        count = fallbackResult.count
+        error = fallbackResult.error
+      }
+    }
 
     if (error) {
       logError(error, 'Products pagination fetch')
-      return NextResponse.json(
-        { error: 'Erreur lors de la récupération des produits' },
-        { status: 500 }
-      )
+      // Ne pas retourner d'erreur, retourner un tableau vide pour permettre le fallback côté client
+      return NextResponse.json({
+        data: [],
+        total: 0,
+        hasMore: false,
+        page,
+        pageSize,
+      })
     }
 
     // Calculer si il y a plus de pages

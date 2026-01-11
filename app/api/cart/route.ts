@@ -52,10 +52,28 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Type explicite pour cartItems
+    type CartItem = {
+      id: string
+      user_id: string
+      product_id: string
+      quantity: number
+      price: string | number
+      currency: string
+      title: string
+      image_url: string | null
+      seller_name: string | null
+      seller_avatar_url: string | null
+      created_at: string
+      updated_at?: string | null
+    }
+
+    const typedCartItems = (cartItems || []) as CartItem[]
+
     return NextResponse.json({
-      items: cartItems || [],
-      totalItems: cartItems?.reduce((sum, item) => sum + item.quantity, 0) || 0,
-      totalPrice: cartItems?.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0) || 0,
+      items: typedCartItems,
+      totalItems: typedCartItems.reduce((sum, item) => sum + item.quantity, 0),
+      totalPrice: typedCartItems.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0),
     })
   } catch (error) {
     logError(error, 'Cart GET')
