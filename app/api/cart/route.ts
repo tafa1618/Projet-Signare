@@ -108,12 +108,12 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       logSecurity('Cart item validation failed', {
         userId,
-        errors: validation.error.errors,
+        errors: validation.error.issues,
       })
       return NextResponse.json(
         {
           error: 'Données invalides',
-          details: validation.error.errors.map(e => ({
+          details: validation.error.issues.map(e => ({
             field: e.path.join('.'),
             message: e.message,
           })),
@@ -223,7 +223,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Données invalides',
-          details: validation.error.errors,
+          details: validation.error.issues,
         },
         { status: 400 }
       )

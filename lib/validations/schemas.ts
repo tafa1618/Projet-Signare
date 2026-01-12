@@ -85,6 +85,16 @@ export const ValidationCodeRequestSchema = z.object({
 export type ValidationCodeRequestInput = z.infer<typeof ValidationCodeRequestSchema>
 
 /**
+ * Schéma pour créer un vote (like)
+ * @security Validation stricte de l'ID de participation
+ */
+export const VoteCreateSchema = z.object({
+  participation_id: z.string().uuid('ID de participation invalide'),
+})
+
+export type VoteCreateInput = z.infer<typeof VoteCreateSchema>
+
+/**
  * Constantes de validation pour upload d'images
  */
 export const IMAGE_UPLOAD_CONSTRAINTS = {

@@ -21,6 +21,9 @@ import {
 import mesureImg from '../../Assets/prise de mesure.jpg'
 import atelierImg from '../../Assets/unnamed (1).jpg'
 import lookbookImg from '../../Assets/unnamed.jpg'
+import WeeklyCompetition from '@/components/WeeklyCompetition'
+import type { ParticipantSubmission, Participant } from '@/components/WeeklyCompetition/ParticipantCard'
+import { Plus } from 'lucide-react'
 
 /**
  * Page Events - Stories, Lives & Défilés
@@ -102,6 +105,125 @@ const UPCOMING: UpcomingEvent[] = [
   },
 ]
 
+// Données mockées pour la compétition
+const MOCK_PARTICIPANTS: {
+  homme: Participant[]
+  femme: Participant[]
+  tailleur: Participant[]
+} = {
+  homme: [
+    {
+      id: 'h1',
+      name: 'Moussa Diallo',
+      media: ['https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=600&h=800&fit=crop'],
+      format: 'photos',
+      likes: 1240,
+      tailorId: 'tailor-1',
+      tailorName: 'Atelier Fatou',
+      category: 'homme',
+      position: 1,
+    },
+    {
+      id: 'h2',
+      name: 'Amadou Ndiaye',
+      media: ['https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=600&h=800&fit=crop'],
+      format: 'video',
+      likes: 892,
+      tailorId: 'tailor-2',
+      tailorName: 'Maison Saliou',
+      category: 'homme',
+      position: 2,
+    },
+    {
+      id: 'h3',
+      name: 'Ibrahima Ba',
+      media: ['https://images.unsplash.com/photo-1594938291221-94f18dd5e26c?w=600&h=800&fit=crop'],
+      format: 'photos',
+      likes: 654,
+      tailorId: 'tailor-3',
+      tailorName: 'Studio Dakar Luxe',
+      category: 'homme',
+      position: 3,
+    },
+  ],
+  femme: [
+    {
+      id: 'f1',
+      name: 'Aïssatou Sow',
+      media: ['https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=600&h=800&fit=crop'],
+      format: 'photos',
+      likes: 2156,
+      tailorId: 'tailor-1',
+      tailorName: 'Atelier Fatou',
+      category: 'femme',
+      position: 1,
+    },
+    {
+      id: 'f2',
+      name: 'Fatou Diallo',
+      media: ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&h=800&fit=crop'],
+      format: 'video',
+      likes: 1834,
+      tailorId: 'tailor-2',
+      tailorName: 'Maison Saliou',
+      category: 'femme',
+      position: 2,
+    },
+    {
+      id: 'f3',
+      name: 'Khadija Fall',
+      media: ['https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600&h=800&fit=crop'],
+      format: 'photos',
+      likes: 1456,
+      tailorId: 'tailor-3',
+      tailorName: 'Studio Dakar Luxe',
+      category: 'femme',
+      position: 3,
+    },
+  ],
+  tailleur: [
+    {
+      id: 't1',
+      name: 'Atelier Fatou',
+      media: ['https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=600&h=800&fit=crop'],
+      format: 'photos',
+      likes: 3421,
+      tailorId: 'tailor-1',
+      tailorName: 'Atelier Fatou',
+      category: 'tailleur',
+      position: 1,
+    },
+    {
+      id: 't2',
+      name: 'Maison Saliou',
+      media: ['https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&h=800&fit=crop'],
+      format: 'video',
+      likes: 2890,
+      tailorId: 'tailor-2',
+      tailorName: 'Maison Saliou',
+      category: 'tailleur',
+      position: 2,
+    },
+    {
+      id: 't3',
+      name: 'Studio Dakar Luxe',
+      media: ['https://images.unsplash.com/photo-1520975868797-1c3e0e012a4c?w=600&h=800&fit=crop'],
+      format: 'photos',
+      likes: 2234,
+      tailorId: 'tailor-3',
+      tailorName: 'Studio Dakar Luxe',
+      category: 'tailleur',
+      position: 3,
+    },
+  ],
+}
+
+const MOCK_WINNERS = {
+  homme: MOCK_PARTICIPANTS.homme[0],
+  femme: MOCK_PARTICIPANTS.femme[0],
+  tailleur: MOCK_PARTICIPANTS.tailleur[0],
+}
+
 export default function EventsPage() {
   const reactions = useMemo(() => ['✨', '🔥', '😍', '👏', '❤️'], [])
   const [activeStoryId, setActiveStoryId] = useState<string | null>(null)
@@ -110,6 +232,8 @@ export default function EventsPage() {
   const [savedBookmark, setSavedBookmark] = useState<boolean>(false)
   const [commentSheetOpen, setCommentSheetOpen] = useState(false)
   const [commentDraft, setCommentDraft] = useState('')
+  const [hasParticipated, setHasParticipated] = useState(false)
+  const [competitionModalOpen, setCompetitionModalOpen] = useState(false)
   const [comments, setComments] = useState<Record<string, StoryComment[]>>(() => ({
     me: [
       { id: 'c1', author: 'Aïssatou', text: 'Tellement élégant, j’adore !', timestamp: 'il y a 5 min' },
@@ -126,8 +250,8 @@ export default function EventsPage() {
 
   const trackInterest = (targetId: string) => {
     // @ai-context Tracking des vues d'événement pour le dataset de recommandation
-    // ✅ Utilisation du logger sécurisé
-    logMLInteraction({ targetId, score: 2, timestamp: new Date().toISOString() })
+    // TODO: Implémenter logMLInteraction quand disponible
+    console.log('Event view tracked:', targetId)
   }
 
   const openStory = (id: string) => {
@@ -179,7 +303,7 @@ export default function EventsPage() {
       id: `local-${Date.now()}`,
       author: 'Vous',
       text,
-      timestamp: 'à l’instant',
+      timestamp: 'à l'instant',
     }
     setComments((prev) => ({
       ...prev,
@@ -187,6 +311,20 @@ export default function EventsPage() {
     }))
     setCommentDraft('')
     trackInterest(`story-comment:${activeStoryId}`)
+  }
+
+  // Handlers pour la compétition
+  const handleParticipate = (data: ParticipantSubmission) => {
+    // Frontend uniquement - envoi des données sans validation
+    console.log('Participation:', data)
+    setHasParticipated(true)
+    trackInterest('competition-participate')
+  }
+
+  const handleLike = (participantId: string) => {
+    // Frontend uniquement - appel API à implémenter
+    console.log('Like participant:', participantId)
+    trackInterest(`competition-like:${participantId}`)
   }
 
   useEffect(() => {
@@ -231,6 +369,20 @@ export default function EventsPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 space-y-8">
+        {/* Sagnsé & Ndanane de la semaine */}
+        <section className="pt-4">
+          <WeeklyCompetition
+            hasParticipated={hasParticipated}
+            daysRemaining={3}
+            topParticipants={MOCK_PARTICIPANTS}
+            winners={MOCK_WINNERS}
+            onParticipate={handleParticipate}
+            onLike={handleLike}
+            externalModalOpen={competitionModalOpen}
+            onModalOpenChange={setCompetitionModalOpen}
+          />
+        </section>
+
         {/* Stories */}
         <section className="pt-4">
           <div className="flex items-center justify-between mb-3">
@@ -550,6 +702,25 @@ export default function EventsPage() {
           </motion.div>
         </motion.div>
       )}
+
+      {/* Bouton sticky mobile "+ Participer" */}
+      {!hasParticipated && (
+        <motion.div
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="fixed bottom-24 left-0 right-0 z-40 md:hidden px-4"
+        >
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCompetitionModalOpen(true)}
+            className="w-full bg-[#D4AF37] text-[#0A0A0A] py-4 rounded-xl font-black uppercase tracking-[0.18em] text-sm shadow-[0_0_30px_rgba(212,175,55,0.5)] flex items-center justify-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Participer
+          </motion.button>
+        </motion.div>
+      )}
+
     </div>
   )
 }
