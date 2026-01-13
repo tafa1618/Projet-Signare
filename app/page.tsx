@@ -577,8 +577,8 @@ const TailorCard = ({ post, onLike, onSave, onRepost, openCommentModal }: { post
         </div>
       </div>
       
-      {/* Carrousel de médias : max 50vh + object-cover (clic => détail produit) */}
-      <div ref={mediaContainerRef} className="relative w-full aspect-[4/5] max-h-[50vh] bg-neutral-900">
+      {/* Carrousel de médias : max 50vh sur mobile, limité sur desktop */}
+      <div ref={mediaContainerRef} className="relative w-full aspect-[4/5] max-h-[50vh] md:max-h-[350px] md:aspect-[4/5] bg-neutral-900">
         <Link
           href={`/product/${post.id}`}
           className="relative block w-full h-full"
@@ -917,8 +917,8 @@ const ClientCard = ({ post, onLike, onSave, onRepost, openCommentModal }: { post
         </div>
       </div>
       
-      {/* Carrousel de médias : max 50vh + object-cover (clic => détail produit) */}
-      <div ref={mediaContainerRef} className="relative w-full aspect-[4/5] max-h-[50vh] bg-neutral-900">
+      {/* Carrousel de médias : max 50vh sur mobile, limité sur desktop */}
+      <div ref={mediaContainerRef} className="relative w-full aspect-[4/5] max-h-[50vh] md:max-h-[350px] md:aspect-[4/5] bg-neutral-900">
         <Link
           href={`/product/${post.id}`}
           className="relative block w-full h-full"
@@ -1080,17 +1080,6 @@ const ClientCard = ({ post, onLike, onSave, onRepost, openCommentModal }: { post
             >
               <MoreVertical size={18} className="group-hover:scale-110 transition-transform" />
             </motion.button>
-          </div>
-
-          <div className="flex items-center justify-end flex-shrink-0">
-            <Link
-              href={`/messages?user=${encodeURIComponent(post.user.name)}`}
-              className="bg-white/5 border border-[#D4AF37]/25 text-[#D4AF37] px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-95 flex items-center gap-1.5 sm:gap-2"
-              aria-label="Discuter avec ce membre"
-            >
-              <MessageCircle size={12} className="sm:w-[14px] sm:h-[14px]" />
-              <span className="hidden xs:inline">Discuter</span>
-            </Link>
           </div>
         </div>
       </div>
@@ -1395,7 +1384,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] pb-24 text-white">
+    <div className="min-h-screen bg-[#0A0A0A] pb-20 text-white">
       {/* Search Modal */}
       <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 

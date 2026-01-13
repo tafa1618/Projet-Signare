@@ -115,7 +115,7 @@ export default function WeeklyCompetition({
               </h4>
               <span className="text-xs text-white/50">{topParticipants.femme.length} participants</span>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {topParticipants.femme.slice(0, 3).map((participant, index) => (
                 <ParticipantCard
                   key={participant.id}
@@ -134,7 +134,7 @@ export default function WeeklyCompetition({
               </h4>
               <span className="text-xs text-white/50">{topParticipants.homme.length} participants</span>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {topParticipants.homme.slice(0, 3).map((participant, index) => (
                 <ParticipantCard
                   key={participant.id}
@@ -153,7 +153,7 @@ export default function WeeklyCompetition({
               </h4>
               <span className="text-xs text-white/50">{topParticipants.tailleur.length} participants</span>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {topParticipants.tailleur.slice(0, 3).map((participant, index) => (
                 <ParticipantCard
                   key={participant.id}
@@ -176,7 +176,7 @@ export default function WeeklyCompetition({
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             {winners.femme && (
               <div className="relative rounded-xl overflow-hidden border-2 border-[#D4AF37] bg-gradient-to-br from-[#D4AF37]/20 to-[#0A0A0A]">
                 <div className="absolute top-3 left-3 z-20 bg-[#D4AF37] text-[#0A0A0A] px-3 py-1 rounded-full text-xs font-black uppercase tracking-[0.18em]">

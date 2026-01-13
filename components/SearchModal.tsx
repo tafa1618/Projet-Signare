@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, X, Filter, SlidersHorizontal, Loader2, Star } from 'lucide-react'
 import Image from 'next/image'
@@ -22,6 +23,12 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const { results, isLoading, error, suggestions, totalResults, search, getSuggestions } = useSearch()
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([])
+  const [mounted, setMounted] = useState(false)
+
+  // Vérifier que le composant est monté côté client
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Focus sur l'input quand le modal s'ouvre
   useEffect(() => {
@@ -81,30 +88,31 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     onClose()
   }
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
-          />
+  if (!isOpen || !mounted) return null
 
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-0 top-0 bg-[#0A0A0A] border-b border-[#D4AF37]/20 z-50 max-h-screen flex flex-col"
-          >
+  const modalContent = (
+    <AnimatePresence>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/95 backdrop-blur-md z-[100]"
+      />
+
+      {/* Modal */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-[#0A0A0A] z-[101] flex flex-col overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
             {/* Header */}
-            <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 sm:py-4 border-b border-[#D4AF37]/10">
+            <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 sm:py-4 border-b border-[#D4AF37]/10 bg-[#0A0A0A] flex-shrink-0">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 text-[#D4AF37] z-10" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 text-[#D4AF37] z-10 pointer-events-none" />
                 <input
                   ref={inputRef}
                   type="text"
@@ -112,7 +120,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Rechercher un modèle, une tenue..."
-                  className="w-full bg-white/20 sm:bg-white/5 border-2 border-[#D4AF37] sm:border border-[#D4AF37]/20 rounded-xl pl-11 sm:pl-12 pr-4 py-3 sm:py-3 text-white text-base sm:text-base placeholder-white/70 sm:placeholder-white/40 focus:outline-none focus:border-[#D4AF37] focus:bg-white/25 sm:focus:bg-white/10 focus:ring-2 focus:ring-[#D4AF37]/30 transition-all shadow-[0_0_15px_rgba(212,175,55,0.2)] sm:shadow-none"
+                  className="w-full bg-white/10 border-2 border-[#D4AF37] rounded-xl pl-11 sm:pl-12 pr-4 py-3 text-white text-base placeholder-white/60 focus:outline-none focus:border-[#D4AF37] focus:bg-white/15 focus:ring-2 focus:ring-[#D4AF37]/30 transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)]"
                 />
               </div>
               <button
@@ -241,14 +249,16 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             )}
 
             {/* Résultats */}
-            <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4">
               {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+                <div className="flex flex-col items-center justify-center py-16 gap-4">
+                  <Loader2 className="w-10 h-10 text-[#D4AF37] animate-spin" />
+                  <p className="text-white/50 text-sm">Recherche en cours...</p>
                 </div>
               ) : error ? (
-                <div className="text-center py-12">
-                  <p className="text-white/60">{error}</p>
+                <div className="text-center py-16 px-4">
+                  <p className="text-white/70 mb-2">{error}</p>
+                  <p className="text-white/40 text-sm">Veuillez réessayer</p>
                 </div>
               ) : results.length > 0 ? (
                 <>
@@ -311,16 +321,33 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   </p>
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <Search className="w-12 h-12 text-[#D4AF37]/30 mx-auto mb-4" />
-                  <p className="text-white/60">Commencez à rechercher...</p>
+                <div className="flex flex-col items-center justify-center h-full min-h-[400px] px-4">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex flex-col items-center gap-4"
+                  >
+                    <div className="relative">
+                      <Search className="w-16 h-16 sm:w-20 sm:h-20 text-[#D4AF37]/40" strokeWidth={1.5} />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-[#D4AF37]/20 rounded-full animate-pulse" />
+                      </div>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <p className="text-white/70 text-base sm:text-lg font-medium">Commencez à rechercher...</p>
+                      <p className="text-white/40 text-xs sm:text-sm max-w-sm">
+                        Tapez un mot-clé pour trouver des modèles, des tenues ou des tailleurs
+                      </p>
+                    </div>
+                  </motion.div>
                 </div>
               )}
             </div>
           </motion.div>
-        </>
-      )}
     </AnimatePresence>
   )
+
+  return createPortal(modalContent, document.body)
 }
 

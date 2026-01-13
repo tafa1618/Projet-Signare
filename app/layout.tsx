@@ -30,7 +30,7 @@ export default function RootLayout({
     <html lang="fr" className={`dark ${fontSans.variable} ${fontSerif.variable}`}>
       <body className="m-0 p-0 overflow-x-hidden" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
         {/* CONTENU SCROLLABLE */}
-        <div className="min-h-screen pb-24">
+        <div className="min-h-screen pb-20">
           {children}
         </div>
 
