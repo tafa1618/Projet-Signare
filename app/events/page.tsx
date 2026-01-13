@@ -18,6 +18,7 @@ import {
   Bookmark,
   MessageSquare,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import mesureImg from '../../Assets/prise de mesure.jpg'
 import atelierImg from '../../Assets/unnamed (1).jpg'
 import lookbookImg from '../../Assets/unnamed.jpg'
@@ -225,6 +226,7 @@ const MOCK_WINNERS = {
 }
 
 export default function EventsPage() {
+  const router = useRouter()
   const reactions = useMemo(() => ['✨', '🔥', '😍', '👏', '❤️'], [])
   const [activeStoryId, setActiveStoryId] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
@@ -348,41 +350,49 @@ export default function EventsPage() {
   }, [activeStoryId])
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white pb-20">
+    <div className="min-h-screen bg-[#0A0A0A] text-white pb-20 overflow-x-hidden">
       {/* Header */}
-      <header className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 sticky top-0 z-40 bg-[#0A0A0A]/85 backdrop-blur-xl border-b border-[#D4AF37]/15">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="bg-[#D4AF37] p-1.5 sm:p-2 rounded-lg shadow-[0_0_20px_rgba(212,175,55,0.35)]">
-              <Ticket className="w-4 h-4 sm:w-5 sm:h-5 text-[#0A0A0A]" />
+      <header className="px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 md:pt-8 pb-3 sm:pb-4 md:pb-5 sticky top-0 z-40 bg-[#0A0A0A]/85 backdrop-blur-xl border-b border-[#D4AF37]/15 overflow-x-hidden">
+        <div className="flex items-center justify-between max-w-4xl mx-auto w-full">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            <div className="bg-[#D4AF37] p-1.5 sm:p-2 md:p-2.5 rounded-lg md:rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.35)]">
+              <Ticket className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#0A0A0A]" />
             </div>
             <div>
-              <h1 className="text-lg sm:text-xl font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Events</h1>
-              <p className="text-[9px] sm:text-[10px] text-white/50 tracking-[0.2em] uppercase">Lives & Défilés</p>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Events</h1>
+              <p className="text-[9px] sm:text-[10px] md:text-xs text-white/50 tracking-[0.2em] uppercase">Lives & Défilés</p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D4AF37]/70" />
-            <span className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-[0.2em] hidden sm:inline">Mode Dakar</span>
-            <span className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-[0.2em] sm:hidden">Dakar</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 text-[#D4AF37]/70" />
+            <span className="text-[9px] sm:text-[10px] md:text-xs text-white/50 uppercase tracking-[0.2em] hidden sm:inline">Mode Dakar</span>
+            <span className="text-[9px] sm:text-[10px] md:text-xs text-white/50 uppercase tracking-[0.2em] sm:hidden">Dakar</span>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => router.push('/publish')}
+              className="ml-2 sm:ml-3 bg-[#D4AF37] text-[#0A0A0A] p-1.5 sm:p-2 rounded-lg sm:rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.5)] hover:shadow-[0_0_30px_rgba(212,175,55,0.7)] transition-all"
+              aria-label="Créer un statut"
+            >
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            </motion.button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 space-y-6 sm:space-y-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 space-y-6 sm:space-y-8 md:space-y-10 overflow-x-hidden">
         {/* Stories */}
-        <section className="pt-2 sm:pt-4">
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <h2 className="text-xs sm:text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Stories & Lives</h2>
-            <div className="text-[9px] sm:text-[10px] text-white/40 uppercase tracking-[0.2em]">Swipe →</div>
+        <section className="pt-2 sm:pt-4 md:pt-6 overflow-x-hidden">
+          <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-5">
+            <h2 className="text-xs sm:text-sm md:text-base font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Stories & Lives</h2>
+            <div className="text-[9px] sm:text-[10px] md:text-xs text-white/40 uppercase tracking-[0.2em]">Swipe →</div>
           </div>
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar pb-2">
+          <div className="flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto no-scrollbar pb-2 md:pb-3">
             {STORIES.map((story) => (
               <motion.button
                 key={story.id}
                 whileTap={{ scale: 0.92 }}
                 onClick={() => openStory(story.id)}
-                className="flex flex-col items-center gap-2 min-w-[72px]"
+                className="flex flex-col items-center gap-2 min-w-[72px] sm:min-w-[80px] md:min-w-[90px]"
               >
                 <motion.div
                   animate={story.type === 'live' ? { rotate: 360 } : {}}
@@ -391,7 +401,7 @@ export default function EventsPage() {
                     ? 'p-[2px] rounded-full bg-gradient-to-tr from-[#D4AF37] via-[#D4AF37]/60 to-transparent'
                     : 'p-[2px] rounded-full border border-[#D4AF37]/40'}
                 >
-                  <div className="w-16 h-16 rounded-full overflow-hidden bg-black relative">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-black relative">
                     <Image src={story.thumbnail} alt={story.label} fill className="object-cover" />
                     {story.type === 'live' && (
                       <div className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-[#D4AF37] text-[#0A0A0A] text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-[0_0_12px_rgba(212,175,55,0.6)]">
@@ -400,7 +410,7 @@ export default function EventsPage() {
                     )}
                   </div>
                 </motion.div>
-                <span className="text-[10px] text-white/60 uppercase tracking-[0.15em] text-center leading-tight w-16 line-clamp-2">
+                <span className="text-[10px] sm:text-[11px] md:text-xs text-white/60 uppercase tracking-[0.15em] text-center leading-tight w-16 sm:w-20 md:w-24 line-clamp-2">
                   {story.label}
                 </span>
               </motion.button>
@@ -409,9 +419,9 @@ export default function EventsPage() {
         </section>
 
         {/* Live à la Une */}
-        <section>
-          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden border border-[#D4AF37]/20 bg-white/5 shadow-[0_15px_60px_rgba(0,0,0,0.35)]">
-            <div className="relative h-[280px] sm:h-[340px] md:h-[420px]">
+        <section className="overflow-x-hidden">
+          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden border border-[#D4AF37]/20 bg-white/5 shadow-[0_15px_60px_rgba(0,0,0,0.35)] w-full">
+            <div className="relative h-[280px] sm:h-[360px] md:h-[450px] lg:h-[500px]">
               <Image src={LIVE_FEATURED.banner} alt={LIVE_FEATURED.title} fill className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/85 via-[#0A0A0A]/40 to-transparent backdrop-blur-[2px]" />
 
@@ -427,8 +437,8 @@ export default function EventsPage() {
               </div>
 
               <div className="absolute bottom-3 left-3 right-3 sm:bottom-5 sm:left-5 sm:right-5 space-y-2 sm:space-y-3">
-                <h3 className="text-lg sm:text-xl md:text-2xl font-serif text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.45)]">{LIVE_FEATURED.title}</h3>
-                <p className="text-xs sm:text-sm text-white/80">
+                <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-serif text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.45)]">{LIVE_FEATURED.title}</h3>
+                <p className="text-xs sm:text-sm md:text-base text-white/80 line-clamp-2">
                   Créateurs : {LIVE_FEATURED.creators.join(' • ')}
                 </p>
                 <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -483,17 +493,17 @@ export default function EventsPage() {
         </section>
 
         {/* Événements à venir */}
-        <section className="pb-4 sm:pb-6">
-          <h2 className="text-xs sm:text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase mb-2 sm:mb-3">Événements à venir</h2>
-          <div className="space-y-3 sm:space-y-4">
+        <section className="pb-4 sm:pb-6 md:pb-8">
+          <h2 className="text-xs sm:text-sm md:text-base font-serif text-[#D4AF37] tracking-[0.18em] uppercase mb-3 sm:mb-4 md:mb-5">Événements à venir</h2>
+          <div className="space-y-3 sm:space-y-4 md:space-y-5">
             {UPCOMING.map((ev) => (
               <motion.div
                 key={ev.id}
                 whileTap={{ scale: 0.98 }}
-                className="flex gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-white/5 border border-white/10 backdrop-blur-xl"
+                className="flex gap-2 sm:gap-3 md:gap-4 p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 transition-colors cursor-pointer"
                 onClick={() => trackInterest(ev.id)}
               >
-                <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden shrink-0">
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-lg md:rounded-xl overflow-hidden shrink-0">
                   <Image src={ev.image} alt={ev.title} fill className="object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 </div>
@@ -502,15 +512,15 @@ export default function EventsPage() {
                     <p className="text-[10px] sm:text-[11px] text-[#D4AF37]/80 uppercase tracking-[0.18em] flex items-center gap-1">
                       <Clock3 size={10} className="sm:w-3 sm:h-3" /> {ev.date}
                     </p>
-                    <h3 className="text-xs sm:text-sm font-semibold text-white mt-0.5 sm:mt-1 line-clamp-2">{ev.title}</h3>
-                    <p className="text-[10px] sm:text-[11px] text-white/50 flex items-center gap-1 mt-0.5 sm:mt-1">
-                      <MapPin size={10} className="sm:w-3 sm:h-3" /> <span className="line-clamp-1">{ev.location}</span>
+                    <h3 className="text-xs sm:text-sm md:text-base font-semibold text-white mt-0.5 sm:mt-1 md:mt-1.5 line-clamp-2">{ev.title}</h3>
+                    <p className="text-[10px] sm:text-[11px] md:text-xs text-white/50 flex items-center gap-1 mt-0.5 sm:mt-1 md:mt-1.5">
+                      <MapPin size={10} className="sm:w-3 sm:h-3 md:w-4 md:h-4" /> <span className="line-clamp-1">{ev.location}</span>
                     </p>
                   </div>
                   <div className="flex items-center justify-between mt-1.5 sm:mt-2">
                     <motion.button
                       whileTap={{ scale: 0.94 }}
-                      className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.18em] bg-[#D4AF37] text-[#0A0A0A] px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg shadow-[0_0_18px_rgba(212,175,55,0.35)]"
+                      className="text-[10px] sm:text-[11px] md:text-xs font-black uppercase tracking-[0.18em] bg-[#D4AF37] text-[#0A0A0A] px-2.5 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 rounded-lg md:rounded-xl shadow-[0_0_18px_rgba(212,175,55,0.35)] hover:shadow-[0_0_25px_rgba(212,175,55,0.5)] transition-shadow"
                     >
                       {ev.cta}
                     </motion.button>
@@ -528,12 +538,12 @@ export default function EventsPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[140] bg-black/90 backdrop-blur-sm"
+          className="fixed inset-0 z-[140] bg-black/90 backdrop-blur-sm overflow-x-hidden"
           onClick={closeStory}
         >
-          <div className="absolute inset-0 flex justify-center items-center px-4">
+          <div className="absolute inset-0 flex justify-center items-center px-4 overflow-x-hidden">
             <div
-              className="relative w-full max-w-[320px] max-h-[88vh] bg-white/5 border border-[#D4AF37]/20 rounded-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)] overflow-hidden flex flex-col"
+              className="relative w-full max-w-[320px] sm:max-w-[380px] md:max-w-[420px] max-h-[88vh] bg-white/5 border border-[#D4AF37]/20 rounded-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)] overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-4 pt-3 pb-2 shrink-0">
@@ -639,7 +649,7 @@ export default function EventsPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[150] pointer-events-none"
+          className="fixed inset-0 z-[150] pointer-events-none overflow-x-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
           <motion.div
@@ -647,9 +657,9 @@ export default function EventsPage() {
             animate={{ y: 0 }}
             exit={{ y: 240 }}
             transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-            className="pointer-events-auto absolute inset-x-0 bottom-0 px-3 pb-4"
+            className="pointer-events-auto absolute inset-x-0 bottom-0 px-3 pb-4 max-w-full overflow-x-hidden"
           >
-            <div className="mx-auto w-full max-w-[420px] bg-[#0A0A0A]/95 backdrop-blur-xl border border-[#D4AF37]/30 rounded-2xl shadow-[0_20px_80px_rgba(0,0,0,0.55)] p-4 space-y-3">
+            <div className="mx-auto w-full max-w-[420px] bg-[#0A0A0A]/95 backdrop-blur-xl border border-[#D4AF37]/30 rounded-2xl shadow-[0_20px_80px_rgba(0,0,0,0.55)] p-4 space-y-3 overflow-x-hidden">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full overflow-hidden border border-[#D4AF37]/40 relative">
@@ -709,7 +719,7 @@ export default function EventsPage() {
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="fixed bottom-24 left-0 right-0 z-40 md:hidden px-4"
+          className="fixed bottom-24 left-0 right-0 z-40 md:hidden px-4 max-w-full"
         >
           <motion.button
             whileTap={{ scale: 0.95 }}

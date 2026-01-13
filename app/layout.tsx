@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr" className={`dark ${fontSans.variable} ${fontSerif.variable}`}>
+    <html lang="fr" className={`dark ${fontSans.variable} ${fontSerif.variable} overflow-x-hidden`}>
       <body className="m-0 p-0 overflow-x-hidden" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
         {/* CONTENU SCROLLABLE */}
         <div className="min-h-screen pb-20">

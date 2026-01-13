@@ -58,7 +58,7 @@ export default function WeeklyCompetition({
   return (
     <>
       {/* Section Principale */}
-      <section className="mb-8">
+      <section className="mb-8 overflow-x-hidden">
         <div className="relative rounded-2xl overflow-hidden border border-[#D4AF37]/20 bg-gradient-to-br from-[#D4AF37]/10 via-[#0A0A0A] to-[#0A0A0A]">
           <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-5" />
           <div className="relative px-4 py-8 sm:px-6 sm:py-10 space-y-6">
@@ -115,7 +115,7 @@ export default function WeeklyCompetition({
               </h4>
               <span className="text-xs text-white/50">{topParticipants.femme.length} participants</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 overflow-x-hidden">
               {topParticipants.femme.slice(0, 3).map((participant, index) => (
                 <ParticipantCard
                   key={participant.id}
@@ -134,7 +134,7 @@ export default function WeeklyCompetition({
               </h4>
               <span className="text-xs text-white/50">{topParticipants.homme.length} participants</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 overflow-x-hidden">
               {topParticipants.homme.slice(0, 3).map((participant, index) => (
                 <ParticipantCard
                   key={participant.id}
@@ -153,7 +153,7 @@ export default function WeeklyCompetition({
               </h4>
               <span className="text-xs text-white/50">{topParticipants.tailleur.length} participants</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 overflow-x-hidden">
               {topParticipants.tailleur.slice(0, 3).map((participant, index) => (
                 <ParticipantCard
                   key={participant.id}

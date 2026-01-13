@@ -29,8 +29,8 @@ export default function BottomNav() {
 
   // Toujours afficher le footer (toujours visible pour la navigation)
   return (
-    <nav className="fixed bottom-0 left-0 right-0 w-full z-[200] h-16 bg-[#0A0A0A]/95 backdrop-blur-lg pb-safe">
-      <div className="flex justify-around items-center h-full px-4 max-w-2xl mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 w-full z-[200] h-16 bg-[#0A0A0A]/95 backdrop-blur-lg pb-safe overflow-x-hidden">
+      <div className="flex justify-around items-center h-full px-4 max-w-2xl mx-auto w-full">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
