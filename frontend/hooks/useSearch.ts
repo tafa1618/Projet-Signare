@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { handleHTTPError, handleFetchError } from '@/lib/errors'
 import { logError } from '@/lib/logger'
 
@@ -174,7 +174,7 @@ export function useSearch() {
     }
   }
 
-  const getSuggestions = async (query: string) => {
+  const getSuggestions = useCallback(async (query: string) => {
     try {
       // Vérifier que l'URL est valide
       if (!SEARCH_ENGINE_URL || SEARCH_ENGINE_URL === 'http://localhost:8003/api/v1') {
@@ -213,7 +213,7 @@ export function useSearch() {
       })
       return mockSuggestions
     }
-  }
+  }, [])
 
   return {
     results,

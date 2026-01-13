@@ -44,7 +44,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     } else {
       setSearchSuggestions([])
     }
-  }, [query, getSuggestions])
+  }, [query, getSuggestions]) // getSuggestions est maintenant mémorisé avec useCallback
 
   // Rechercher quand Enter est pressé
   const handleSearch = async () => {

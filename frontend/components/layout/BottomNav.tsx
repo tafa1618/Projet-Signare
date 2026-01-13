@@ -35,14 +35,21 @@ export default function BottomNav() {
           const isActive = pathname === item.href;
           const Icon = item.icon;
 
+          const handleLinkClick = (e: React.MouseEvent) => {
+            console.log('🔗 Link clicked:', item.href, 'Current path:', pathname);
+            // Ne pas empêcher la navigation par défaut
+          };
+
           return (
             <Link
               key={item.href}
               href={item.href}
+              onClick={handleLinkClick}
               className={cn(
                 "flex flex-col items-center justify-center flex-1 relative transition-all duration-300 py-1.5 rounded-xl h-14 cursor-pointer",
                 isActive && "bg-[#D4AF37]/10"
               )}
+              style={{ pointerEvents: 'auto' }}
             >
               <Icon 
                 size={20} 
