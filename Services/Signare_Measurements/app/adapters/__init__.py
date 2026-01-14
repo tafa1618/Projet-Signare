@@ -1,0 +1,4 @@
+"""
+Adapters (Mock et Replicate)
+"""
+
