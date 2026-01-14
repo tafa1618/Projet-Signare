@@ -20,9 +20,11 @@ import {
   UserPlus,
   Camera,
   Heart,
-  Eye
+  Eye,
+  Plus
 } from 'lucide-react'
 import type { Database, Mesure } from '@/shared/types/database.types'
+import { cn } from '@/shared/lib/utils'
 
 type UserInteractionInsert = Database['public']['Tables']['user_interactions']['Insert']
 
@@ -31,6 +33,7 @@ type UserInteractionInsert = Database['public']['Tables']['user_interactions']['
  * @ai-context Les vues de profil et clics sur mensurations/galerie alimentent le dataset de recommandation.
  */
 import { logMLInteraction } from '@/lib/logger'
+import { useAuth } from '@/frontend/hooks/useAuth'
 
 function trackProfileInteraction(payload: UserInteractionInsert) {
   // TODO: brancher vers Supabase quand l'auth est active.
@@ -51,10 +54,11 @@ type ClientProfile = {
   latestMesure: Mesure
 }
 
+// Profils mockés basés sur les numéros de téléphone
 const MOCK_CLIENT_PROFILE: ClientProfile = {
-  id: 'c1',
-  name: 'Fatou Dia',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fatou',
+  id: 'client-771111111',
+  name: 'Aminata Ndiaye',
+  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aminata',
   coverImage: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=1200&h=400&fit=crop',
   bio: "Inspirée par l'élégance traditionnelle du Sénégal. J'aime les coupes nettes, le wax premium et les finitions couture.",
   outfitCount: 13,
@@ -63,8 +67,8 @@ const MOCK_CLIENT_PROFILE: ClientProfile = {
   postsCount: 87,
   latestMesure: {
     id: 'm-1',
-    user_id: 'c1',
-    client_name: 'Fatou Dia',
+    user_id: 'client-771111111',
+    client_name: 'Aminata Ndiaye',
     tour_poitrine: 92,
     tour_taille: 68,
     tour_hanches: 98,
@@ -106,11 +110,11 @@ type TailorProfile = {
 }
 
 const MOCK_TAILOR_PROFILE: TailorProfile = {
-  id: 't1',
-  name: 'Maison Aïda Sow',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aida',
+  id: 'tailor-772222222',
+  name: 'Tapha Tailleur',
+  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Tapha',
   coverImage: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&h=400&fit=crop',
-  bio: 'Maîtresse Couturière — Spécialiste boubous de cérémonie & finitions couture.',
+  bio: 'Maître Tailleur — Spécialiste boubous de cérémonie & finitions couture.',
   rating: 4.9,
   activeOrders: 8,
   monthlyRevenue: '1.2M FCFA',
@@ -162,16 +166,27 @@ function StarRating({ rating }: { rating: number }) {
   )
 }
 
+// Mapping des numéros de téléphone vers les profils
+const PHONE_TO_PROFILE: Record<string, { type: ProfileMode; profileId: string }> = {
+  '+771111111': { type: 'client', profileId: 'client-771111111' },
+  '771111111': { type: 'client', profileId: 'client-771111111' },
+  '+772222222': { type: 'tailleur', profileId: 'tailor-772222222' },
+  '772222222': { type: 'tailleur', profileId: 'tailor-772222222' },
+}
+
 export default function ProfilPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user } = useAuth()
   const sessionId = 'session-demo'
-  const [mode, setMode] = useState<ProfileMode>('client')
   const [profileOverride, setProfileOverride] = useState<{ name: string; avatar: string; id: string } | null>(null)
   const [deliveryStatus, setDeliveryStatus] = useState<string | null>(null)
 
-  // Utilisateur connecté (simulation)
-  const actorUserId = MOCK_CLIENT_PROFILE.id
+  // Détecter le type d'utilisateur basé sur le numéro de téléphone connecté
+  const currentUserPhone = user?.phone || user?.user_metadata?.phone || null
+  const userProfileInfo = currentUserPhone ? PHONE_TO_PROFILE[currentUserPhone] : null
+  const mode: ProfileMode = userProfileInfo?.type || 'client'
+  const actorUserId = userProfileInfo?.profileId || MOCK_CLIENT_PROFILE.id
 
   const profile = mode === 'client'
     ? {
@@ -195,7 +210,7 @@ export default function ProfilPage() {
         postsCount: MOCK_TAILOR_PROFILE.postsCount,
       }
 
-  const isOwnProfile = mode === 'client' && profile.id === actorUserId
+  const isOwnProfile = profile.id === actorUserId
 
   const gallery = useMemo(() => (
     Array.from({ length: 9 }).map((_, i) => ({
@@ -205,15 +220,9 @@ export default function ProfilPage() {
   ), [])
 
   useEffect(() => {
-    const urlMode = searchParams.get('mode')
+    // Support pour consulter d'autres profils via URL (optionnel)
     const urlTailor = searchParams.get('tailor')
     const urlClient = searchParams.get('client')
-
-    if (urlMode === 'tailleur') {
-      setMode('tailleur')
-    } else if (urlMode === 'client') {
-      setMode('client')
-    }
 
     const overrideName = urlTailor ?? urlClient
 
@@ -289,26 +298,7 @@ export default function ProfilPage() {
       {/* Top Bar */}
       <div className="sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-[#D4AF37]/10">
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
-          <button
-            onClick={() => {
-              const nextMode: ProfileMode = mode === 'client' ? 'tailleur' : 'client'
-              setMode(nextMode)
-              trackProfileInteraction({
-                user_id: actorUserId,
-                post_id: null,
-                interaction_type: 'click',
-                session_id: sessionId,
-                duration_seconds: null,
-                scroll_depth: null,
-                came_from: `profil:toggle_mode:${mode}->${nextMode}`,
-                device_type: 'web',
-                user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-              })
-            }}
-            className="text-[10px] tracking-[0.22em] text-[#D4AF37] border border-[#D4AF37]/30 px-3 py-1.5 rounded-full uppercase font-black hover:bg-[#D4AF37]/10 transition-colors active:scale-[0.98]"
-          >
-            MODE {mode === 'client' ? 'CLIENT' : 'TAILLEUR'}
-          </button>
+          <div className="flex-1" />
           <div className="flex items-center gap-3 sm:gap-4">
             {isOwnProfile && (
               <button 
@@ -471,13 +461,40 @@ export default function ProfilPage() {
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => router.push('/settings')}
-                className="w-full flex items-center justify-center gap-2 bg-[#0A0A0A] border border-[#D4AF37]/30 text-[#D4AF37] py-3 rounded-xl text-sm font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-[0.98]"
-              >
-                <Settings size={18} />
-                Modifier le profil
-              </button>
+              <>
+                {mode === 'tailleur' && (
+                  <button
+                    onClick={() => {
+                      trackProfileInteraction({
+                        user_id: actorUserId,
+                        post_id: null,
+                        interaction_type: 'click',
+                        session_id: sessionId,
+                        duration_seconds: null,
+                        scroll_depth: null,
+                        came_from: 'profil:tailleur_add_product',
+                        device_type: 'web',
+                        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                      })
+                      router.push('/shop/publish?type=tailleur')
+                    }}
+                    className="flex items-center justify-center gap-2 bg-[#D4AF37] text-[#0A0A0A] px-4 py-3 rounded-xl text-sm font-black uppercase tracking-[0.18em] shadow-[0_0_14px_rgba(212,175,55,0.25)] hover:bg-[#D4AF37]/90 transition-all active:scale-[0.98]"
+                  >
+                    <Plus size={18} />
+                    Ajouter un article
+                  </button>
+                )}
+                <button
+                  onClick={() => router.push('/settings')}
+                  className={cn(
+                    "flex items-center justify-center gap-2 bg-[#0A0A0A] border border-[#D4AF37]/30 text-[#D4AF37] py-3 rounded-xl text-sm font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/10 transition-all active:scale-[0.98]",
+                    mode === 'tailleur' ? "flex-1" : "w-full"
+                  )}
+                >
+                  <Settings size={18} />
+                  Modifier le profil
+                </button>
+              </>
             )}
           </div>
         </section>

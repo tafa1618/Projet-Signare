@@ -120,6 +120,10 @@ Le terme SIGNARE fera référence à Femme, et NDANANE aux Hommes, en tenir comp
   - Secrets ou identifiants en dur
   - Sur-ingénierie sans justification
   - Optimisation prématurée sans données
+- **Pricing :**
+  -Toute logique de pricing doit passer par le service de pricing officiel Signare.
+  -Aucun calcul de prix ne doit être fait ailleurs.
+
 
 - **Vérification Finale :**
   Avant de proposer du code, vérifier :

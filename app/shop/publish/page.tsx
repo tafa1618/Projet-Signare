@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
@@ -30,12 +30,23 @@ import {
   type GenderTag,
   type ColorTag,
 } from '@/shared/constants/ai-tags'
+import { calculatePricing } from '@/lib/pricing.service'
+import { useAuth } from '@/frontend/hooks/useAuth'
 
 type SellerType = 'tailleur' | 'consumer'
+
+// Mapping des numéros de téléphone vers le type de vendeur
+const PHONE_TO_SELLER_TYPE: Record<string, SellerType> = {
+  '+771111111': 'consumer',
+  '771111111': 'consumer',
+  '+772222222': 'tailleur',
+  '772222222': 'tailleur',
+}
 
 export default function ShopPublishPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [mediaFiles, setMediaFiles] = useState<File[]>([])
@@ -46,7 +57,6 @@ export default function ShopPublishPage() {
   const [price, setPrice] = useState('')
   const [category, setCategory] = useState('')
   const [tags, setTags] = useState('')
-  const [sellerType, setSellerType] = useState<SellerType>('consumer')
   const [showSuccess, setShowSuccess] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   
@@ -56,16 +66,38 @@ export default function ShopPublishPage() {
   const [selectedGender, setSelectedGender] = useState<GenderTag | null>(null)
   const [selectedColor, setSelectedColor] = useState<ColorTag | null>(null)
 
+  // Détecter automatiquement le type de vendeur basé sur l'utilisateur connecté ou le paramètre URL
+  const currentUserPhone = user?.phone || user?.user_metadata?.phone || null
+  const detectedSellerType = currentUserPhone ? PHONE_TO_SELLER_TYPE[currentUserPhone] : null
+  const urlType = searchParams.get('type') as SellerType | null
+  const sellerType: SellerType = urlType || detectedSellerType || 'consumer'
+
+  // Calcul du pricing en temps réel (uniquement pour les tailleurs)
+  const pricing = useMemo(() => {
+    if (sellerType !== 'tailleur' || !price.trim()) {
+      return null
+    }
+    
+    const priceValue = parseFloat(price)
+    if (isNaN(priceValue) || priceValue < 0) {
+      return null
+    }
+    
+    try {
+      return calculatePricing(priceValue)
+    } catch (error) {
+      return null
+    }
+  }, [price, sellerType])
+
   // Récupérer l'image depuis les query params si c'est un tailleur
   useEffect(() => {
     const imageParam = searchParams.get('image')
-    const typeParam = searchParams.get('type')
     
-    if (imageParam && typeParam === 'tailleur') {
-      setSellerType('tailleur')
+    if (imageParam && sellerType === 'tailleur') {
       setMediaPreviews([imageParam])
     }
-  }, [searchParams])
+  }, [searchParams, sellerType])
 
   const categories = ['Boubou', 'Robe', 'Kaftan', 'Tenue', 'Accessoire', 'Autre']
 
@@ -109,11 +141,29 @@ export default function ShopPublishPage() {
 
     setIsSubmitting(true)
 
+    // Calculer le pricing si c'est un tailleur
+    let finalPrice = parseFloat(price)
+    let pricingData = null
+    
+    if (sellerType === 'tailleur' && pricing) {
+      // Pour les tailleurs, on enregistre le prix de base et le pricing calculé
+      finalPrice = pricing.price_client // Prix affiché au client
+      pricingData = {
+        price_tailor: pricing.price_tailor,
+        price_client: pricing.price_client,
+        commission_tailor: pricing.commission_tailor,
+        client_fee: pricing.client_fee,
+        platform_revenue: pricing.platform_revenue,
+        pricing_tier: pricing.pricing_tier,
+      }
+    }
+
     // Préparer les données avec métadonnées optionnelles
     const productData = {
       title: title.trim(),
       description: description.trim() || null, // Optionnel
-      price: parseFloat(price),
+      price: finalPrice, // Prix final (client pour tailleur, direct pour consumer)
+      pricing: pricingData, // Données de pricing (uniquement pour tailleur)
       category: category || null,
       tags: tags.split(',').map(t => t.trim()).filter(Boolean),
       // Métadonnées optionnelles pour améliorer les recommandations IA
@@ -319,6 +369,60 @@ export default function ShopPublishPage() {
                 className="w-full bg-white/5 border border-[#D4AF37]/20 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37] transition-colors"
                 required
               />
+              
+              {/* Affichage du pricing en temps réel pour les tailleurs */}
+              {sellerType === 'tailleur' && pricing && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl p-3 sm:p-4 space-y-2.5"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Info size={14} className="text-[#D4AF37]" />
+                    <p className="text-[10px] sm:text-[11px] font-bold text-[#D4AF37] uppercase tracking-[0.1em]">
+                      Calcul du prix client
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-1.5 text-[11px] sm:text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70">Prix de base (votre prix)</span>
+                      <span className="text-white font-semibold">
+                        {pricing.price_tailor.toLocaleString()} FCFA
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70">Frais de service ({pricing.client_fee_rate}%)</span>
+                      <span className="text-white/80">
+                        + {pricing.client_fee.toLocaleString()} FCFA
+                      </span>
+                    </div>
+                    
+                    <div className="h-px bg-[#D4AF37]/20 my-2" />
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-white font-semibold">Prix affiché au client</span>
+                      <span className="text-[#D4AF37] font-bold text-sm sm:text-base">
+                        {pricing.price_client.toLocaleString()} FCFA
+                      </span>
+                    </div>
+                    
+                    <div className="mt-2 pt-2 border-t border-[#D4AF37]/10">
+                      <div className="flex justify-between items-center text-[10px] text-white/50">
+                        <span>Commission plateforme ({pricing.commission_rate}%)</span>
+                        <span>{pricing.commission_tailor.toLocaleString()} FCFA</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] text-white/50 mt-1">
+                        <span>Votre revenu net</span>
+                        <span className="text-white/70">
+                          {(pricing.price_tailor - pricing.commission_tailor).toLocaleString()} FCFA
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
             <div className="space-y-1.5 sm:space-y-2">
               <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-[0.15em]">

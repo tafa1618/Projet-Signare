@@ -49,7 +49,7 @@ export default function WelcomePage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full space-y-4 mt-12"
+          className="w-full space-y-8 mt-12"
         >
           {/* Bouton SE CONNECTER */}
           <Link href="/login">
