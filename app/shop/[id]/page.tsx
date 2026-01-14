@@ -46,9 +46,9 @@ const MOCK_PRODUCTS: Record<string, {
     price: 125000,
     currency: 'FCFA',
     images: [
-      'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&h=1000&fit=crop',
-      'https://images.unsplash.com/photo-1520975916090-3105956dac38?w=800&h=1000&fit=crop',
-      'https://images.unsplash.com/photo-1520975892776-3f7c5b37c5b2?w=800&h=1000&fit=crop',
+      'https://images.unsplash.com/photo-1594938291221-94f18dd5e26c?w=800&h=1000&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=800&h=1000&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=800&h=1000&fit=crop&q=80',
     ],
     seller: {
       name: 'Maison Aïda Sow',
@@ -70,7 +70,7 @@ const MOCK_PRODUCTS: Record<string, {
     price: 75000,
     currency: 'FCFA',
     images: [
-      'https://images.unsplash.com/photo-1520975916090-3105956dac38?w=800&h=1000&fit=crop',
+      'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=800&h=1000&fit=crop&q=80',
     ],
     seller: {
       name: 'Atelier Fatou',
@@ -92,7 +92,7 @@ const MOCK_PRODUCTS: Record<string, {
     price: 180000,
     currency: 'FCFA',
     images: [
-      'https://images.unsplash.com/photo-1520975892776-3f7c5b37c5b2?w=800&h=1000&fit=crop',
+      'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=800&h=1000&fit=crop&q=80',
     ],
     seller: {
       name: 'Awa Ndiaye',
@@ -217,6 +217,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 className="object-cover"
                 sizes="(max-width: 640px) 100vw, 640px"
                 priority
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = 'https://via.placeholder.com/800x1000/0A0A0A/D4AF37?text=SIGNARE'
+                }}
               />
             </motion.div>
           </AnimatePresence>
@@ -276,7 +280,16 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               href={`/profil?mode=${product.seller.type === 'tailleur' ? 'tailleur' : 'client'}&${product.seller.type === 'tailleur' ? 'tailor' : 'client'}=${encodeURIComponent(product.seller.name)}`}
               className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden border border-[#D4AF37]/30 hover:border-[#D4AF37] transition-colors flex-shrink-0"
             >
-              <Image src={product.seller.avatar} alt={product.seller.name} fill className="object-cover" />
+              <Image 
+                src={product.seller.avatar} 
+                alt={product.seller.name} 
+                fill 
+                className="object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Default'
+                }}
+              />
             </Link>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">

@@ -64,16 +64,36 @@ type ProductDetail = Pick<
 }
 
 const MOCK_PRODUCTS: Record<string, ProductDetail> = {
+  '0': {
+    id: '0',
+    user_id: 't1',
+    title: 'Boubou Royale • Or & Basin',
+    creator: { id: 't1', name: 'Atelier Fatou' },
+    image_url: 'https://images.unsplash.com/photo-1594938291221-94f18dd5e26c?w=1200&h=1600&fit=crop&q=80',
+    gallery_urls: [
+      'https://images.unsplash.com/photo-1594938291221-94f18dd5e26c?w=1200&h=1600&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=1200&h=1600&fit=crop&q=80',
+    ],
+    caption: 'Boubou en basin riche, broderie royale et finitions main. Une pièce signature pour les grandes occasions.',
+    price: 125000,
+    garment_type: 'boubou',
+    complexity: 'haute_couture',
+    estimated_hours: 40,
+    fabric_type: 'Bazin Riche',
+    cultural_tags: ['dakar', 'traditionnel'],
+    style_tags: ['luxe', 'royal'],
+    occasion_tags: ['mariage', 'cérémonie'],
+  },
   '1': {
     id: '1',
     user_id: 't1',
     title: 'Boubou Royale • Or & Basin',
     creator: { id: 't1', name: 'Atelier Fatou' },
-    image_url: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=1200&h=1600&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1594938291221-94f18dd5e26c?w=1200&h=1600&fit=crop&q=80',
     gallery_urls: [
-      'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=1200&h=1600&fit=crop',
-      'https://images.unsplash.com/photo-1520975958225-12b1f1f1d9a7?w=1200&h=1600&fit=crop',
-      'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=1200&h=1600&fit=crop',
+      'https://images.unsplash.com/photo-1594938291221-94f18dd5e26c?w=1200&h=1600&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=1200&h=1600&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1542272604-787c3835535d?w=1200&h=1600&fit=crop&q=80',
     ],
     caption: 'Boubou en basin riche, broderie royale et finitions main. Une pièce signature pour les grandes occasions.',
     price: 125000,
@@ -90,10 +110,10 @@ const MOCK_PRODUCTS: Record<string, ProductDetail> = {
     user_id: 't2',
     title: 'Robe Wax • Mariage',
     creator: { id: 't2', name: 'Maison Ndèye' },
-    image_url: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=1200&h=1600&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=1200&h=1600&fit=crop&q=80',
     gallery_urls: [
-      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=1200&h=1600&fit=crop',
-      'https://images.unsplash.com/photo-1520975693410-55b2f6e3f246?w=1200&h=1600&fit=crop',
+      'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=1200&h=1600&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=1200&h=1600&fit=crop&q=80',
     ],
     caption: 'Robe wax contemporaine, coupe ajustée et détails couture. Élégance sans effort.',
     price: 75000,
@@ -110,10 +130,10 @@ const MOCK_PRODUCTS: Record<string, ProductDetail> = {
     user_id: 't3',
     title: 'Ensemble Tailleur • Lin & Wax',
     creator: { id: 't3', name: 'Couture Aminata' },
-    image_url: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&h=1600&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&h=1600&fit=crop&q=80',
     gallery_urls: [
-      'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&h=1600&fit=crop',
-      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&h=1600&fit=crop',
+      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&h=1600&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=1200&h=1600&fit=crop&q=80',
     ],
     caption: 'Lin texturé + wax accent. Un équilibre entre classicisme et identité.',
     price: 55000,
@@ -130,10 +150,10 @@ const MOCK_PRODUCTS: Record<string, ProductDetail> = {
     user_id: 't1',
     title: 'Kaftan de Soirée • Signature',
     creator: { id: 't1', name: 'Atelier Fatou' },
-    image_url: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&h=1600&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=1200&h=1600&fit=crop&q=80',
     gallery_urls: [
-      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&h=1600&fit=crop',
-      'https://images.unsplash.com/photo-1520975741466-4a62dfb2d3d9?w=1200&h=1600&fit=crop',
+      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=1200&h=1600&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1542293787938-4d22170c3b99?w=1200&h=1600&fit=crop&q=80',
     ],
     caption: 'Kaftan de soirée aux lignes fluides, finitions haut de gamme. Pensé pour capturer la lumière.',
     price: 98000,
@@ -295,14 +315,14 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="bg-[#0A0A0A] text-white h-[calc(100dvh-80px)] -mb-24 flex items-center justify-center px-6">
-        <div className="text-center space-y-2">
-          <p className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Produit introuvable</p>
+      <div className="bg-[#0A0A0A] text-white min-h-screen flex items-center justify-center px-6 pb-20">
+        <div className="text-center space-y-4">
+          <p className="text-lg sm:text-xl font-serif text-[#D4AF37] tracking-[0.18em] uppercase">PRODUIT INTROUVABLE</p>
           <button
             onClick={() => router.push('/')}
-            className="text-[10px] font-black uppercase tracking-[0.22em] text-[#D4AF37]/80 hover:text-[#D4AF37] transition-colors"
+            className="text-xs sm:text-sm font-black uppercase tracking-[0.22em] text-[#D4AF37]/80 hover:text-[#D4AF37] transition-colors underline"
           >
-            Retour au feed
+            RETOUR AU FEED
           </button>
         </div>
       </div>
@@ -353,6 +373,10 @@ export default function ProductDetailPage() {
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 560px"
                       priority={idx === 0}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.src = 'https://via.placeholder.com/1200x1600/0A0A0A/D4AF37?text=SIGNARE'
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/55 to-transparent pointer-events-none" />
                   </div>
@@ -661,6 +685,10 @@ export default function ProductDetailPage() {
                         fill
                         className="object-cover"
                         sizes="(max-width: 768px) 100vw, 560px"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = 'https://via.placeholder.com/1200x1600/0A0A0A/D4AF37?text=SIGNARE'
+                        }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/60 to-transparent" />
                     </div>

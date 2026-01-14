@@ -99,7 +99,7 @@ const mockPosts: Post[] = [
     },
     repostOfId: 1,
     repostedByMe: true,
-    image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&h=1000&fit=crop',
+    image: 'https://images.unsplash.com/photo-1594938291221-94f18dd5e26c?w=800&h=1000&fit=crop&q=80',
     caption: 'Boubou Royale en basin riche. Un travail de broderie de plus de 40 heures. ✨🇸🇳',
     likes: 0,
     comments: 0,
@@ -114,7 +114,7 @@ const mockPosts: Post[] = [
     garment_type: 'Boubou',
     quality_rating: 5,
     quote_comment: "🔥 À voir absolument — finitions dignes d'un défilé.",
-    quote_media: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&h=1200&fit=crop',
+    quote_media: 'https://images.unsplash.com/photo-1594938291221-94f18dd5e26c?w=900&h=1200&fit=crop&q=80',
   },
   {
     id: 1,
@@ -126,7 +126,7 @@ const mockPosts: Post[] = [
       role: 'Maître Tailleur',
       specialty: 'Spécialiste Basin Riche & Broderie Royale',
     },
-    image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&h=1000&fit=crop',
+    image: 'https://images.unsplash.com/photo-1594938291221-94f18dd5e26c?w=800&h=1000&fit=crop&q=80',
     caption: 'Boubou Royale en basin riche. Un travail de broderie de plus de 40 heures. ✨🇸🇳',
     price: '125 000 FCFA',
     likes: 856,
@@ -150,7 +150,7 @@ const mockPosts: Post[] = [
       name: 'Maison Ndèye',
       id: 'tailor-ndeye',
     },
-    image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&h=1000&fit=crop',
+    image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=800&h=1000&fit=crop&q=80',
     caption: 'Tellement satisfaite de ma tenue pour le mariage de ma sœur ! 😍👜',
     likes: 1243,
     comments: 89,
@@ -169,7 +169,7 @@ const mockPosts: Post[] = [
       role: 'Designer Mode',
       specialty: 'Prêt-à-porter de luxe & Wax contemporain',
     },
-    image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&h=1000&fit=crop',
+    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&h=1000&fit=crop&q=80',
     caption: 'Collection capsule : Le lin rencontre le wax. L\'élégance au quotidien. 🌿✨',
     price: '55 000 FCFA',
     likes: 432,
@@ -193,7 +193,7 @@ const mockPosts: Post[] = [
       name: 'Atelier Fatou',
       id: 'tailor-fatou',
     },
-    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&h=1000&fit=crop',
+    image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&h=1000&fit=crop&q=80',
     caption: 'Le chic sénégalais dans toute sa splendeur. Toujours fidèle à mon tailleur préféré. ✨🇸🇳',
     likes: 3567,
     comments: 156,
@@ -212,7 +212,7 @@ const mockPosts: Post[] = [
       role: 'Atelier Vérifié',
       specialty: 'Wax Premium & Coupe Ajustée',
     },
-    image: 'https://images.unsplash.com/photo-1520975916090-3105956dac38?w=800&h=1000&fit=crop',
+    image: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=800&h=1000&fit=crop&q=80',
     caption: 'Robe wax couture : tombé parfait, finitions main et ceinture signature. Élégance sobre. ✨',
     price: '75 000 FCFA',
     likes: 642,
@@ -236,7 +236,7 @@ const mockPosts: Post[] = [
       name: 'Couture Aminata',
       id: 'tailor-aminata',
     },
-    image: 'https://images.unsplash.com/photo-1520975892776-3f7c5b37c5b2?w=800&h=1000&fit=crop',
+    image: 'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=800&h=1000&fit=crop&q=80',
     caption: 'Tenue parfaite pour la Tabaski. Broderies fines, coupe impeccable. Merci ! 🇸🇳',
     likes: 982,
     comments: 64,
@@ -255,7 +255,7 @@ const mockPosts: Post[] = [
       role: 'Maître Tailleur',
       specialty: 'Kaftans premium & Soie',
     },
-    image: 'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=800&h=1000&fit=crop',
+    image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=800&h=1000&fit=crop&q=80',
     caption: 'Kaftan de soirée en soie : lumière, fluidité, détails couture. Une pièce premium. ✨',
     price: '98 000 FCFA',
     likes: 1240,
@@ -279,7 +279,7 @@ const mockPosts: Post[] = [
       name: 'Atelier Fatou',
       id: 'tailor-fatou',
     },
-    image: 'https://images.unsplash.com/photo-1496747611180-206a5c8c26af?w=800&h=1000&fit=crop',
+    image: 'https://images.unsplash.com/photo-1520975868797-1c3e0e012a4c?w=800&h=1000&fit=crop&q=80',
     caption: 'Minimaliste mais royal. Le tissu est incroyable et les finitions sont nettes.',
     likes: 2103,
     comments: 102,
@@ -298,7 +298,7 @@ const mockPosts: Post[] = [
       role: 'Designer Mode',
       specialty: 'Prêt-à-porter luxe & Lin',
     },
-    image: 'https://images.unsplash.com/photo-1520975868797-1c3e0e012a4c?w=800&h=1000&fit=crop',
+    image: 'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=800&h=1000&fit=crop&q=80',
     caption: 'Ensemble en lin texturé : coupe moderne, confort premium, détails discrets en or.',
     price: '55 000 FCFA',
     likes: 518,
@@ -322,7 +322,7 @@ const mockPosts: Post[] = [
       name: 'Maison Ndèye',
       id: 'tailor-ndeye',
     },
-    image: 'https://images.unsplash.com/photo-1520975741466-4a62dfb2d3d9?w=800&h=1000&fit=crop',
+    image: 'https://images.unsplash.com/photo-1542293787938-4d22170c3b99?w=800&h=1000&fit=crop&q=80',
     caption: 'Un look quotidien chic. J’adore le tombé et le confort.',
     likes: 721,
     comments: 38,
@@ -538,7 +538,16 @@ const TailorCard = ({ post, onLike, onSave, onRepost, openCommentModal }: { post
             )}
             {post.quote_media && (
               <div className="relative w-full h-28 sm:h-32 rounded-md overflow-hidden border border-[#D4AF37]/20">
-                <Image src={post.quote_media} alt="Media cité" fill className="object-cover" />
+                <Image 
+                  src={post.quote_media} 
+                  alt="Media cité" 
+                  fill 
+                  className="object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.src = 'https://via.placeholder.com/900x1200/0A0A0A/D4AF37?text=SIGNARE'
+                  }}
+                />
               </div>
             )}
           </div>
@@ -612,6 +621,11 @@ const TailorCard = ({ post, onLike, onSave, onRepost, openCommentModal }: { post
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 560px"
                   priority={post.id === 1 && index === 0}
+                  onError={(e) => {
+                    // Fallback vers une image placeholder si l'image ne charge pas
+                    const target = e.target as HTMLImageElement
+                    target.src = 'https://via.placeholder.com/800x1000/0A0A0A/D4AF37?text=SIGNARE'
+                  }}
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/60 to-transparent pointer-events-none" />
@@ -870,7 +884,16 @@ const ClientCard = ({ post, onLike, onSave, onRepost, openCommentModal }: { post
             )}
             {post.quote_media && (
               <div className="relative w-full h-28 sm:h-32 rounded-md overflow-hidden border border-[#D4AF37]/20">
-                <Image src={post.quote_media} alt="Media cité" fill className="object-cover" />
+                <Image 
+                  src={post.quote_media} 
+                  alt="Media cité" 
+                  fill 
+                  className="object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.src = 'https://via.placeholder.com/900x1200/0A0A0A/D4AF37?text=SIGNARE'
+                  }}
+                />
               </div>
             )}
           </div>
