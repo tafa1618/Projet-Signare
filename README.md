@@ -33,6 +33,9 @@ DELIVERY_ENGINE_URL=http://localhost:8002
 
 # Search/Feed/Recommendation Engine (microservice Python)
 NEXT_PUBLIC_SEARCH_ENGINE_URL=http://localhost:8003/api/v1
+
+# Measurements Service (microservice Python)
+NEXT_PUBLIC_MEASUREMENTS_API_URL=http://localhost:8003/api/v1
 ```
 
 ### 3. Lancement

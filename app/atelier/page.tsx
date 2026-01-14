@@ -6,9 +6,10 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Ruler, Plus } from 'lucide-react'
+import { Ruler, Plus, ChevronRight } from 'lucide-react'
 import { MesureForm } from '@/frontend/components/atelier/MesureForm'
 import { useAuth } from '@/frontend/hooks/useAuth'
+import Link from 'next/link'
 
 export default function AtelierPage() {
   const { user } = useAuth()
@@ -46,6 +47,38 @@ export default function AtelierPage() {
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 py-6">
+        {/* CTA pour prendre ses mesures */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <Link href="/atelier/mesures">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="p-6 bg-gradient-to-r from-[#D4AF37]/20 to-[#D4AF37]/10 border-2 border-[#D4AF37]/30 rounded-2xl hover:border-[#D4AF37] transition-all"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="bg-[#D4AF37]/20 p-3 rounded-xl">
+                    <Ruler className="w-8 h-8 text-[#D4AF37]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-serif text-[#D4AF37] mb-1 tracking-[0.1em]">
+                      Prendre mes mesures
+                    </h3>
+                    <p className="text-sm text-white/70">
+                      Manuelle ou automatique par scan IA
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-6 h-6 text-[#D4AF37]/60" />
+              </div>
+            </motion.div>
+          </Link>
+        </motion.div>
+
         {/* Intro */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
