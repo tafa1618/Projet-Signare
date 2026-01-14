@@ -30,6 +30,11 @@ export default function AtelierPage() {
     )
   }
 
+  // Vérifier si l'utilisateur est un tailleur
+  const isTailor = user.id === 'tailor-772222222' || 
+                   (typeof user.phone === 'string' && (user.phone === '+772222222' || user.phone === '772222222')) ||
+                   (user.user_metadata?.phone && (user.user_metadata.phone === '+772222222' || user.user_metadata.phone === '772222222'))
+
   return (
     <div className="min-h-screen bg-noir pb-20">
       {/* Header */}
@@ -79,41 +84,45 @@ export default function AtelierPage() {
           </Link>
         </motion.div>
 
-        {/* Intro */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 p-6 bg-noir border border-or/20 rounded-lg"
-        >
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-or/10 rounded-full">
-              <Plus className="w-6 h-6 text-or" />
-            </div>
-            <div>
-              <h2 className="text-lg font-serif text-or mb-2">
-                Nouvelle fiche de mesures
-              </h2>
-              <p className="text-blanc/60 text-sm mb-3">
-                Enregistrez les mesures de votre client. Les scores de complexité
-                et d'élasticité sont calculés automatiquement pour l'IA.
-              </p>
-              <div className="flex items-center gap-2 text-xs text-or/70">
-                <div className="w-2 h-2 rounded-full bg-or animate-pulse" />
-                <span>Données ML enregistrées automatiquement</span>
+        {/* Intro - Uniquement pour les tailleurs */}
+        {isTailor && (
+          <>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 p-6 bg-noir border border-or/20 rounded-lg"
+            >
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-or/10 rounded-full">
+                  <Plus className="w-6 h-6 text-or" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-serif text-or mb-2">
+                    Nouvelle fiche de mesures
+                  </h2>
+                  <p className="text-blanc/60 text-sm mb-3">
+                    Enregistrez les mesures de votre client. Les scores de complexité
+                    et d'élasticité sont calculés automatiquement pour l'IA.
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-or/70">
+                    <div className="w-2 h-2 rounded-full bg-or animate-pulse" />
+                    <span>Données ML enregistrées automatiquement</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </motion.div>
+            </motion.div>
 
-        {/* Formulaire */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-noir border border-or/20 rounded-lg p-6"
-        >
-          <MesureForm userId={user.id} />
-        </motion.div>
+            {/* Formulaire - Uniquement pour les tailleurs */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-noir border border-or/20 rounded-lg p-6"
+            >
+              <MesureForm userId={user.id} />
+            </motion.div>
+          </>
+        )}
 
         {/* Info ML */}
         <motion.div
