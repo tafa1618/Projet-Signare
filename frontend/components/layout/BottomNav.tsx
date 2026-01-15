@@ -22,8 +22,8 @@ const navItems = [
 export default function BottomNav() {
   const pathname = usePathname();
 
-  // Ne pas afficher la barre sur les pages de bienvenue et d'authentification
-  const hideNav = pathname === '/welcome' || pathname === '/login' || pathname === '/register' || pathname === '/onboarding' || pathname === '/publish';
+  // Ne pas afficher la barre sur les pages de bienvenue, d'authentification et de messagerie
+  const hideNav = pathname === '/welcome' || pathname === '/login' || pathname === '/register' || pathname === '/onboarding' || pathname === '/publish' || pathname === '/messages';
 
   // Retourner null après tous les hooks
   if (hideNav) return null;
