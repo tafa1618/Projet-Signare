@@ -9,7 +9,6 @@ import {
   Search, 
   Store, 
   ShoppingCart, 
-  Bell, 
   MessageCircle, 
   Plus, 
   Menu,
@@ -29,7 +28,6 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const { totalItems } = useCart()
   const { user, signOut } = useAuth()
 
@@ -177,18 +175,6 @@ export default function Header() {
                     {cartOpen && <CartDropdown isOpen={cartOpen} onClose={() => setCartOpen(false)} />}
                   </div>
                   
-                  {/* Notifications */}
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => setNotificationsOpen(!notificationsOpen)}
-                    className="relative text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors p-2"
-                    title="Notifications"
-                  >
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
-                  </motion.button>
-                  
                   {/* Messages */}
                   <Link href="/messages">
                     <motion.button
@@ -312,18 +298,6 @@ export default function Header() {
                       {totalItems > 0 && (
                         <span className="absolute top-2 right-2 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
                       )}
-                    </motion.button>
-                    
-                    <motion.button
-                      onClick={() => {
-                        setNotificationsOpen(!notificationsOpen)
-                        setMenuOpen(false)
-                      }}
-                      className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-[#D4AF37]/20 hover:bg-[#D4AF37]/10 transition-colors relative"
-                    >
-                      <Bell className="w-5 h-5 text-[#D4AF37]" />
-                      <span className="text-sm font-semibold text-white">Notifications</span>
-                      <span className="absolute top-2 right-2 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
                     </motion.button>
                     
                     <Link

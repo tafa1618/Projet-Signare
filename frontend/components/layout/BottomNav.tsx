@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Sparkles, Ticket } from 'lucide-react';
+import { Home, Sparkles, Ticket, Bell } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -16,6 +16,7 @@ const navItems = [
   { label: 'ACCUEIL', icon: Home, href: '/' },
   { label: 'IA', icon: Sparkles, href: '/inspiration' },
   { label: 'EVENTS', icon: Ticket, href: '/events' },
+  { label: 'NOTIFS', icon: Bell, href: '/notifications' },
 ];
 
 export default function BottomNav() {
@@ -51,16 +52,22 @@ export default function BottomNav() {
               )}
               style={{ pointerEvents: 'auto' }}
             >
-              <Icon 
-                size={20} 
-                className={cn(
-                  "transition-all duration-300",
-                  isActive 
-                    ? "text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.6)] mb-1" 
-                    : "text-[#D4AF37]/40"
-                )} 
-                strokeWidth={isActive ? 2.5 : 2}
-              />
+              <div className="relative">
+                <Icon 
+                  size={20} 
+                  className={cn(
+                    "transition-all duration-300",
+                    isActive 
+                      ? "text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.6)] mb-1" 
+                      : "text-[#D4AF37]/40"
+                  )} 
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
+                {/* Badge de notification pour l'icône Bell */}
+                {item.icon === Bell && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#D4AF37] rounded-full border border-[#0A0A0A] shadow-[0_0_8px_rgba(212,175,55,0.8)]" />
+                )}
+              </div>
               {/* Afficher le texte seulement si la page est active */}
               {isActive && (
                 <span className={cn(

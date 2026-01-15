@@ -37,6 +37,15 @@ Services/Signare_Measurements/
 
 ## 🔧 Installation
 
+### Méthode recommandée : Docker
+
+```bash
+cd Services/Signare_Measurements
+docker-compose up --build
+```
+
+### Alternative : Environnement virtuel (développement local)
+
 ```bash
 cd Services/Signare_Measurements
 python -m venv venv
@@ -45,6 +54,12 @@ pip install -r requirements.txt
 ```
 
 ## ⚙️ Configuration
+
+### Avec Docker
+
+Les variables d'environnement peuvent être définies dans un fichier `.env` à la racine du service ou directement dans `docker-compose.yml`.
+
+### Avec venv
 
 Copier `.env.example` vers `.env` et configurer :
 
@@ -58,6 +73,16 @@ REPLICATE_API_TOKEN=your_token_here
 ```
 
 ## 🚀 Lancement
+
+### Avec Docker (recommandé)
+
+```bash
+docker-compose up
+# ou en arrière-plan
+docker-compose up -d
+```
+
+### Avec venv
 
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
