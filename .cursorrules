@@ -1,5 +1,14 @@
 # SIGNARE - Charte de Développement & Design
 
+## Règles des Hooks React (CRITIQUE)
+- **Ordre des Hooks** : Tous les hooks doivent être appelés dans le même ordre à chaque rendu
+- **Séparation stricte** : Tous les `useState` doivent être déclarés AVANT tous les `useEffect`
+- **Interdiction** : Ne JAMAIS placer un `useEffect` entre deux `useState` - cela viole les règles des hooks et cause des erreurs de compilation
+- **Structure recommandée** :
+  1. Tous les `useState` en premier
+  2. Tous les `useEffect` ensuite
+  3. Toutes les fonctions de gestion d'événements après
+
 ## 1. Identité & Design (Luxe Sénégalais)
 - **Couleurs Principales :** - Noir Profond (`#0A0A0A`) pour le fond.
   - Or Raffiné (`#D4AF37`) pour les accents, boutons primaires et icônes actives.

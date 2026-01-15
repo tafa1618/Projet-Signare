@@ -14,11 +14,18 @@ import {
   Camera,
   Check,
   MapPin,
-  Navigation
+  Navigation,
+  Clock,
+  Building2,
+  Award,
+  Scissors,
+  Briefcase,
+  X
 } from 'lucide-react'
 import { logMLInteraction } from '@/lib/logger'
 import type { Database, Mesure } from '@/shared/types/database.types'
 import { useGeolocation } from '@/frontend/hooks/useGeolocation'
+import { useAuth } from '@/frontend/hooks/useAuth'
 
 type UserInteractionInsert = Database['public']['Tables']['user_interactions']['Insert']
 
@@ -59,10 +66,26 @@ const MOCK_CURRENT_PROFILE = {
   },
 }
 
+// Mapping des numéros de téléphone vers le type d'utilisateur
+const PHONE_TO_USER_TYPE: Record<string, 'client' | 'tailleur'> = {
+  '+771111111': 'client',
+  '771111111': 'client',
+  '+772222222': 'tailleur',
+  '772222222': 'tailleur',
+}
+
 export default function SettingsPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  
+  // Détecter le type d'utilisateur
+  const currentUserPhone = user?.phone || user?.user_metadata?.phone || null
+  const userType = currentUserPhone ? PHONE_TO_USER_TYPE[currentUserPhone] || 'client' : 'client'
+  const isTailor = userType === 'tailleur'
+  
+  // Onglets : seulement "Profil" pour les tailleurs, "Profil" et "Mensurations" pour les clients
   const [activeTab, setActiveTab] = useState<'profile' | 'measurements'>('profile')
 
   // Geolocation
@@ -79,7 +102,18 @@ export default function SettingsPage() {
     address: '',
     latitude: null as number | null,
     longitude: null as number | null,
+    // Champs spécifiques aux tailleurs
+    workshopName: '',
+    location: '',
+    workingHours: '',
+    specialties: [] as string[],
+    certifications: [] as string[],
+    experienceYears: null as number | null,
+    about: '',
   })
+  
+  const [specialtyInput, setSpecialtyInput] = useState('')
+  const [certificationInput, setCertificationInput] = useState('')
 
   // Measurements state
   const [measurements, setMeasurements] = useState<Partial<Mesure>>({
@@ -216,6 +250,27 @@ export default function SettingsPage() {
     }
   }
 
+  // Initialiser les champs tailleur une fois que user est disponible
+  useEffect(() => {
+    const userPhone = user?.phone || user?.user_metadata?.phone || null
+    const detectedUserType = userPhone ? PHONE_TO_USER_TYPE[userPhone] || 'client' : 'client'
+    const detectedIsTailor = detectedUserType === 'tailleur'
+    
+    if (detectedIsTailor && !profile.workshopName) {
+      setProfile(prev => ({
+        ...prev,
+        workshopName: 'Atelier Tapha',
+        location: 'Dakar, Plateau',
+        workingHours: 'Lun - Sam, 9h - 19h',
+        specialties: ['Boubou de cérémonie', 'Broderie perlé'],
+        certifications: ['Maître Artisan'],
+        experienceYears: 12,
+        about: 'Atelier familial depuis 3 générations. Spécialisé dans la haute couture sénégalaise.',
+      }))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
   // Récupération automatique de l'adresse quand la géolocalisation est disponible
   useEffect(() => {
     if (latitude && longitude && !profile.address && !geoLoading) {
@@ -288,31 +343,33 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 mt-6">
-        <div className="flex gap-2 border-b border-[#D4AF37]/20">
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`flex-1 py-3 text-sm font-black uppercase tracking-[0.18em] transition-colors ${
-              activeTab === 'profile'
-                ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]'
-                : 'text-white/50 hover:text-white/70'
-            }`}
-          >
-            Profil
-          </button>
-          <button
-            onClick={() => setActiveTab('measurements')}
-            className={`flex-1 py-3 text-sm font-black uppercase tracking-[0.18em] transition-colors ${
-              activeTab === 'measurements'
-                ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]'
-                : 'text-white/50 hover:text-white/70'
-            }`}
-          >
-            Mensurations
-          </button>
+      {/* Tabs - Masquer "Mensurations" pour les tailleurs */}
+      {!isTailor && (
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 mt-6">
+          <div className="flex gap-2 border-b border-[#D4AF37]/20">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`flex-1 py-3 text-sm font-black uppercase tracking-[0.18em] transition-colors ${
+                activeTab === 'profile'
+                  ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]'
+                  : 'text-white/50 hover:text-white/70'
+              }`}
+            >
+              Profil
+            </button>
+            <button
+              onClick={() => setActiveTab('measurements')}
+              className={`flex-1 py-3 text-sm font-black uppercase tracking-[0.18em] transition-colors ${
+                activeTab === 'measurements'
+                  ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]'
+                  : 'text-white/50 hover:text-white/70'
+              }`}
+            >
+              Mensurations
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <motion.div
         key={activeTab}
@@ -321,7 +378,7 @@ export default function SettingsPage() {
         transition={{ duration: 0.3 }}
         className="max-w-2xl mx-auto px-4 sm:px-6 mt-6 space-y-6"
       >
-        {activeTab === 'profile' ? (
+        {activeTab === 'profile' || isTailor ? (
           <>
             {/* Cover Image */}
             <section className="relative">
@@ -401,59 +458,253 @@ export default function SettingsPage() {
               <div>
                 <label className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37] mb-2">
                   <FileText className="w-4 h-4" />
-                  Bio
+                  {isTailor ? 'Description de l\'atelier' : 'Bio'}
                 </label>
                 <textarea
-                  value={profile.bio}
-                  onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                  value={isTailor ? profile.about : profile.bio}
+                  onChange={(e) => setProfile({ ...profile, [isTailor ? 'about' : 'bio']: e.target.value })}
                   rows={4}
                   className="w-full bg-white/5 border border-[#D4AF37]/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#D4AF37] transition-colors resize-none"
-                  placeholder="Parlez-nous de vous..."
+                  placeholder={isTailor ? "Décrivez votre atelier, votre histoire, vos valeurs..." : "Parlez-nous de vous..."}
                 />
               </div>
 
-              {/* Adresse de livraison */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37] mb-2">
-                  <MapPin className="w-4 h-4" />
-                  Adresse de livraison
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={profile.address}
-                    onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                    className="w-full bg-white/5 border border-[#D4AF37]/20 rounded-xl px-4 py-3 pr-12 text-white placeholder-white/30 focus:outline-none focus:border-[#D4AF37] transition-colors"
-                    placeholder="Votre adresse de livraison"
-                  />
-                  <button
-                    onClick={handleGetCurrentLocation}
-                    disabled={isFetchingAddress || geoLoading}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30 rounded-lg text-[#D4AF37] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Récupérer automatiquement mon adresse"
-                  >
-                    {isFetchingAddress ? (
-                      <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+              {/* Champs spécifiques aux tailleurs */}
+              {isTailor && (
+                <>
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37] mb-2">
+                      <Building2 className="w-4 h-4" />
+                      Nom de l'atelier
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.workshopName}
+                      onChange={(e) => setProfile({ ...profile, workshopName: e.target.value })}
+                      className="w-full bg-white/5 border border-[#D4AF37]/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#D4AF37] transition-colors"
+                      placeholder="Ex: Atelier Tapha"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37] mb-2">
+                      <MapPin className="w-4 h-4" />
+                      Localisation de l'atelier
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.location}
+                      onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                      className="w-full bg-white/5 border border-[#D4AF37]/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#D4AF37] transition-colors"
+                      placeholder="Ex: Dakar, Plateau"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37] mb-2">
+                      <Clock className="w-4 h-4" />
+                      Horaires d'ouverture
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.workingHours}
+                      onChange={(e) => setProfile({ ...profile, workingHours: e.target.value })}
+                      className="w-full bg-white/5 border border-[#D4AF37]/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#D4AF37] transition-colors"
+                      placeholder="Ex: Lun - Sam, 9h - 19h"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37] mb-2">
+                      <Briefcase className="w-4 h-4" />
+                      Années d'expérience
+                    </label>
+                    <input
+                      type="number"
+                      value={profile.experienceYears ?? ''}
+                      onChange={(e) => setProfile({ ...profile, experienceYears: e.target.value ? parseInt(e.target.value) : null })}
+                      className="w-full bg-white/5 border border-[#D4AF37]/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#D4AF37] transition-colors"
+                      placeholder="Ex: 12"
+                      min="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37] mb-2">
+                      <Scissors className="w-4 h-4" />
+                      Spécialités
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={specialtyInput}
+                          onChange={(e) => setSpecialtyInput(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && specialtyInput.trim()) {
+                              e.preventDefault()
+                              setProfile({
+                                ...profile,
+                                specialties: [...profile.specialties, specialtyInput.trim()],
+                              })
+                              setSpecialtyInput('')
+                            }
+                          }}
+                          className="flex-1 bg-white/5 border border-[#D4AF37]/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#D4AF37] transition-colors"
+                          placeholder="Ajouter une spécialité (Ex: Boubou de cérémonie)"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (specialtyInput.trim()) {
+                              setProfile({
+                                ...profile,
+                                specialties: [...profile.specialties, specialtyInput.trim()],
+                              })
+                              setSpecialtyInput('')
+                            }
+                          }}
+                          className="px-4 bg-[#D4AF37] text-[#0A0A0A] rounded-xl font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/90 transition-colors"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.specialties.map((specialty, idx) => (
+                          <span
+                            key={idx}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-[#D4AF37]/20 border border-[#D4AF37]/30 rounded-lg text-sm text-[#D4AF37]"
+                          >
+                            {specialty}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProfile({
+                                  ...profile,
+                                  specialties: profile.specialties.filter((_, i) => i !== idx),
+                                })
+                              }}
+                              className="text-[#D4AF37] hover:text-red-400 transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37] mb-2">
+                      <Award className="w-4 h-4" />
+                      Certifications
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={certificationInput}
+                          onChange={(e) => setCertificationInput(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && certificationInput.trim()) {
+                              e.preventDefault()
+                              setProfile({
+                                ...profile,
+                                certifications: [...profile.certifications, certificationInput.trim()],
+                              })
+                              setCertificationInput('')
+                            }
+                          }}
+                          className="flex-1 bg-white/5 border border-[#D4AF37]/20 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#D4AF37] transition-colors"
+                          placeholder="Ajouter une certification (Ex: Maître Artisan)"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (certificationInput.trim()) {
+                              setProfile({
+                                ...profile,
+                                certifications: [...profile.certifications, certificationInput.trim()],
+                              })
+                              setCertificationInput('')
+                            }
+                          }}
+                          className="px-4 bg-[#D4AF37] text-[#0A0A0A] rounded-xl font-black uppercase tracking-[0.18em] hover:bg-[#D4AF37]/90 transition-colors"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.certifications.map((cert, idx) => (
+                          <span
+                            key={idx}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-[#D4AF37]/20 border border-[#D4AF37]/30 rounded-lg text-sm text-[#D4AF37]"
+                          >
+                            {cert}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProfile({
+                                  ...profile,
+                                  certifications: profile.certifications.filter((_, i) => i !== idx),
+                                })
+                              }}
+                              className="text-[#D4AF37] hover:text-red-400 transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Adresse de livraison (clients) ou Adresse de l'atelier (tailleurs) */}
+              {!isTailor && (
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#D4AF37] mb-2">
+                    <MapPin className="w-4 h-4" />
+                    Adresse de livraison
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={profile.address}
+                      onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                      className="w-full bg-white/5 border border-[#D4AF37]/20 rounded-xl px-4 py-3 pr-12 text-white placeholder-white/30 focus:outline-none focus:border-[#D4AF37] transition-colors"
+                      placeholder="Votre adresse de livraison"
+                    />
+                    <button
+                      onClick={handleGetCurrentLocation}
+                      disabled={isFetchingAddress || geoLoading}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30 rounded-lg text-[#D4AF37] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Récupérer automatiquement mon adresse"
+                    >
+                      {isFetchingAddress ? (
+                        <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Navigation className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-1 text-xs text-white/50 flex items-center gap-1">
+                    {geoLoading ? (
+                      <>Récupération de votre position...</>
+                    ) : geoError ? (
+                      <>Géolocalisation non disponible. Vous pouvez saisir votre adresse manuellement.</>
+                    ) : latitude && longitude ? (
+                      <>
+                        <Check className="w-3 h-3 text-[#D4AF37]" />
+                        Position détectée. Cliquez sur l'icône pour récupérer l'adresse.
+                      </>
                     ) : (
-                      <Navigation className="w-4 h-4" />
+                      <>Cliquez sur l'icône pour récupérer automatiquement votre adresse.</>
                     )}
-                  </button>
+                  </p>
                 </div>
-                <p className="mt-1 text-xs text-white/50 flex items-center gap-1">
-                  {geoLoading ? (
-                    <>Récupération de votre position...</>
-                  ) : geoError ? (
-                    <>Géolocalisation non disponible. Vous pouvez saisir votre adresse manuellement.</>
-                  ) : latitude && longitude ? (
-                    <>
-                      <Check className="w-3 h-3 text-[#D4AF37]" />
-                      Position détectée. Cliquez sur l'icône pour récupérer l'adresse.
-                    </>
-                  ) : (
-                    <>Cliquez sur l'icône pour récupérer automatiquement votre adresse.</>
-                  )}
-                </p>
-              </div>
+              )}
             </section>
           </>
         ) : (
@@ -550,7 +801,7 @@ export default function SettingsPage() {
         {/* Save Button */}
         <div className="sticky bottom-0 bg-[#0A0A0A]/95 backdrop-blur-xl border-t border-[#D4AF37]/10 py-4 -mx-4 sm:-mx-6 px-4 sm:px-6 mt-8">
           <button
-            onClick={activeTab === 'profile' ? handleSaveProfile : handleSaveMeasurements}
+            onClick={isTailor || activeTab === 'profile' ? handleSaveProfile : handleSaveMeasurements}
             disabled={isSaving || saveSuccess}
             className="w-full flex items-center justify-center gap-2 bg-[#D4AF37] text-[#0A0A0A] py-4 rounded-xl text-sm font-black uppercase tracking-[0.18em] shadow-[0_0_14px_rgba(212,175,55,0.25)] hover:bg-[#D4AF37]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -567,7 +818,7 @@ export default function SettingsPage() {
             ) : (
               <>
                 <Save className="w-5 h-5" />
-                Enregistrer
+                {isTailor ? 'Enregistrer les modifications' : 'Enregistrer'}
               </>
             )}
           </button>
