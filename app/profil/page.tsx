@@ -982,6 +982,38 @@ export default function ProfilPage() {
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-2">
+                {/* Bouton Ajouter une création */}
+                {isOwnProfile && (
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      trackProfileInteraction({
+                        user_id: actorUserId,
+                        post_id: null,
+                        interaction_type: 'click',
+                        session_id: sessionId,
+                        duration_seconds: null,
+                        scroll_depth: null,
+                        came_from: 'profil:tailor_add_portfolio_creation',
+                        device_type: 'web',
+                        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                      })
+                      // TODO: Ouvrir modal d'upload ou rediriger vers page d'ajout
+                      router.push('/atelier/portfolio/add')
+                    }}
+                    className="relative aspect-square rounded-lg overflow-hidden border-2 border-dashed border-[#D4AF37]/40 hover:border-[#D4AF37] bg-white/[0.02] hover:bg-[#D4AF37]/5 transition-all flex flex-col items-center justify-center group"
+                  >
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center group-hover:bg-[#D4AF37]/30 transition-colors">
+                        <Plus className="w-5 h-5 text-[#D4AF37]" />
+                      </div>
+                      <span className="text-[9px] text-[#D4AF37]/80 font-black uppercase tracking-[0.2em] group-hover:text-[#D4AF37] transition-colors">
+                        Ajouter
+                      </span>
+                    </div>
+                  </motion.button>
+                )}
+                
                 {gallery.map((img) => (
                   <div key={img.id} className="relative group">
                     <button
