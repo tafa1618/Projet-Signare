@@ -15,11 +15,11 @@
   --text-h3-mobile: 1.5rem; /* 24px mobile */
   --text-h3-desktop: 1.75rem; /* 28px desktop */
   
-  /* Couleurs premium */
-  --color-bg-primary: #1A1A1A; /* Gris très foncé premium */
-  --color-text-primary: #FFFFFF; /* Blanc pur */
+  /* Couleurs premium SIGNARE */
+  --color-bg-primary: #0A0A0A; /* Noir Profond */
+  --color-text-primary: #FFFFFF; /* Blanc Pur */
   --color-text-secondary: rgba(255, 255, 255, 0.7); /* Blanc avec opacité */
-  --color-accent: #D4AF37; /* Or raffiné */
+  --color-accent: #D4AF37; /* Or Raffiné */
 }
 
 @layer base {

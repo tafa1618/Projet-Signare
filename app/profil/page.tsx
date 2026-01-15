@@ -21,7 +21,18 @@ import {
   Camera,
   Heart,
   Eye,
-  Plus
+  Plus,
+  MapPin,
+  Clock,
+  CheckCircle2,
+  TrendingUp,
+  Users,
+  Calendar,
+  Shield,
+  Zap,
+  Medal,
+  Briefcase,
+  Building2
 } from 'lucide-react'
 import type { Database, Mesure } from '@/shared/types/database.types'
 import { cn } from '@/shared/lib/utils'
@@ -107,6 +118,19 @@ type TailorProfile = {
   followersCount: number
   followingCount: number
   postsCount: number
+  // Nouvelles propriétés pour l'atelier virtuel
+  experienceYears: number
+  specialties: string[]
+  location: string
+  workshopPhotos?: string[]
+  certifications?: string[]
+  workingHours: string
+  responseTime: string
+  satisfactionRate: number
+  averageDeliveryDays: number
+  totalClients: number
+  completedOrders: number
+  about: string
 }
 
 const MOCK_TAILOR_PROFILE: TailorProfile = {
@@ -122,6 +146,21 @@ const MOCK_TAILOR_PROFILE: TailorProfile = {
   followersCount: 3421,
   followingCount: 156,
   postsCount: 124,
+  experienceYears: 12,
+  specialties: ['Boubou de cérémonie', 'Broderie perlé', 'Kaftan luxe', 'Ensemble traditionnel'],
+  location: 'Dakar, Plateau',
+  workshopPhotos: [
+    'https://images.unsplash.com/photo-1585128792330-5b0c0b0b5b0b?w=400&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1585128792330-5b0c0b0b5b0b?w=400&h=300&fit=crop',
+  ],
+  certifications: ['Maître Artisan', 'Formation École de Mode Dakar'],
+  workingHours: 'Lun - Sam, 9h - 19h',
+  responseTime: '< 2 heures',
+  satisfactionRate: 98,
+  averageDeliveryDays: 7,
+  totalClients: 342,
+  completedOrders: 1247,
+  about: 'Atelier familial depuis 3 générations. Spécialisé dans la haute couture sénégalaise avec une attention particulière aux finitions et aux détails. Chaque pièce est créée avec passion et respect des traditions.',
 }
 
 const MOCK_TAILOR_ORDERS = [
@@ -597,15 +636,19 @@ export default function ProfilPage() {
           </>
         ) : (
           <>
-            {/* Stats Atelier (compact) - En haut pour tailleur */}
-            <section className="grid grid-cols-3 gap-3">
+            {/* Stats Atelier Premium - En haut pour tailleur */}
+            <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="bg-[#D4AF37] text-[#0A0A0A] rounded-xl p-4 text-center">
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-80">Commandes</p>
                 <p className="mt-1 text-2xl font-black">{MOCK_TAILOR_PROFILE.activeOrders}</p>
               </div>
               <div className="bg-white/[0.03] border border-[#D4AF37]/20 rounded-xl p-4 text-center">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/50">Revenus</p>
-                <p className="mt-1 text-lg font-serif text-[#D4AF37]">{MOCK_TAILOR_PROFILE.monthlyRevenue}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/50">Clients</p>
+                <p className="mt-1 text-xl font-serif text-[#D4AF37]">{MOCK_TAILOR_PROFILE.totalClients || 342}</p>
+              </div>
+              <div className="bg-white/[0.03] border border-[#D4AF37]/20 rounded-xl p-4 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/50">Satisfaction</p>
+                <p className="mt-1 text-xl font-serif text-[#D4AF37]">{MOCK_TAILOR_PROFILE.satisfactionRate || 98}%</p>
               </div>
               <div className="bg-white/[0.03] border border-[#D4AF37]/20 rounded-xl p-4 text-center">
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/50">Note</p>
@@ -616,14 +659,124 @@ export default function ProfilPage() {
               </div>
             </section>
 
-            {/* Rating + badge */}
-            <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <Scissors className="w-5 h-5 text-[#D4AF37]" />
-                <div className="flex-1">
-                  <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black">Maître Tailleur</p>
-                  <p className="text-xs text-white/50 mt-0.5">Qualité basée sur avis & réactivité</p>
+            {/* Badge Maître Tailleur + Expérience */}
+            <section className="bg-gradient-to-r from-[#D4AF37]/10 to-transparent border-l-2 border-[#D4AF37] rounded-xl p-4">
+              <div className="flex items-start gap-4">
+                <div className="bg-[#D4AF37] p-3 rounded-xl">
+                  <Medal className="w-6 h-6 text-[#0A0A0A]" />
                 </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm font-serif text-[#D4AF37] font-bold">Maître Tailleur</p>
+                    <CheckCircle2 className="w-4 h-4 text-[#D4AF37]" />
+                  </div>
+                  <p className="text-xs text-white/70 mb-2">{MOCK_TAILOR_PROFILE.experienceYears || 12} ans d'expérience • {MOCK_TAILOR_PROFILE.completedOrders || 1247} commandes réalisées</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {MOCK_TAILOR_PROFILE.certifications?.map((cert, idx) => (
+                      <span key={idx} className="text-[10px] px-2 py-1 bg-[#D4AF37]/20 border border-[#D4AF37]/30 rounded-full text-[#D4AF37] font-black uppercase tracking-[0.12em]">
+                        {cert}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* À propos de l'atelier */}
+            <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Building2 className="w-4 h-4 text-[#D4AF37]" />
+                <h3 className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">À propos de l'atelier</h3>
+              </div>
+              <p className="text-xs text-white/80 leading-relaxed">
+                {MOCK_TAILOR_PROFILE.about || 'Atelier familial depuis 3 générations. Spécialisé dans la haute couture sénégalaise avec une attention particulière aux finitions et aux détails. Chaque pièce est créée avec passion et respect des traditions.'}
+              </p>
+              
+              {/* Spécialités */}
+              <div className="mt-4 pt-4 border-t border-[#D4AF37]/10">
+                <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black mb-2">Spécialités</p>
+                <div className="flex flex-wrap gap-2">
+                  {MOCK_TAILOR_PROFILE.specialties?.map((specialty, idx) => (
+                    <span key={idx} className="text-[11px] px-3 py-1.5 bg-white/5 border border-[#D4AF37]/20 rounded-lg text-white/90 font-medium">
+                      {specialty}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Informations pratiques */}
+            <section className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Localisation */}
+              <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className="w-4 h-4 text-[#D4AF37]" />
+                  <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black">Localisation</p>
+                </div>
+                <p className="text-sm text-white/90">{MOCK_TAILOR_PROFILE.location || 'Dakar, Plateau'}</p>
+              </div>
+
+              {/* Horaires */}
+              <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="w-4 h-4 text-[#D4AF37]" />
+                  <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black">Horaires</p>
+                </div>
+                <p className="text-sm text-white/90">{MOCK_TAILOR_PROFILE.workingHours || 'Lun - Sam, 9h - 19h'}</p>
+              </div>
+
+              {/* Réactivité */}
+              <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap className="w-4 h-4 text-[#D4AF37]" />
+                  <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black">Réactivité</p>
+                </div>
+                <p className="text-sm text-white/90">{MOCK_TAILOR_PROFILE.responseTime || '< 2 heures'}</p>
+              </div>
+
+              {/* Délai moyen */}
+              <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="w-4 h-4 text-[#D4AF37]" />
+                  <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black">Délai moyen</p>
+                </div>
+                <p className="text-sm text-white/90">{MOCK_TAILOR_PROFILE.averageDeliveryDays || 7} jours</p>
+              </div>
+            </section>
+
+            {/* Photos de l'atelier */}
+            {MOCK_TAILOR_PROFILE.workshopPhotos && MOCK_TAILOR_PROFILE.workshopPhotos.length > 0 && (
+              <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Camera className="w-4 h-4 text-[#D4AF37]" />
+                  <h3 className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Visite de l'atelier</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {MOCK_TAILOR_PROFILE.workshopPhotos.map((photo, idx) => (
+                    <div key={idx} className="relative aspect-[4/3] rounded-lg overflow-hidden border border-[#D4AF37]/20">
+                      <Image src={photo} alt={`Atelier ${idx + 1}`} fill className="object-cover" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Badges de qualité */}
+            <section className="grid grid-cols-3 gap-2">
+              <div className="bg-white/[0.02] border border-[#D4AF37]/20 rounded-lg p-3 text-center">
+                <Shield className="w-5 h-5 text-[#D4AF37] mx-auto mb-1" />
+                <p className="text-[9px] text-white/50 uppercase tracking-[0.2em] font-black">Garantie</p>
+                <p className="text-[10px] text-[#D4AF37] font-bold mt-0.5">Qualité</p>
+              </div>
+              <div className="bg-white/[0.02] border border-[#D4AF37]/20 rounded-lg p-3 text-center">
+                <Zap className="w-5 h-5 text-[#D4AF37] mx-auto mb-1" />
+                <p className="text-[9px] text-white/50 uppercase tracking-[0.2em] font-black">Réactivité</p>
+                <p className="text-[10px] text-[#D4AF37] font-bold mt-0.5">Rapide</p>
+              </div>
+              <div className="bg-white/[0.02] border border-[#D4AF37]/20 rounded-lg p-3 text-center">
+                <TrendingUp className="w-5 h-5 text-[#D4AF37] mx-auto mb-1" />
+                <p className="text-[9px] text-white/50 uppercase tracking-[0.2em] font-black">Performance</p>
+                <p className="text-[10px] text-[#D4AF37] font-bold mt-0.5">Top</p>
               </div>
             </section>
 
@@ -631,8 +784,8 @@ export default function ProfilPage() {
             <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black">Commandes atelier</p>
-                  <p className="text-xs text-white/60">Clients, modèles et mesures clés</p>
+                  <p className="text-[10px] text-[#D4AF37] uppercase tracking-[0.22em] font-black">Commandes actives</p>
+                  <p className="text-xs text-white/60">{MOCK_TAILOR_PROFILE.activeOrders} en cours • {MOCK_TAILOR_PROFILE.completedOrders || 1247} réalisées</p>
                 </div>
                 <button
                   onClick={() => {
@@ -702,6 +855,78 @@ export default function ProfilPage() {
               </div>
             </section>
 
+            {/* Témoignages clients */}
+            <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#D4AF37]" />
+                  <h3 className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Témoignages clients</h3>
+                </div>
+                <span className="text-[10px] text-white/50">4.9/5 • 342 avis</span>
+              </div>
+              
+              <div className="space-y-3">
+                {[
+                  {
+                    client: 'Aminata Diallo',
+                    rating: 5,
+                    comment: 'Travail exceptionnel ! Mon boubou de mariage était parfait, les finitions sont impeccables. Je recommande vivement.',
+                    date: 'Il y a 2 semaines',
+                  },
+                  {
+                    client: 'Moussa Ndiaye',
+                    rating: 5,
+                    comment: 'Professionnel et réactif. Le délai a été respecté et la qualité est au rendez-vous. Un vrai maître artisan.',
+                    date: 'Il y a 1 mois',
+                  },
+                  {
+                    client: 'Fatou Sarr',
+                    rating: 5,
+                    comment: 'Service client au top, conseils personnalisés. Le résultat dépasse mes attentes. Merci !',
+                    date: 'Il y a 3 semaines',
+                  },
+                ].map((testimonial, idx) => (
+                  <div key={idx} className="bg-white/[0.02] border border-[#D4AF37]/10 rounded-lg p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="text-xs font-bold text-white">{testimonial.client}</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              size={10}
+                              className={s <= testimonial.rating ? "fill-current text-[#D4AF37]" : "text-white/20"}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <span className="text-[9px] text-white/40">{testimonial.date}</span>
+                    </div>
+                    <p className="text-xs text-white/80 leading-relaxed">{testimonial.comment}</p>
+                  </div>
+                ))}
+              </div>
+              
+              <button
+                onClick={() => {
+                  trackProfileInteraction({
+                    user_id: actorUserId,
+                    post_id: null,
+                    interaction_type: 'click',
+                    session_id: sessionId,
+                    duration_seconds: null,
+                    scroll_depth: null,
+                    came_from: 'profil:tailor_reviews',
+                    device_type: 'web',
+                    user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+                  })
+                }}
+                className="w-full text-center text-[10px] text-[#D4AF37] font-black uppercase tracking-[0.2em] py-2 border border-[#D4AF37]/30 rounded-lg hover:bg-[#D4AF37]/10 transition-all"
+              >
+                Voir tous les avis (342)
+              </button>
+            </section>
+
             {/* CTA : Livrer (simulation delivery_engine) */}
             <section className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
@@ -720,10 +945,38 @@ export default function ProfilPage() {
             </section>
 
 
+            {/* Processus de travail */}
+            <section className="bg-gradient-to-br from-[#D4AF37]/5 to-transparent border border-[#D4AF37]/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Briefcase className="w-4 h-4 text-[#D4AF37]" />
+                <h3 className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Notre processus</h3>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { step: '1', title: 'Consultation', desc: 'Échange sur vos besoins et préférences' },
+                  { step: '2', title: 'Prise de mesures', desc: 'Mesures précises via notre système' },
+                  { step: '3', title: 'Patronage', desc: 'Création du patron sur-mesure' },
+                  { step: '4', title: 'Confection', desc: 'Réalisation avec matériaux premium' },
+                  { step: '5', title: 'Finitions', desc: 'Détails et ajustements parfaits' },
+                  { step: '6', title: 'Livraison', desc: 'Remise en main propre ou livraison express' },
+                ].map((process) => (
+                  <div key={process.step} className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#D4AF37] text-[#0A0A0A] flex items-center justify-center text-[10px] font-black">
+                      {process.step}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-white">{process.title}</p>
+                      <p className="text-[11px] text-white/60 mt-0.5">{process.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
             {/* Créations (galerie compacte) */}
             <section>
               <div className="flex items-end justify-between mb-3">
-                <h2 className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Créations</h2>
+                <h2 className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Portfolio</h2>
                 <p className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black">
                   {MOCK_TAILOR_PROFILE.creationsCount} pièces
                 </p>

@@ -31,6 +31,14 @@
 - [ ] Clé API du fournisseur SMS pour l'authentification OTP
 - [ ] Numéro d'expéditeur SMS configuré
 
+### Variables WebRTC (Appels Audio/Vidéo)
+- [ ] `NEXT_PUBLIC_STUN_SERVER` - URL du serveur STUN (ex: `stun:stun.l.google.com:19302`)
+- [ ] `NEXT_PUBLIC_TURN_SERVER` - URL du serveur TURN (si nécessaire)
+- [ ] `TURN_USERNAME` - Identifiant pour le serveur TURN
+- [ ] `TURN_CREDENTIAL` - Mot de passe pour le serveur TURN
+- [ ] `NEXT_PUBLIC_AGORA_APP_ID` - Si utilisation d'Agora (optionnel)
+- [ ] `NEXT_PUBLIC_DAILY_API_KEY` - Si utilisation de Daily.co (optionnel)
+
 ---
 
 ## 🗄️ 2. BASE DE DONNÉES SUPABASE
@@ -69,7 +77,27 @@
 ### Realtime
 - [ ] Activer Supabase Realtime pour la table `messages`
 - [ ] Activer Supabase Realtime pour la table `conversations`
+- [ ] Activer Supabase Realtime pour la signalisation des appels (canaux `calls:*`)
 - [ ] Configurer les abonnements Realtime côté frontend
+
+### Table Calls (Appels Audio/Vidéo)
+- [ ] Créer la table `calls` dans Supabase :
+  ```sql
+  CREATE TABLE calls (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    conversation_id UUID REFERENCES conversations(id),
+    caller_id UUID REFERENCES profiles(id),
+    receiver_id UUID REFERENCES profiles(id),
+    type TEXT CHECK (type IN ('audio', 'video')),
+    status TEXT CHECK (status IN ('ringing', 'connected', 'ended', 'missed', 'rejected')),
+    started_at TIMESTAMPTZ,
+    ended_at TIMESTAMPTZ,
+    duration_seconds INTEGER,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  );
+  ```
+- [ ] Activer RLS sur la table `calls`
+- [ ] Créer les politiques de sécurité (utilisateurs peuvent voir leurs propres appels)
 
 ---
 
@@ -149,6 +177,20 @@
 - [ ] Tester la génération d'inspiration
 - [ ] Tester l'essayage virtuel
 - [ ] Vérifier que les images sont correctement uploadées et traitées
+
+### Appels Audio/Vidéo (WebRTC)
+- [ ] Configurer les serveurs STUN/TURN pour la traversée NAT
+  - [ ] STUN servers (gratuits : Google, Twilio)
+  - [ ] TURN servers (optionnel : service tiers ou auto-hébergé)
+- [ ] Vérifier que Supabase Realtime est activé pour la signalisation
+- [ ] Créer la table `calls` dans Supabase pour l'historique
+- [ ] Tester les appels audio 1-to-1
+- [ ] Tester les appels vidéo 1-to-1
+- [ ] Vérifier les permissions d'accès micro/caméra dans le navigateur
+- [ ] Tester sur mobile (iOS/Android)
+- [ ] Vérifier la qualité audio/vidéo selon la connexion réseau
+- [ ] Implémenter la gestion des erreurs (réseau, permissions, etc.)
+- [ ] Configurer les appels de groupe (si nécessaire) avec SFU
 
 ---
 
@@ -253,6 +295,12 @@
 - [ ] Tester la livraison et la validation
 - [ ] Tester l'essayage virtuel
 - [ ] Tester la génération d'inspiration IA
+- [ ] Tester les appels audio 1-to-1
+- [ ] Tester les appels vidéo 1-to-1
+- [ ] Tester la gestion des appels (accepter, refuser, terminer)
+- [ ] Tester les permissions micro/caméra
+- [ ] Tester sur différents navigateurs (Chrome, Safari, Firefox)
+- [ ] Tester sur mobile (iOS Safari, Android Chrome)
 
 ### Tests de Charge
 - [ ] Tester avec plusieurs utilisateurs simultanés
@@ -359,6 +407,8 @@
 8. **✅ CONFIGURER LE MODE PRODUCTION POUR LES MICROSERVICES IA**
 9. **✅ VÉRIFIER QUE LES UPLOADS FONCTIONNENT VERS SUPABASE STORAGE**
 10. **✅ TESTER TOUS LES MICROSERVICES EN PRODUCTION**
+11. **✅ CONFIGURER LES SERVEURS STUN/TURN POUR LES APPELS WEBRTC**
+12. **✅ TESTER LES APPELS AUDIO/VIDÉO SUR DIFFÉRENTS RÉSEAUX**
 
 ---
 
