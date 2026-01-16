@@ -110,27 +110,27 @@ signare/
 
 ## 🤖 Architecture Data-Ready
 
-### Types de Données Structurés pour l'IA
+🟡 **Types de Données Structurés pour l'IA**
 
 Chaque interface inclut des métadonnées sémantiques pour faciliter l'entraînement de modèles ML :
 
-#### **Profiles**
+#### **Profiles** 🟡
 - `role_score` : Score comportemental (0=acheteur, 100=créateur)
 - `style_preferences` : Vecteur de préférences stylistiques
 - `interaction_history` : Historique pour recommandations
 
-#### **Mesures**
+#### **Mesures** 🟡
 - `pattern_type` : Type de patron (boubou, kaftan, etc.)
 - `fabric_stretch_index` : Élasticité du tissu (0-100)
 - `complexity_score` : Complexité du vêtement (1-10)
 
-#### **Posts**
+#### **Posts** 🟡
 - `color_palette` : Palette de couleurs extraite
 - `garment_type` : Type de vêtement pour classification
 - `cultural_tags` : Tags culturels sénégalais
 - `complexity` : Niveau de complexité (simple → haute_couture)
 
-#### **Inspirations**
+#### **Inspirations** 🟡
 - `prompt_text` : Prompt utilisateur
 - `generation_params` : Paramètres du modèle
 - `user_rating` : Feedback pour amélioration continue
@@ -138,7 +138,7 @@ Chaque interface inclut des métadonnées sémantiques pour faciliter l'entraîn
 
 ## 🚚 Logistique (Modèle Yango)
 
-### Calcul Automatique des Frais de Livraison
+🟡 **Calcul Automatique des Frais de Livraison**
 
 ```typescript
 Prix de base : 1500 FCFA
@@ -154,13 +154,13 @@ Frais SIGNARE : 15% inclus dans le prix final
 
 ### Sécurité de Livraison
 
-- Code de validation client à 6 chiffres
-- Fonds débloqués uniquement après validation
-- Géolocalisation GPS obligatoire
+- 🟡 Code de validation client à 6 chiffres
+- 🧠 Fonds débloqués uniquement après validation
+- 🟡 Géolocalisation GPS obligatoire
 
 ## 🔐 Authentification
 
-**Uniquement par numéro de téléphone (OTP SMS)**
+🟡 **Uniquement par numéro de téléphone (OTP SMS)**
 
 ```typescript
 // Connexion
@@ -175,18 +175,32 @@ await verifyOTP('+221771234567', '123456')
 
 ## 🎯 Fonctionnalités
 
+### Légende des Statuts
+
+- ✅ **En production / utilisable** : Fonctionnalité complète et opérationnelle
+- 🟡 **En cours / partiellement mocké** : Fonctionnalité en développement avec données mockées
+- 🧠 **Vision / roadmap** : Fonctionnalité planifiée, pas encore implémentée
+
+### Vue d'Ensemble de l'État du Projet
+
+**Frontend & UI** : 🟡 Interface complète avec design premium, données mockées en cours de remplacement  
+**Backend & Services** : 🟡 Architecture prête, intégration Supabase en cours  
+**IA & ML** : 🟡 Services Python opérationnels, collecte de données pour entraînement  
+**Paiements & Livraison** : 🟡 Calculs implémentés, intégration paiement en cours  
+**Communication** : 🟡 Messagerie fonctionnelle, WebRTC planifié
+
 ### Pages Principales
 
-- ✅ **Feed Social** : Partage de créations (aspect ratio 4:5 ou 9:16) avec système de likes et commentaires
-- ✅ **Messagerie** : Communication premium entre clients et tailleurs avec indicateurs de statut, appels audio/vidéo
-- ✅ **Atelier** : Gestion des mesures corporelles avec données ML et validation automatique
-- ✅ **Portfolio** : Galerie de créations pour les tailleurs (distinct du shop)
-- ✅ **Essayage Virtuel** : Try-on IA avec sélection visuelle de modèles et tailleurs
-- ✅ **Inspiration IA** : Génération de designs personnalisés basés sur des tags
-- ✅ **Shop** : Marketplace pour la vente de créations
-- ✅ **Events** : Billetterie pour défilés et expositions
-- ✅ **Profil** : Profils enrichis avec atelier virtuel pour tailleurs, paramètres personnalisés
-- ✅ **Commandes** : Suivi des commandes avec validation de livraison par code
+- 🟡 **Feed Social** : Partage de créations (aspect ratio 4:5 ou 9:16) avec système de likes et commentaires
+- 🟡 **Messagerie** : Communication premium entre clients et tailleurs avec indicateurs de statut, appels audio/vidéo
+- 🟡 **Atelier** : Gestion des mesures corporelles avec données ML et validation automatique
+- 🟡 **Portfolio** : Galerie de créations pour les tailleurs (distinct du shop)
+- 🟡 **Essayage Virtuel** : Try-on IA avec sélection visuelle de modèles et tailleurs
+- 🟡 **Inspiration IA** : Génération de designs personnalisés basés sur des tags
+- 🟡 **Shop** : Marketplace pour la vente de créations
+- 🧠 **Events** : Billetterie pour défilés et expositions
+- 🟡 **Profil** : Profils enrichis avec atelier virtuel pour tailleurs, paramètres personnalisés
+- 🟡 **Commandes** : Suivi des commandes avec validation de livraison par code
 
 ### Segmentation
 
@@ -208,14 +222,14 @@ await verifyOTP('+221771234567', '123456')
 - **Auth** : OTP par SMS uniquement (pas de Google Login)
 
 ### Microservices Python (FastAPI)
-- **Delivery Engine** : Calcul automatique des prix de livraison (modèle Yango)
-- **Measurements Service** : Prise de mesures corporelles avec IA (Replicate)
-- **AI Service** : Génération d'inspiration et essayage virtuel
-- **Search/Feed Engine** : Moteur de recherche et recommandation
+- 🟡 **Delivery Engine** : Calcul automatique des prix de livraison (modèle Yango)
+- 🟡 **Measurements Service** : Prise de mesures corporelles avec IA (Replicate)
+- 🟡 **AI Service** : Génération d'inspiration et essayage virtuel
+- 🧠 **Search/Feed Engine** : Moteur de recherche et recommandation
 
-### WebRTC (À venir)
-- **Appels Audio/Vidéo** : Communication en temps réel entre utilisateurs
-- **STUN/TURN Servers** : Configuration pour la traversée NAT
+### WebRTC
+- 🧠 **Appels Audio/Vidéo** : Communication en temps réel entre utilisateurs
+- 🧠 **STUN/TURN Servers** : Configuration pour la traversée NAT
 
 ## 📱 Mobile-First Absolu
 
