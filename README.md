@@ -285,7 +285,7 @@ Ce projet suit la **Charte SIGNARE** (voir `.cursorrules`).
 
 ## 📄 Licence
 
-Propriétaire - SIGNARE © 2024
+Propriétaire - SIGNARE © 2026
 
 ---
 

@@ -1,6 +1,6 @@
 # ✅ CHECKLIST DE DÉPLOIEMENT - SIGNARE
 
-**Date de création :** 2024  
+**Date de création :** 2026  
 **Dernière mise à jour :** À compléter avant chaque déploiement
 
 ---
