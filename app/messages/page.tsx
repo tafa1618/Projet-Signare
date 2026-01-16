@@ -246,19 +246,23 @@ export default function MessagesPage() {
         "w-full md:w-[340px] border-r border-[#D4AF37]/20 flex flex-col bg-[#0A0A0A]",
         selectedConv ? "hidden md:flex" : "flex"
       )}>
-        <header className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-[#D4AF37]/20">
+        <header className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 bg-gradient-to-b from-[#0A0A0A] to-[#0A0A0A]/95 backdrop-blur-xl border-b border-[#D4AF37]/20 shadow-[0_2px_10px_rgba(212,175,55,0.1)]">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg sm:text-xl font-serif text-[#D4AF37] tracking-[0.15em] sm:tracking-[0.2em] uppercase">MESSAGES</h1>
-            <button className="p-1.5 sm:p-2 text-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors">
+            <h1 className="text-lg sm:text-xl font-serif text-[#D4AF37] tracking-[0.15em] sm:tracking-[0.2em] uppercase drop-shadow-[0_0_8px_rgba(212,175,55,0.3)]">MESSAGES</h1>
+            <motion.button 
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05 }}
+              className="p-1.5 sm:p-2 text-[#D4AF37]/70 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-lg transition-all duration-300"
+            >
               <Plus size={18} className="sm:w-5 sm:h-5" />
-            </button>
+            </motion.button>
           </div>
           <div className="relative mt-3 sm:mt-4">
-            <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 w-3.5 h-3.5 sm:w-4 sm:h-4" size={14} />
+            <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-[#D4AF37]/50 w-3.5 h-3.5 sm:w-4 sm:h-4" size={14} />
             <input
               type="text"
               placeholder="RECHERCHER..."
-              className="w-full bg-transparent border-b border-[#D4AF37]/20 py-2 sm:py-2.5 pl-6 sm:pl-7 pr-2 sm:pr-3 text-[9px] sm:text-[10px] font-black tracking-[0.18em] sm:tracking-[0.22em] uppercase outline-none focus:border-[#D4AF37] placeholder:text-white/20"
+              className="w-full bg-transparent border-b border-[#D4AF37]/20 py-2 sm:py-2.5 pl-6 sm:pl-7 pr-2 sm:pr-3 text-[9px] sm:text-[10px] font-black tracking-[0.18em] sm:tracking-[0.22em] uppercase outline-none focus:border-[#D4AF37] focus:shadow-[0_1px_8px_rgba(212,175,55,0.2)] transition-all duration-300 placeholder:text-white/20"
             />
           </div>
         </header>
@@ -286,19 +290,29 @@ export default function MessagesPage() {
               }}
               className={cn(
                 "w-full text-left flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border transition-all duration-300",
-                "border-transparent hover:border-[#D4AF37]/15",
-                "hover:bg-gradient-to-r hover:from-[#D4AF37]/10 hover:to-transparent",
-                "active:scale-[0.99]"
+                "border-transparent hover:border-[#D4AF37]/20",
+                "hover:bg-gradient-to-r hover:from-[#D4AF37]/10 hover:via-[#D4AF37]/5 hover:to-transparent",
+                "hover:shadow-[0_0_20px_rgba(212,175,55,0.1)]",
+                "active:scale-[0.98]"
               )}
             >
               <div className="relative flex-shrink-0">
                 <div className={cn(
-                  "w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden border p-0.5",
-                  conv.user.isMasterTailor ? "border-[#D4AF37]/50" : "border-white/10"
+                  "w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 p-0.5 relative",
+                  conv.user.isMasterTailor 
+                    ? "border-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.4)]" 
+                    : "border-white/20"
                 )}>
                   <div className="w-full h-full rounded-full overflow-hidden relative bg-neutral-900">
                     <Image src={conv.user.avatar} alt={conv.user.name} fill className="object-cover" />
                   </div>
+                  {/* Indicateur de statut */}
+                  <div className={cn(
+                    "absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-[#0A0A0A]",
+                    conv.user.status === 'online' && "bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.6)]",
+                    conv.user.status === 'atelier' && "bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.6)]",
+                    conv.user.status === 'offline' && "bg-white/20"
+                  )} />
                 </div>
               </div>
               
@@ -315,7 +329,12 @@ export default function MessagesPage() {
                 <div className="flex justify-between items-center">
                   <p className="text-[10px] sm:text-xs text-white/40 truncate pr-2 sm:pr-4 italic">{conv.lastMessage}</p>
                   {conv.unreadCount > 0 && (
-                    <div className="bg-[#D4AF37] w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shadow-[0_0_12px_rgba(212,175,55,0.7)] flex-shrink-0" />
+                    <div className="relative flex-shrink-0">
+                      <div className="bg-[#D4AF37] w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shadow-[0_0_12px_rgba(212,175,55,0.8)] flex items-center justify-center">
+                        <span className="text-[7px] sm:text-[8px] font-black text-[#0A0A0A]">{conv.unreadCount}</span>
+                      </div>
+                      <div className="absolute inset-0 bg-[#D4AF37] rounded-full animate-ping opacity-75" />
+                    </div>
                   )}
                 </div>
                 {typeof conv.user.rating === 'number' && (
@@ -345,7 +364,7 @@ export default function MessagesPage() {
               className="flex flex-col h-full"
             >
               {/* Header Chat (Feed-like) - Compact & Responsive */}
-              <header className="sticky top-0 z-10 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 border-b border-[#D4AF37]/20 bg-[#0A0A0A]/95 backdrop-blur-xl">
+              <header className="sticky top-0 z-10 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 border-b border-[#D4AF37]/20 bg-gradient-to-b from-[#0A0A0A] to-[#0A0A0A]/95 backdrop-blur-xl shadow-[0_2px_10px_rgba(212,175,55,0.1)]">
                 <div className="flex items-center justify-between gap-2 sm:gap-3">
                   {/* Left: Back + Avatar + Info */}
                   <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
@@ -372,8 +391,10 @@ export default function MessagesPage() {
 
                     {/* Avatar */}
                     <div className={cn(
-                      "w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full overflow-hidden border-2 flex-shrink-0",
-                      selectedConv.user.isMasterTailor ? "border-[#D4AF37]/50" : "border-white/10"
+                      "w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full overflow-hidden border-2 flex-shrink-0 relative",
+                      selectedConv.user.isMasterTailor 
+                        ? "border-[#D4AF37] shadow-[0_0_16px_rgba(212,175,55,0.5)]" 
+                        : "border-white/20"
                     )}>
                       <div className="w-full h-full rounded-full overflow-hidden relative bg-neutral-900">
                         <Image 
@@ -384,6 +405,13 @@ export default function MessagesPage() {
                           sizes="48px"
                         />
                       </div>
+                      {/* Indicateur de statut */}
+                      <div className={cn(
+                        "absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-[#0A0A0A]",
+                        selectedConv.user.status === 'online' && "bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.6)]",
+                        selectedConv.user.status === 'atelier' && "bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.6)]",
+                        selectedConv.user.status === 'offline' && "bg-white/20"
+                      )} />
                     </div>
 
                     {/* Name + Rank + Rating */}
@@ -408,6 +436,7 @@ export default function MessagesPage() {
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                     <motion.button
                       whileTap={{ scale: 0.94 }}
+                      whileHover={{ scale: 1.05 }}
                       onClick={() => {
                         trackInteraction({
                           user_id: currentUserId,
@@ -421,13 +450,14 @@ export default function MessagesPage() {
                           user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
                         })
                       }}
-                      className="px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 rounded-lg md:rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] bg-[#0A0A0A] hover:bg-[#D4AF37]/10 transition-colors text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-[0.12em] sm:tracking-[0.15em] md:tracking-[0.18em] flex items-center gap-1"
+                      className="px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 rounded-lg md:rounded-xl border border-[#D4AF37]/40 text-[#D4AF37] bg-gradient-to-br from-[#0A0A0A] to-[#141414] hover:bg-[#D4AF37]/15 hover:border-[#D4AF37]/60 hover:shadow-[0_0_12px_rgba(212,175,55,0.3)] transition-all duration-300 text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-[0.12em] sm:tracking-[0.15em] md:tracking-[0.18em] flex items-center gap-1"
                     >
                       <Phone size={12} className="sm:w-[13px] sm:h-[13px] md:w-[14px] md:h-[14px]" />
                       <span className="hidden sm:inline">APPEL</span>
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.94 }}
+                      whileHover={{ scale: 1.05 }}
                       onClick={() => {
                         trackInteraction({
                           user_id: currentUserId,
@@ -441,7 +471,7 @@ export default function MessagesPage() {
                           user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
                         })
                       }}
-                      className="px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 rounded-lg md:rounded-xl border border-[#D4AF37]/30 text-[#D4AF37] bg-[#0A0A0A] hover:bg-[#D4AF37]/10 transition-colors text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-[0.12em] sm:tracking-[0.15em] md:tracking-[0.18em] flex items-center gap-1"
+                      className="px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 rounded-lg md:rounded-xl border border-[#D4AF37]/40 text-[#D4AF37] bg-gradient-to-br from-[#0A0A0A] to-[#141414] hover:bg-[#D4AF37]/15 hover:border-[#D4AF37]/60 hover:shadow-[0_0_12px_rgba(212,175,55,0.3)] transition-all duration-300 text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-[0.12em] sm:tracking-[0.15em] md:tracking-[0.18em] flex items-center gap-1"
                     >
                       <Video size={12} className="sm:w-[13px] sm:h-[13px] md:w-[14px] md:h-[14px]" />
                       <span className="hidden sm:inline">VIDÉO</span>
@@ -466,10 +496,10 @@ export default function MessagesPage() {
                       className={cn("flex", isMe ? "justify-end" : "justify-start")}
                     >
                       <div className={cn(
-                        "max-w-[85%] sm:max-w-[75%] md:max-w-[60%] px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-[13px] leading-relaxed border",
+                        "max-w-[85%] sm:max-w-[75%] md:max-w-[60%] px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-[13px] leading-relaxed border relative",
                         isMe
-                          ? "bg-[#141414] text-white/90 border-white/10 rounded-tr-sm sm:rounded-tr-none"
-                          : "bg-[#0A0A0A] text-white/90 border-[#D4AF37]/20 rounded-tl-sm sm:rounded-tl-none"
+                          ? "bg-gradient-to-br from-[#1A1A1A] to-[#141414] text-white/95 border-white/10 rounded-tr-sm sm:rounded-tr-none shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                          : "bg-gradient-to-br from-[#0F0F0F] to-[#0A0A0A] text-white/95 border-[#D4AF37]/30 rounded-tl-sm sm:rounded-tl-none shadow-[0_2px_12px_rgba(212,175,55,0.15)]"
                       )}>
                         {msg.type === 'post_share' && msg.postData ? (
                           <div className="space-y-2">
@@ -485,7 +515,27 @@ export default function MessagesPage() {
                             </div>
                           </div>
                         ) : (
-                          <p className="break-words">{msg.text}</p>
+                          <>
+                            <p className="break-words">{msg.text}</p>
+                            <div className="flex items-center justify-end gap-1.5 mt-1.5 pt-1 border-t border-white/5">
+                              <span className="text-[9px] text-white/30 font-bold uppercase tracking-[0.1em]">
+                                {msg.timestamp}
+                              </span>
+                              {isMe && (
+                                <div className="flex items-center">
+                                  {msg.status === 'read' && (
+                                    <CheckCheck size={12} className="text-[#D4AF37]" />
+                                  )}
+                                  {msg.status === 'delivered' && (
+                                    <CheckCheck size={12} className="text-white/40" />
+                                  )}
+                                  {msg.status === 'sent' && (
+                                    <div className="w-2 h-2 rounded-full bg-white/20" />
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </>
                         )}
                       </div>
                     </motion.div>
@@ -494,9 +544,9 @@ export default function MessagesPage() {
               </div>
 
               {/* Input compact (no-scroll global) - Responsive */}
-              <div className="sticky bottom-0 border-t border-[#D4AF37]/20 bg-[#0A0A0A]/95 backdrop-blur-xl px-2.5 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3">
+              <div className="sticky bottom-0 border-t border-[#D4AF37]/20 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/98 to-[#0A0A0A]/95 backdrop-blur-xl px-2.5 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3">
                 <div className="relative">
-                  <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 bg-white/[0.03] border border-white/10 rounded-lg sm:rounded-xl md:rounded-2xl px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2">
+                  <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 bg-gradient-to-r from-white/[0.05] to-white/[0.02] border border-[#D4AF37]/20 rounded-lg sm:rounded-xl md:rounded-2xl px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 shadow-[0_0_20px_rgba(212,175,55,0.1)]">
                     <button
                       onClick={() => {
                         setShowQuickMenu((v) => !v)
@@ -553,6 +603,7 @@ export default function MessagesPage() {
 
                     <motion.button
                       whileTap={{ scale: 0.94 }}
+                      whileHover={{ scale: 1.05 }}
                       onClick={() => {
                         if (!inputText.trim()) return
                         trackInteraction({
@@ -568,7 +619,12 @@ export default function MessagesPage() {
                         })
                         setInputText('')
                       }}
-                      className="bg-[#D4AF37] text-[#0A0A0A] p-1.5 sm:p-2 md:p-2.5 rounded-lg md:rounded-xl shadow-[0_0_12px_rgba(212,175,55,0.3)] sm:shadow-[0_0_18px_rgba(212,175,55,0.35)] flex-shrink-0"
+                      className={cn(
+                        "bg-gradient-to-br from-[#D4AF37] to-[#B8941F] text-[#0A0A0A] p-1.5 sm:p-2 md:p-2.5 rounded-lg md:rounded-xl",
+                        "shadow-[0_0_12px_rgba(212,175,55,0.4)] sm:shadow-[0_0_18px_rgba(212,175,55,0.5)]",
+                        "hover:shadow-[0_0_24px_rgba(212,175,55,0.6)] transition-all duration-300",
+                        "flex-shrink-0 font-black"
+                      )}
                       aria-label="Envoyer"
                     >
                       <Send size={14} className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" />
@@ -620,17 +676,30 @@ export default function MessagesPage() {
             </motion.div>
           ) : (
             <div className="hidden md:flex h-full items-center justify-center text-center px-10">
-              <div className="space-y-4">
-                <div className="bg-[#D4AF37]/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto border border-[#D4AF37]/20">
-                  <MessageCircle size={32} className="text-[#D4AF37]" />
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-6"
+              >
+                <div className="relative">
+                  <div className="bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto border-2 border-[#D4AF37]/30 shadow-[0_0_30px_rgba(212,175,55,0.3)]">
+                    <MessageCircle size={36} className="text-[#D4AF37]" />
+                  </div>
+                  <div className="absolute inset-0 bg-[#D4AF37]/20 rounded-full animate-ping opacity-20" />
                 </div>
-                <div className="space-y-1">
-                  <h2 className="text-xl font-serif text-[#D4AF37] tracking-[0.2em] uppercase">Salon Privé</h2>
-                  <p className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black">
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-serif text-[#D4AF37] tracking-[0.2em] uppercase">Salon Privé</h2>
+                  <p className="text-xs text-white/50 uppercase tracking-[0.22em] font-black">
                     Sélectionnez une conversation
                   </p>
+                  <div className="pt-2 flex items-center justify-center gap-2">
+                    <div className="w-1 h-1 bg-[#D4AF37] rounded-full animate-pulse" />
+                    <div className="w-1 h-1 bg-[#D4AF37] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                    <div className="w-1 h-1 bg-[#D4AF37] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           )}
         </AnimatePresence>
