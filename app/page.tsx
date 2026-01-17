@@ -1394,8 +1394,11 @@ export default function HomePage() {
               <Sparkles className="w-5 h-5 text-[#D4AF37]/60" />
               <div className="w-16 h-px bg-gradient-to-l from-transparent to-[#D4AF37]/40" />
             </div>
-            <p className="text-[10px] text-[#D4AF37]/50 font-serif tracking-[0.4em] uppercase">
-              Signare • Dakar Luxe
+            <p className="text-[10px] text-[#D4AF37]/50 font-serif tracking-[0.4em] uppercase mb-2">
+              SIGNARE
+            </p>
+            <p className="text-[9px] text-[#D4AF37]/40 font-sans tracking-wide italic max-w-xs text-center px-4">
+              La porte d'entrée mondiale de la mode sénégalaise
             </p>
             <p className="text-[9px] text-white/30 mt-2">Vous avez vu tous les posts</p>
           </div>
