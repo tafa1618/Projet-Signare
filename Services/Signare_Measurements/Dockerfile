@@ -15,6 +15,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copier les fichiers de dépendances
 COPY requirements.txt .
 
+# Installer setuptools et wheel pour la construction de packages (numpy, scipy)
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
 

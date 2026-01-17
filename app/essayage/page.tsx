@@ -104,7 +104,14 @@ export default function EssayagePage() {
   const productIdFromUrl = searchParams.get('productId')
   const tailorIdFromUrl = searchParams.get('tailorId')
   
-  const [currentStep, setCurrentStep] = useState<Step>('photo')
+  // Déterminer l'étape initiale : si produit/tailleur pré-sélectionné → photo, sinon → modèle
+  const getInitialStep = (): Step => {
+    if (productIdFromUrl && tailorIdFromUrl) return 'photo'
+    if (productIdFromUrl && !selectedTailor) return 'tailor'
+    return 'model'
+  }
+  
+  const [currentStep, setCurrentStep] = useState<Step>(getInitialStep())
   const [userPhoto, setUserPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<typeof MOCK_PRODUCTS[0] | null>(
@@ -117,8 +124,6 @@ export default function EssayagePage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [resultImage, setResultImage] = useState<string | null>(null)
 
-  // Si un produit est pré-sélectionné depuis l'URL, passer directement à l'étape photo
-  const initialStep = productIdFromUrl && tailorIdFromUrl ? 'photo' : 'model'
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -197,40 +202,62 @@ export default function EssayagePage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-5">
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center gap-2 mb-6">
-          {(['photo', 'model', 'tailor', 'result'] as Step[]).map((step, idx) => {
-            const stepNames = { photo: 'Photo', model: 'Modèle', tailor: 'Tailleur', result: 'Résultat' }
-            const isActive = currentStep === step
-            const isCompleted = 
-              (step === 'photo' && photoPreview) ||
-              (step === 'model' && selectedProduct) ||
-              (step === 'tailor' && selectedTailor) ||
-              (step === 'result' && resultImage)
-            
-            return (
-              <div key={step} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all ${
-                  isActive 
-                    ? 'bg-[#D4AF37] text-[#0A0A0A]' 
-                    : isCompleted 
-                    ? 'bg-[#D4AF37]/30 text-[#D4AF37]' 
-                    : 'bg-white/5 text-white/30'
-                }`}>
-                  {isCompleted && !isActive ? <CheckCircle2 size={16} /> : idx + 1}
+        {/* Progress Steps - Amélioré avec labels */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-1 sm:gap-2 mb-3">
+            {(['model', 'tailor', 'photo', 'result'] as Step[]).map((step, idx) => {
+              const stepLabels = { 
+                model: 'Modèle', 
+                tailor: 'Tailleur', 
+                photo: 'Photo', 
+                result: 'Résultat' 
+              }
+              const isActive = currentStep === step
+              const isCompleted = 
+                (step === 'photo' && photoPreview) ||
+                (step === 'model' && selectedProduct) ||
+                (step === 'tailor' && selectedTailor) ||
+                (step === 'result' && resultImage)
+              
+              return (
+                <div key={step} className="flex items-center">
+                  <div className="flex flex-col items-center">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-black transition-all shadow-lg ${
+                      isActive 
+                        ? 'bg-gradient-to-br from-[#D4AF37] to-[#B8941F] text-[#0A0A0A] shadow-[0_0_20px_rgba(212,175,55,0.5)] scale-110' 
+                        : isCompleted 
+                        ? 'bg-[#D4AF37]/40 text-[#D4AF37] border-2 border-[#D4AF37]' 
+                        : 'bg-white/5 text-white/30 border border-white/10'
+                    }`}>
+                      {isCompleted && !isActive ? (
+                        <CheckCircle2 size={18} className="text-[#D4AF37]" />
+                      ) : (
+                        <span>{idx + 1}</span>
+                      )}
+                    </div>
+                    <span className={`text-[9px] sm:text-[10px] mt-1.5 font-black uppercase tracking-[0.1em] ${
+                      isActive ? 'text-[#D4AF37]' : isCompleted ? 'text-[#D4AF37]/70' : 'text-white/30'
+                    }`}>
+                      {stepLabels[step]}
+                    </span>
+                  </div>
+                  {idx < 3 && (
+                    <div className={`w-12 sm:w-16 h-0.5 mx-1 sm:mx-2 transition-all ${
+                      (step === 'model' && selectedProduct) ||
+                      (step === 'tailor' && selectedTailor) ||
+                      (step === 'photo' && photoPreview)
+                        ? 'bg-gradient-to-r from-[#D4AF37] to-[#D4AF37]/50' 
+                        : 'bg-white/10'
+                    }`} />
+                  )}
                 </div>
-                {idx < 3 && (
-                  <div className={`w-8 h-0.5 mx-1 ${
-                    isCompleted ? 'bg-[#D4AF37]' : 'bg-white/10'
-                  }`} />
-                )}
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
 
         <AnimatePresence mode="wait">
-          {/* Step 1: Upload Photo */}
+          {/* Step 3: Upload Photo */}
           {currentStep === 'photo' && (
             <motion.div
               key="photo"
@@ -246,35 +273,53 @@ export default function EssayagePage() {
                 </label>
                 
                 {photoPreview ? (
-                  <div className="relative aspect-[3/4] max-h-[500px] rounded-xl overflow-hidden border border-[#D4AF37]/20">
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="relative aspect-[3/4] max-h-[500px] rounded-xl overflow-hidden border-2 border-[#D4AF37]/40 shadow-[0_0_30px_rgba(212,175,55,0.3)]"
+                  >
                     <Image
                       src={photoPreview}
                       alt="Votre photo"
                       fill
                       className="object-cover"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/80 via-transparent to-transparent" />
                     <button
                       onClick={() => {
                         setPhotoPreview(null)
                         setUserPhoto(null)
                         if (fileInputRef.current) fileInputRef.current.value = ''
                       }}
-                      className="absolute top-2 right-2 bg-black/50 backdrop-blur-md rounded-full p-2 text-white/80 hover:text-red-400 transition-colors"
+                      className="absolute top-3 right-3 bg-black/70 backdrop-blur-md rounded-full p-2 text-white/90 hover:text-red-400 hover:bg-black/90 transition-all shadow-lg"
                     >
                       <X size={18} />
                     </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full aspect-[3/4] max-h-[500px] border-2 border-dashed border-[#D4AF37]/30 rounded-xl flex flex-col items-center justify-center gap-3 hover:border-[#D4AF37]/50 transition-colors"
-                  >
-                    <Upload className="w-12 h-12 text-[#D4AF37]/50" />
-                    <div className="text-center">
-                      <p className="text-sm text-white/70 mb-1">Glissez votre photo ici</p>
-                      <p className="text-xs text-white/50">ou cliquez pour choisir un fichier</p>
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <div className="bg-[#D4AF37]/90 backdrop-blur-sm rounded-lg px-3 py-2">
+                        <p className="text-xs font-black uppercase tracking-[0.15em] text-[#0A0A0A]">Photo sélectionnée</p>
+                      </div>
                     </div>
-                  </button>
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full aspect-[3/4] max-h-[500px] border-2 border-dashed border-[#D4AF37]/40 rounded-xl flex flex-col items-center justify-center gap-4 hover:border-[#D4AF37] hover:bg-[#D4AF37]/5 transition-all group"
+                  >
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-[#D4AF37]/20 rounded-full blur-xl group-hover:bg-[#D4AF37]/30 transition-colors" />
+                      <Camera className="w-16 h-16 text-[#D4AF37] relative z-10 group-hover:scale-110 transition-transform" />
+                    </div>
+                    <div className="text-center space-y-1">
+                      <p className="text-base font-bold text-white/90">Ajoutez votre photo</p>
+                      <p className="text-xs text-white/60">Glissez ou cliquez pour sélectionner</p>
+                      <p className="text-[10px] text-[#D4AF37]/70 uppercase tracking-[0.1em] mt-2">
+                        Format recommandé: Portrait (3:4)
+                      </p>
+                    </div>
+                  </motion.button>
                 )}
                 
                 <input
@@ -318,7 +363,7 @@ export default function EssayagePage() {
             </motion.div>
           )}
 
-          {/* Step 2: Select Model */}
+          {/* Step 1: Select Model */}
           {currentStep === 'model' && (
             <motion.div
               key="model"
@@ -396,7 +441,7 @@ export default function EssayagePage() {
             </motion.div>
           )}
 
-          {/* Step 3: Select Tailor (si pas déjà sélectionné via le produit) */}
+          {/* Step 2: Select Tailor (si pas déjà sélectionné via le produit) */}
           {currentStep === 'tailor' && (
             <motion.div
               key="tailor"

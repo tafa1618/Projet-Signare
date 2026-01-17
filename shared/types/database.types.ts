@@ -466,6 +466,31 @@ export interface Event {
   created_at: string
 }
 
+// ==================== PAYMENTS ====================
+export interface Payment {
+  id: string
+  user_id: string
+  reference: string
+  amount: number
+  currency: string
+  purpose: 'SPONSORING' | 'FEATURE' | 'SUBSCRIPTION' | 'PROMOTION' | 'ORDER' | 'COMMISSION'
+  status: 'INITIATED' | 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED'
+  provider: 'MOCK' | 'PAYTECH' | 'PAYDUNYA'
+  provider_reference: string | null
+  metadata: Json
+  created_at: string
+  updated_at: string
+}
+
+// ==================== TRANSACTION_LOGS ====================
+export interface TransactionLog {
+  id: string
+  payment_id: string
+  event: string
+  payload: Json
+  created_at: string
+}
+
 // ==================== DATABASE TYPE ====================
 export interface Database {
   public: {
@@ -544,6 +569,16 @@ export interface Database {
         Row: Event
         Insert: Omit<Event, 'id' | 'created_at'>
         Update: Partial<Omit<Event, 'id' | 'created_at'>>
+      }
+      payments: {
+        Row: Payment
+        Insert: Omit<Payment, 'id' | 'created_at' | 'updated_at' | 'reference'>
+        Update: Partial<Omit<Payment, 'id' | 'created_at' | 'reference'>>
+      }
+      transaction_logs: {
+        Row: TransactionLog
+        Insert: Omit<TransactionLog, 'id' | 'created_at'>
+        Update: never
       }
     }
   }

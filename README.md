@@ -1,5 +1,7 @@
 # 🇸🇳 SIGNARE - Plateforme de Mode Sénégalaise de Luxe
 
+**La porte d'entrée mondiale de la mode sénégalaise**
+
 **Architecture Data-Ready pour l'entraînement d'IA**
 
 SIGNARE est une plateforme mobile-first alliant artisanat traditionnel sénégalais et intelligence artificielle, avec un design luxueux Noir Profond & Or Raffiné.

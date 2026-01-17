@@ -6,6 +6,17 @@
 import { supabase } from '@/backend/lib/supabase'
 import type { Profile, Post, Order } from '@/shared/types/database.types'
 
+// Export du service de paiement (structure séparée pour organisation)
+export { PaymentService, paymentService } from './payment/PaymentService'
+export { MockProvider } from './payment/providers/MockProvider'
+export type { PaymentProvider } from './payment/PaymentProvider'
+export type {
+  PaymentInitiationResult,
+  PaymentVerificationResult,
+  ProviderCallbackData,
+  PaymentInstructions,
+} from './payment/types'
+
 /**
  * Service Profile - Gestion des profils utilisateurs
  */

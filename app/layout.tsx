@@ -19,7 +19,7 @@ const fontSerif = Playfair_Display({
 
 export const metadata: Metadata = {
   title: 'SIGNARE - Mode Sénégalaise de Luxe',
-  description: 'Plateforme de mode sénégalaise alliant artisanat traditionnel et IA',
+  description: 'La porte d\'entrée mondiale de la mode sénégalaise. Plateforme de mode sénégalaise alliant artisanat traditionnel et IA',
 }
 
 export default function RootLayout({

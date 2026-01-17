@@ -82,4 +82,6 @@ export const OrderRepository = new BaseRepository('orders')
 export const MesureRepository = new BaseRepository('mesures')
 export const EventRepository = new BaseRepository('events')
 export const InspirationRepository = new BaseRepository('inspirations')
+export const PaymentRepository = new BaseRepository('payments')
+export const TransactionLogRepository = new BaseRepository('transaction_logs')
 

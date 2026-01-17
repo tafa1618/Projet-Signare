@@ -2,7 +2,7 @@
 Schémas Pydantic pour les mesures
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Literal
 from app.core.constants import MEASUREMENT_RANGES
 
@@ -19,7 +19,8 @@ class MeasurementsInput(BaseModel):
     biceps: Optional[float] = Field(None, ge=MEASUREMENT_RANGES["biceps"][0], le=MEASUREMENT_RANGES["biceps"][1])
     leg_length: Optional[float] = Field(None, ge=MEASUREMENT_RANGES["leg_length"][0], le=MEASUREMENT_RANGES["leg_length"][1])
 
-    @validator("*", pre=True)
+    @field_validator("*", mode="before")
+    @classmethod
     def convert_to_cm(cls, v):
         """Normaliser toutes les valeurs en cm"""
         if v is None:

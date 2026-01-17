@@ -2,7 +2,7 @@
 Configuration du microservice Measurements
 """
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 
 
@@ -22,9 +22,10 @@ class Settings(BaseSettings):
     # Business Rules
     FREE_SCAN_LIMIT: int = 1  # 1 scan gratuit par utilisateur
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True
+    )
 
 
 settings = Settings()

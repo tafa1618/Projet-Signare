@@ -39,8 +39,11 @@ export default function WelcomePage() {
           
           <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mb-6" />
           
-          <p className="text-white/90 text-base font-light tracking-wide leading-relaxed">
+          <p className="text-white/90 text-base font-light tracking-wide leading-relaxed mb-2">
             L'art de la haute couture sénégalaise à votre portée.
+          </p>
+          <p className="text-[#D4AF37]/90 text-sm font-serif italic tracking-wide">
+            La porte d'entrée mondiale de la mode sénégalaise
           </p>
         </motion.div>
 
