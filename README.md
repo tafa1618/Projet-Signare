@@ -209,6 +209,81 @@ await verifyOTP('+221771234567', '123456')
 - **SIGNARE** : Référence aux femmes
 - **NDANANE** : Référence aux hommes
 
+## 👨‍💼 Dashboard Admin
+
+🟡 **Système de gestion administrateur avec RBAC (Role-Based Access Control)**
+
+### Accès
+
+Le dashboard admin est accessible à l'adresse `/admin` après authentification.
+
+**Super Admin** : Connectez-vous avec le numéro `` pour accéder à toutes les fonctionnalités.
+
+### Rôles et Permissions
+
+Le système RBAC comprend 4 rôles avec permissions granulaires :
+
+#### **SUPER_ADMIN**
+- ✅ Accès total à toutes les fonctionnalités
+- ✅ Gestion des rôles et permissions
+- ✅ Gestion des paiements
+- ✅ Paramètres système
+- ✅ Création de nouveaux comptes admin
+
+#### **RESPONSABLE_COMMERCIAL**
+- ✅ Visualisation des tailleurs
+- ✅ Gestion des tailleurs (validation, suspension)
+- ✅ Statistiques des tailleurs
+
+#### **BUSINESS_DEVELOPER**
+- ✅ Visualisation des tailleurs (lecture seule)
+- ✅ Statistiques des tailleurs
+
+#### **ADMIN**
+- ✅ Modération du feed
+- ✅ Suppression de posts
+- ✅ Gestion des signalements
+
+### Pages du Dashboard
+
+- 🟡 **Dashboard Principal** (`/admin`) : KPIs globaux, graphiques de commandes, métriques de la plateforme
+- 🟡 **Gestion des Tailleurs** (`/admin/users/tailors`) : Liste, filtres, gestion des statuts (actif/pending/suspendu)
+- 🟡 **Commandes** (`/admin/orders`) : Vue d'ensemble de toutes les commandes avec filtres par statut
+- 🟡 **Paiements** (`/admin/payments`) : Gestion de tous les paiements (intégration avec le service de paiement centralisé)
+- 🟡 **Modération Feed** (`/admin/feed`) : Posts signalés, suppression de contenu inapproprié
+- 🟡 **Paramètres Système** (`/admin/settings`) : Configuration de la plateforme (taux de commission, prix livraison, etc.)
+
+### Architecture RBAC
+
+```
+lib/auth/
+├── roles.ts              # Enum des rôles et permissions
+└── authorization.ts      # Fonctions de vérification (hasPermission, isSuperAdmin)
+
+middleware.ts            # Protection des routes /admin
+app/admin/
+├── layout.tsx           # Layout avec sidebar dynamique
+└── [pages]/             # Pages admin selon permissions
+```
+
+### Sécurité
+
+- ✅ **Middleware de protection** : Vérification d'authentification et permissions avant accès
+- ✅ **Sidebar dynamique** : Menus générés selon les permissions de l'utilisateur
+- ✅ **Vérification côté serveur** : Double vérification dans le layout
+- ✅ **Page 403** : Redirection automatique en cas d'accès interdit
+
+### Services Mockés
+
+Tous les services admin sont mockés et prêts pour intégration réelle :
+
+- `lib/services/adminMetrics.ts` : KPIs et graphiques
+- `lib/services/adminUsers.ts` : Gestion des tailleurs
+- `lib/services/adminOrders.ts` : Gestion des commandes
+- `lib/services/adminPayments.ts` : Gestion des paiements
+- `lib/services/adminFeed.ts` : Modération du feed
+- `lib/services/adminSettings.ts` : Paramètres système
+
 ## 🛠️ Tech Stack
 
 ### Frontend
