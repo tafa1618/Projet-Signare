@@ -40,25 +40,25 @@ export function PaymentsTable({ payments }: PaymentsTableProps) {
   return (
     <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-[900px]">
           <thead className="bg-[#0A0A0A] border-b border-[#D4AF37]/20">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Référence
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Montant
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Statut
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Provider
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Date
               </th>
             </tr>
@@ -66,20 +66,20 @@ export function PaymentsTable({ payments }: PaymentsTableProps) {
           <tbody className="divide-y divide-[#D4AF37]/10">
             {payments.map((payment) => (
               <tr key={payment.id} className="hover:bg-white/5 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-white/70 text-sm font-mono">
+                <td className="px-4 py-4 whitespace-nowrap text-white/70 text-sm font-mono">
                   {payment.reference}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-[#D4AF37] font-semibold">
+                <td className="px-4 py-4 whitespace-nowrap text-[#D4AF37] font-semibold">
                   {payment.amount.toLocaleString()} {payment.currency}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-white/70 text-sm">
+                <td className="px-4 py-4 whitespace-nowrap text-white/70 text-sm">
                   {payment.purpose}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(payment.status)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-white/60 text-sm">
+                <td className="px-4 py-4 whitespace-nowrap">{getStatusBadge(payment.status)}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-white/60 text-sm">
                   {payment.provider}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-white/60 text-sm">
+                <td className="px-4 py-4 whitespace-nowrap text-white/60 text-sm">
                   {new Date(payment.created_at).toLocaleDateString('fr-FR')}
                 </td>
               </tr>

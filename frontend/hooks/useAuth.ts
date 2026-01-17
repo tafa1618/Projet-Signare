@@ -19,19 +19,33 @@ export function useAuth() {
     if (typeof window !== 'undefined') {
       const mockPhone = localStorage.getItem('mock_auth_phone')
       
-      if (mockPhone && (mockPhone === '+771111111' || mockPhone === '+772222222' || mockPhone === '771111111' || mockPhone === '772222222')) {
+      if (mockPhone && (
+        mockPhone === '+771111111' || mockPhone === '771111111' || 
+        mockPhone === '+772222222' || mockPhone === '772222222' ||
+        mockPhone === '+781110455' || mockPhone === '781110455'
+      )) {
         // Simuler un utilisateur connecté avec le numéro de téléphone
+        let userId = 'client-771111111'
+        let name = 'Aminata Ndiaye'
+        let birthdate = '2000-04-16'
+        
+        if (mockPhone === '+772222222' || mockPhone === '772222222') {
+          userId = 'tailor-772222222'
+          name = 'Tapha Tailleur'
+          birthdate = '1995-06-22'
+        } else if (mockPhone === '+781110455' || mockPhone === '781110455') {
+          userId = 'super-admin-781110455'
+          name = 'Super Admin'
+          birthdate = '1990-01-01'
+        }
+        
         const mockUser = {
-          id: mockPhone === '+771111111' || mockPhone === '771111111' ? 'client-771111111' : 'tailor-772222222',
+          id: userId,
           phone: mockPhone.startsWith('+') ? mockPhone : `+${mockPhone}`,
           user_metadata: {
             phone: mockPhone.startsWith('+') ? mockPhone : `+${mockPhone}`,
-            name: mockPhone === '+771111111' || mockPhone === '771111111' 
-              ? 'Aminata Ndiaye' 
-              : 'Tapha Tailleur',
-            birthdate: mockPhone === '+771111111' || mockPhone === '771111111'
-              ? '2000-04-16'
-              : '1995-06-22',
+            name,
+            birthdate,
           },
         } as unknown as User
         

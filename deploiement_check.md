@@ -45,6 +45,8 @@
 
 ### Schéma de base de données
 - [ ] Exécuter `supabase-schema-ml-ready.sql` sur la base de production
+- [ ] Exécuter `supabase-migrations/004_create_payments_system.sql` (système de paiement)
+- [ ] Exécuter `supabase-migrations/005_create_admin_system.sql` (système admin)
 - [ ] Vérifier que toutes les tables sont créées :
   - [ ] `profiles`
   - [ ] `posts`
@@ -59,12 +61,18 @@
   - [ ] `cart_items`
   - [ ] `competitions`
   - [ ] `votes`
+  - [ ] `payments`
+  - [ ] `transaction_logs`
+  - [ ] `admin_users`
+  - [ ] `admin_actions`
 
 ### Politiques RLS (Row Level Security)
 - [ ] Activer RLS sur toutes les tables
 - [ ] Créer les politiques de sécurité pour chaque table
 - [ ] Tester les accès utilisateur (lecture/écriture)
 - [ ] Vérifier que les utilisateurs ne peuvent accéder qu'à leurs propres données
+- [ ] Vérifier que seuls les SUPER_ADMIN peuvent accéder à `admin_users` et `admin_actions`
+- [ ] Tester la création d'un admin depuis le dashboard (SUPER_ADMIN uniquement)
 
 ### Storage Buckets
 - [ ] Créer le bucket `posts-images` pour les images de posts

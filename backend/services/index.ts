@@ -17,6 +17,10 @@ export type {
   PaymentInstructions,
 } from './payment/types'
 
+// Export du service de gestion des admins
+export { AdminUserService } from './AdminUserService'
+export type { AdminUser } from './AdminUserService'
+
 /**
  * Service Profile - Gestion des profils utilisateurs
  */

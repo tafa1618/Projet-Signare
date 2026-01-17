@@ -491,6 +491,58 @@ export interface TransactionLog {
   created_at: string
 }
 
+// ==================== ADMIN_USERS ====================
+export interface AdminUser {
+  id: string
+  phone: string
+  name: string
+  email: string | null
+  role: 'SUPER_ADMIN' | 'RESPONSABLE_COMMERCIAL' | 'BUSINESS_DEVELOPER' | 'ADMIN'
+  is_active: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  last_active_at: string | null
+}
+
+// ==================== ADMIN_ACTIONS ====================
+export interface AdminAction {
+  id: string
+  admin_id: string
+  action_type: string
+  target_user_id: string | null
+  details: Json
+  ip_address: string | null
+  user_agent: string | null
+  created_at: string
+}
+
+// ==================== ADMIN_USERS ====================
+export interface AdminUser {
+  id: string
+  phone: string
+  name: string
+  email: string | null
+  role: 'SUPER_ADMIN' | 'RESPONSABLE_COMMERCIAL' | 'BUSINESS_DEVELOPER' | 'ADMIN'
+  is_active: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  last_active_at: string | null
+}
+
+// ==================== ADMIN_ACTIONS ====================
+export interface AdminAction {
+  id: string
+  admin_id: string
+  action_type: string
+  target_user_id: string | null
+  details: Json
+  ip_address: string | null
+  user_agent: string | null
+  created_at: string
+}
+
 // ==================== DATABASE TYPE ====================
 export interface Database {
   public: {
@@ -578,6 +630,16 @@ export interface Database {
       transaction_logs: {
         Row: TransactionLog
         Insert: Omit<TransactionLog, 'id' | 'created_at'>
+        Update: never
+      }
+      admin_users: {
+        Row: AdminUser
+        Insert: Omit<AdminUser, 'created_at' | 'updated_at' | 'last_active_at'>
+        Update: Partial<Omit<AdminUser, 'id' | 'created_at' | 'created_by'>>
+      }
+      admin_actions: {
+        Row: AdminAction
+        Insert: Omit<AdminAction, 'id' | 'created_at'>
         Update: never
       }
     }

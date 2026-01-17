@@ -59,18 +59,20 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex">
+    <div className="min-h-screen bg-[#0A0A0A] flex overflow-hidden">
       {/* Sidebar */}
       <AdminSidebar user={user} role={role} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
         <AdminHeader user={user} role={role} />
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-y-auto">
-          {children}
+        <main className="flex-1 p-6 overflow-y-auto overflow-x-hidden">
+          <div className="max-w-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>

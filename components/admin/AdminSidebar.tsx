@@ -22,6 +22,7 @@ import {
   Menu,
   X,
   LogOut,
+  Shield,
 } from 'lucide-react'
 import { useAuth } from '@/frontend/hooks/useAuth'
 
@@ -44,6 +45,12 @@ const MENU_ITEMS: MenuItem[] = [
     href: '/admin/users/tailors',
     icon: Users,
     permission: Permission.VIEW_TAILORS,
+  },
+  {
+    label: 'Gestion Admins',
+    href: '/admin/users/admins',
+    icon: Shield,
+    permission: Permission.CREATE_ACCOUNTS,
   },
   {
     label: 'Commandes',

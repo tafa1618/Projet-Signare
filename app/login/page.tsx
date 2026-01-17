@@ -35,7 +35,11 @@ export default function LoginPage() {
     try {
       // En mode développement, simuler l'envoi d'OTP pour les numéros mockés
       const normalizedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`
-      const mockPhones = ['+771111111', '771111111', '+772222222', '772222222']
+      const mockPhones = [
+        '+771111111', '771111111', 
+        '+772222222', '772222222',
+        '+781110455', '781110455' // SUPER_ADMIN
+      ]
       
       if (mockPhones.includes(normalizedPhone) || mockPhones.includes(phoneNumber)) {
         // Simuler l'envoi d'OTP (pas besoin d'appeler Supabase)
@@ -77,7 +81,11 @@ export default function LoginPage() {
     try {
       // En mode développement, simuler l'authentification pour les numéros mockés
       const normalizedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`
-      const mockPhones = ['+771111111', '771111111', '+772222222', '772222222']
+      const mockPhones = [
+        '+771111111', '771111111', 
+        '+772222222', '772222222',
+        '+781110455', '781110455' // SUPER_ADMIN
+      ]
       
       if (mockPhones.includes(normalizedPhone) || mockPhones.includes(phoneNumber)) {
         // Stocker le numéro dans localStorage pour le mock auth

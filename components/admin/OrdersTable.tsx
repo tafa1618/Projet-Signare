@@ -42,28 +42,28 @@ export function OrdersTable({ orders }: OrdersTableProps) {
   return (
     <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-[1000px]">
           <thead className="bg-[#0A0A0A] border-b border-[#D4AF37]/20">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 ID
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Acheteur
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Vendeur
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Produit
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Montant
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Statut
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Date
               </th>
             </tr>
@@ -71,17 +71,17 @@ export function OrdersTable({ orders }: OrdersTableProps) {
           <tbody className="divide-y divide-[#D4AF37]/10">
             {orders.map((order) => (
               <tr key={order.id} className="hover:bg-white/5 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-white/70 text-sm font-mono">
+                <td className="px-4 py-4 whitespace-nowrap text-white/70 text-sm font-mono">
                   {order.id}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-white">{order.buyerName}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-white/70">{order.sellerName}</td>
-                <td className="px-6 py-4 text-white/70">{order.productTitle}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-[#D4AF37] font-semibold">
+                <td className="px-4 py-4 whitespace-nowrap text-white">{order.buyerName}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-white/70">{order.sellerName}</td>
+                <td className="px-4 py-4 text-white/70">{order.productTitle}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-[#D4AF37] font-semibold">
                   {order.amount.toLocaleString()} FCFA
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(order.status)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-white/60 text-sm">
+                <td className="px-4 py-4 whitespace-nowrap">{getStatusBadge(order.status)}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-white/60 text-sm">
                   {new Date(order.createdAt).toLocaleDateString('fr-FR')}
                 </td>
               </tr>

@@ -35,22 +35,22 @@ export function FeedModerationTable({ posts }: FeedModerationTableProps) {
   return (
     <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-[900px]">
           <thead className="bg-[#0A0A0A] border-b border-[#D4AF37]/20">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Post
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Signalements
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Engagement
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                 Date
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-white/70 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-white/70 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -58,7 +58,7 @@ export function FeedModerationTable({ posts }: FeedModerationTableProps) {
           <tbody className="divide-y divide-[#D4AF37]/10">
             {posts.map((post) => (
               <tr key={post.id} className="hover:bg-white/5 transition-colors">
-                <td className="px-6 py-4">
+                <td className="px-4 py-4">
                   <div className="flex items-center gap-3">
                     <img
                       src={post.image_url}
@@ -73,22 +73,22 @@ export function FeedModerationTable({ posts }: FeedModerationTableProps) {
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-4 py-4">
                   <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs">
                     <AlertTriangle className="w-3 h-3" />
                     {post.reportCount} signalement(s)
                   </span>
                 </td>
-                <td className="px-6 py-4 text-white/70 text-sm">
+                <td className="px-4 py-4 text-white/70 text-sm">
                   <div className="space-y-1">
                     <div>❤️ {post.likes_count}</div>
                     <div>👁️ {post.views_count}</div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-white/60 text-sm">
+                <td className="px-4 py-4 text-white/60 text-sm">
                   {new Date(post.created_at).toLocaleDateString('fr-FR')}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
+                <td className="px-4 py-4 whitespace-nowrap text-right">
                   <div className="flex items-center justify-end gap-2">
                     <button
                       className="p-2 text-white/60 hover:text-white transition-colors"

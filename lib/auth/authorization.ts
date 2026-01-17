@@ -18,15 +18,24 @@ export interface UserWithRole extends User {
  * 
  * @param user - Utilisateur Supabase
  * @returns Rôle de l'utilisateur ou null
+ * 
+ * Priorité de récupération :
+ * 1. Numéro de téléphone SUPER_ADMIN (pour compatibilité dev)
+ * 2. Table admin_users (production)
+ * 3. user_metadata/app_metadata (fallback)
  */
 export function getUserRole(user: User | null): Role | null {
   if (!user) return null
 
-  // SUPER_ADMIN identifié par numéro de téléphone
+  // SUPER_ADMIN identifié par numéro de téléphone (pour développement)
   const phone = user.phone || user.user_metadata?.phone
   if (phone === SUPER_ADMIN_PHONE || phone === '781110455') {
     return Role.SUPER_ADMIN
   }
+
+  // En production, le rôle sera récupéré depuis la table admin_users
+  // via AdminUserService.getUserRole() côté serveur
+  // Pour le client, on utilise les metadata comme fallback
 
   // Récupérer le rôle depuis user_metadata ou app_metadata
   const roleFromMetadata = user.user_metadata?.role || user.app_metadata?.role

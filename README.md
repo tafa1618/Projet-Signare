@@ -279,10 +279,22 @@ Tous les services admin sont mockés et prêts pour intégration réelle :
 
 - `lib/services/adminMetrics.ts` : KPIs et graphiques
 - `lib/services/adminUsers.ts` : Gestion des tailleurs
+- `lib/services/adminUsersManagement.ts` : Gestion des comptes admin (création, modification, désactivation)
 - `lib/services/adminOrders.ts` : Gestion des commandes
 - `lib/services/adminPayments.ts` : Gestion des paiements
 - `lib/services/adminFeed.ts` : Modération du feed
 - `lib/services/adminSettings.ts` : Paramètres système
+
+### Base de Données Admin
+
+Le système admin utilise deux tables Supabase :
+
+- **`admin_users`** : Stocke les comptes admin avec leurs rôles et métadonnées
+- **`admin_actions`** : Audit trail de toutes les actions admin (création, modification, etc.)
+
+**Migration SQL :** `supabase-migrations/005_create_admin_system.sql`
+
+**Documentation complète :** [`docs/ADMIN_SYSTEM.md`](docs/ADMIN_SYSTEM.md)
 
 ## 🛠️ Tech Stack
 
@@ -358,6 +370,7 @@ Toutes les transactions sont en **FCFA** (Franc CFA).
 - **Séparation Backend/Frontend** : [`docs/BACKEND_FRONTEND_SEPARATION.md`](docs/BACKEND_FRONTEND_SEPARATION.md)
 - **Architecture Data ML-Ready** : [`docs/ML_READY_GUIDE.md`](docs/ML_READY_GUIDE.md)
 - **Checklist de Déploiement** : [`deploiement_check.md`](deploiement_check.md)
+- **État de Préparation Production** : [`docs/PRODUCTION_READINESS.md`](docs/PRODUCTION_READINESS.md) ⚠️ **À consulter avant production**
 - **Charte de Développement** : [`.cursorrules`](.cursorrules)
 
 ## 🚀 Déploiement
