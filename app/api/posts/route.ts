@@ -1,14 +1,18 @@
 /**
- * API Route pour récupérer les posts avec pagination
+ * API Route pour récupérer et créer des posts
  * @security Pagination côté serveur pour limiter la charge
  * 
  * GET /api/posts?page=1&pageSize=20&type=tailor|client
- * 
  * Retourne: { data: Post[], total: number, hasMore: boolean }
+ * 
+ * POST /api/posts
+ * Crée un post (membre ou non-membre)
+ * Body: { image_url, caption, garment_type, complexity, ...phone_number?, user_type? }
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/backend/lib/supabase'
+import { PostService } from '@/backend/services'
 import { logError, logPerformance } from '@/lib/logger'
 import { handleHTTPError } from '@/lib/errors'
 import { z } from 'zod'
@@ -105,6 +109,98 @@ export async function GET(request: NextRequest) {
     logError(error, 'Posts pagination')
     return NextResponse.json(
       { error: 'Erreur serveur lors de la récupération des posts' },
+      { status: 500 }
+    )
+  }
+}
+
+// Schéma de validation pour la création de post
+const CreatePostSchema = z.object({
+  image_url: z.string().url('URL d\'image invalide'),
+  caption: z.string().optional(),
+  price: z.number().positive().optional(),
+  garment_type: z.enum(['boubou', 'robe', 'ensemble', 'accessoire', 'kaftan', 'autre']),
+  complexity: z.enum(['simple', 'moyen', 'complexe', 'haute_couture']),
+  cultural_tags: z.array(z.string()).optional().default([]),
+  fabric_type: z.string().optional(),
+  // Champs optionnels pour non-membres
+  phone_number: z.string().regex(/^\+?[0-9]{9,15}$/, 'Format de numéro invalide').optional(),
+  user_type: z.enum(['TAILLEUR', 'CLIENT']).optional(),
+})
+
+/**
+ * POST /api/posts
+ * Crée un nouveau post
+ * Supporte les membres (user_id) et non-membres (phone_number)
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    // Valider les données avec Zod
+    const validation = CreatePostSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: 'Données de post invalides',
+          details: validation.error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message,
+          })),
+        },
+        { status: 400 }
+      )
+    }
+
+    const { phone_number, user_type, ...postData } = validation.data
+
+    // Vérifier si l'utilisateur est connecté
+    const supabase = getSupabaseAdmin()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    let post
+
+    if (user && !authError) {
+      // Cas 1 : Utilisateur connecté (membre)
+      post = await PostService.create({
+        user_id: user.id,
+        ...postData,
+      })
+    } else if (phone_number) {
+      // Cas 2 : Utilisateur non-membre
+      if (!user_type) {
+        return NextResponse.json(
+          { error: 'user_type requis (TAILLEUR ou CLIENT) pour les non-membres' },
+          { status: 400 }
+        )
+      }
+
+      post = await PostService.create(
+        {
+          ...postData,
+        },
+        phone_number,
+        user_type
+      )
+    } else {
+      // Cas 3 : Aucune authentification et pas de numéro de téléphone
+      return NextResponse.json(
+        { 
+          error: 'Authentification requise ou numéro de téléphone fourni',
+          message: 'Vous devez être connecté ou fournir un numéro de téléphone avec user_type'
+        },
+        { status: 401 }
+      )
+    }
+
+    return NextResponse.json(post, { status: 201 })
+  } catch (error) {
+    logError(error, 'Post creation')
+    return NextResponse.json(
+      { 
+        error: 'Erreur serveur lors de la création du post',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

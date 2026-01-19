@@ -47,7 +47,8 @@ export interface Profile {
 // ==================== POSTS (Enrichi) ====================
 export interface Post {
   id: string
-  user_id: string
+  user_id: string | null // Nullable pour permettre les non-membres
+  phone_number: string | null // Numéro de téléphone si l'utilisateur n'est pas membre
   image_url: string
   caption: string | null
   price: number | null
@@ -327,8 +328,10 @@ export interface Mesure {
 // ==================== ORDERS (Enrichi) ====================
 export interface Order {
   id: string
-  buyer_id: string
-  seller_id: string
+  buyer_id: string | null // Nullable pour permettre les non-membres
+  seller_id: string | null // Nullable pour permettre les non-membres
+  buyer_phone: string | null // Numéro de téléphone de l'acheteur si non-membre
+  seller_phone: string | null // Numéro de téléphone du vendeur si non-membre
   post_id: string
   mesure_id: string | null
   
@@ -337,12 +340,30 @@ export interface Order {
   shipping_price: number
   total_price: number
   
-  // Livraison
-  delivery_latitude: number
-  delivery_longitude: number
-  delivery_address: string
-  distance_km: number
-  validation_code: string
+  // Livraison (optionnelle et bidirectionnelle)
+  requires_delivery: boolean
+  delivery_type: 'product_delivery' | 'fabric_delivery' | 'both' | null
+  
+  // Livraison au client (produit fini) - optionnel
+  delivery_to_buyer_latitude: number | null
+  delivery_to_buyer_longitude: number | null
+  delivery_to_buyer_address: string | null
+  delivery_to_buyer_distance_km: number | null
+  delivery_to_buyer_validation_code: string | null
+  
+  // Livraison au tailleur (tissu) - optionnel
+  delivery_to_seller_latitude: number | null
+  delivery_to_seller_longitude: number | null
+  delivery_to_seller_address: string | null
+  delivery_to_seller_distance_km: number | null
+  delivery_to_seller_validation_code: string | null
+  
+  // Champs legacy (dépréciés, maintenus pour compatibilité)
+  delivery_latitude: number | null
+  delivery_longitude: number | null
+  delivery_address: string | null
+  distance_km: number | null
+  validation_code: string | null
   
   // Timing
   estimated_delivery_date: string | null

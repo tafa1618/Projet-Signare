@@ -34,8 +34,13 @@ type ManualOrderDraft = {
   clientId: string
   clientName: string
   clientPhone: string
-  deliveryAddress: string
-  distanceKm: number
+  requiresDelivery: boolean
+  deliveryToBuyer: boolean // Livraison du produit au client
+  deliveryToSeller: boolean // Livraison du tissu au tailleur
+  deliveryToBuyerAddress: string
+  deliveryToBuyerDistanceKm: number
+  deliveryToSellerAddress: string
+  deliveryToSellerDistanceKm: number
   productTitle: string
   productPrice: number
   preparationHours: number
@@ -72,11 +77,23 @@ function clampNumber(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
-function computeShipping(distanceKm: number) {
-  const base = 500
+function computeShipping(distanceToBuyerKm: number, distanceToSellerKm: number) {
+  const base = 1500
   const perKm = 100
-  const km = clampNumber(distanceKm, 0, 200)
-  return Math.round(base + km * perKm)
+  let total = 0
+  
+  if (distanceToBuyerKm > 0) {
+    const km = clampNumber(distanceToBuyerKm, 0, 200)
+    total += base + km * perKm
+  }
+  
+  if (distanceToSellerKm > 0) {
+    const km = clampNumber(distanceToSellerKm, 0, 200)
+    total += base + km * perKm
+  }
+  
+  // Frais SIGNARE 15%
+  return Math.round(total * 1.15)
 }
 
 function computeTotal(productPrice: number, shipping: number) {
@@ -133,8 +150,13 @@ export default function OrdersNewPage() {
     clientId: MOCK_CLIENTS[0].id,
     clientName: '',
     clientPhone: '',
-    deliveryAddress: '',
-    distanceKm: 3,
+    requiresDelivery: false,
+    deliveryToBuyer: false,
+    deliveryToSeller: false,
+    deliveryToBuyerAddress: '',
+    deliveryToBuyerDistanceKm: 0,
+    deliveryToSellerAddress: '',
+    deliveryToSellerDistanceKm: 0,
     productTitle: '',
     productPrice: 75000,
     preparationHours: 14,
@@ -154,7 +176,14 @@ export default function OrdersNewPage() {
     },
   })
 
-  const shippingPrice = useMemo(() => computeShipping(draft.distanceKm), [draft.distanceKm])
+  const shippingPrice = useMemo(() => {
+    if (!draft.requiresDelivery) return 0
+    return computeShipping(
+      draft.deliveryToBuyer ? draft.deliveryToBuyerDistanceKm : 0,
+      draft.deliveryToSeller ? draft.deliveryToSellerDistanceKm : 0
+    )
+  }, [draft.requiresDelivery, draft.deliveryToBuyer, draft.deliveryToBuyerDistanceKm, draft.deliveryToSeller, draft.deliveryToSellerDistanceKm])
+  
   const totalPrice = useMemo(() => computeTotal(draft.productPrice, shippingPrice), [draft.productPrice, shippingPrice])
 
   const resolvedClientName =
@@ -164,9 +193,11 @@ export default function OrdersNewPage() {
 
   const canSave =
     resolvedClientName.trim().length >= 2 &&
-    draft.deliveryAddress.trim().length >= 5 &&
     draft.productTitle.trim().length >= 3 &&
-    draft.productPrice > 0
+    draft.productPrice > 0 &&
+    (!draft.requiresDelivery || 
+      (draft.deliveryToBuyer && draft.deliveryToBuyerAddress.trim().length >= 5) ||
+      (draft.deliveryToSeller && draft.deliveryToSellerAddress.trim().length >= 5))
 
   const handleSave = () => {
     if (!canSave) return
@@ -229,11 +260,26 @@ export default function OrdersNewPage() {
       product_price: Math.round(draft.productPrice),
       shipping_price: shippingPrice,
       total_price: totalPrice,
-      delivery_latitude: 0,
-      delivery_longitude: 0,
-      delivery_address: draft.deliveryAddress,
-      distance_km: draft.distanceKm,
-      validation_code: validationCode,
+      requires_delivery: draft.requiresDelivery,
+      delivery_type: draft.deliveryToBuyer && draft.deliveryToSeller ? 'both' : 
+                     draft.deliveryToBuyer ? 'product_delivery' : 
+                     draft.deliveryToSeller ? 'fabric_delivery' : null,
+      delivery_to_buyer_latitude: draft.deliveryToBuyer ? 0 : null,
+      delivery_to_buyer_longitude: draft.deliveryToBuyer ? 0 : null,
+      delivery_to_buyer_address: draft.deliveryToBuyer ? draft.deliveryToBuyerAddress : null,
+      delivery_to_buyer_distance_km: draft.deliveryToBuyer ? draft.deliveryToBuyerDistanceKm : null,
+      delivery_to_buyer_validation_code: draft.deliveryToBuyer ? validationCode : null,
+      delivery_to_seller_latitude: draft.deliveryToSeller ? 0 : null,
+      delivery_to_seller_longitude: draft.deliveryToSeller ? 0 : null,
+      delivery_to_seller_address: draft.deliveryToSeller ? draft.deliveryToSellerAddress : null,
+      delivery_to_seller_distance_km: draft.deliveryToSeller ? draft.deliveryToSellerDistanceKm : null,
+      delivery_to_seller_validation_code: draft.deliveryToSeller ? generateValidationCode() : null,
+      // Legacy fields (maintenus pour compatibilité)
+      delivery_latitude: draft.deliveryToBuyer ? 0 : null,
+      delivery_longitude: draft.deliveryToBuyer ? 0 : null,
+      delivery_address: draft.deliveryToBuyer ? draft.deliveryToBuyerAddress : null,
+      distance_km: draft.deliveryToBuyer ? draft.deliveryToBuyerDistanceKm : null,
+      validation_code: draft.deliveryToBuyer ? validationCode : null,
       estimated_delivery_date: null,
       actual_delivery_date: null,
       preparation_time_hours: Math.round(draft.preparationHours),
@@ -469,32 +515,103 @@ export default function OrdersNewPage() {
 
         {/* Livraison */}
         <section className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <MapPin size={16} className="text-[#D4AF37]" />
-            <h2 className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Livraison</h2>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin size={16} className="text-[#D4AF37]" />
+              <h2 className="text-sm font-serif text-[#D4AF37] tracking-[0.18em] uppercase">Livraison</h2>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={draft.requiresDelivery}
+                onChange={(e) => setDraft((d) => ({ ...d, requiresDelivery: e.target.checked }))}
+                className="w-4 h-4 rounded border-white/20 bg-white/5 text-[#D4AF37] focus:ring-[#D4AF37] focus:ring-offset-0"
+              />
+              <span className="text-[10px] text-white/60 uppercase tracking-[0.15em]">Livraison requise</span>
+            </label>
           </div>
-          <label className="block">
-            <span className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black">Adresse</span>
-            <input
-              value={draft.deliveryAddress}
-              onChange={(e) => setDraft((d) => ({ ...d, deliveryAddress: e.target.value }))}
-              placeholder="Ex: Almadies, Dakar…"
-              className="mt-2 w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/40 transition-all text-sm placeholder:text-white/20"
-            />
-          </label>
-          <label className="block">
-            <span className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black flex items-center gap-2">
-              <Sparkles size={12} className="text-[#D4AF37]/80" /> Distance (km)
-            </span>
-            <input
-              type="number"
-              min={0}
-              max={200}
-              value={draft.distanceKm}
-              onChange={(e) => setDraft((d) => ({ ...d, distanceKm: Number(e.target.value || 0) }))}
-              className="mt-2 w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/40 transition-all text-sm"
-            />
-          </label>
+
+          {draft.requiresDelivery && (
+            <div className="space-y-4 pt-2">
+              {/* Livraison au client (produit fini) */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={draft.deliveryToBuyer}
+                    onChange={(e) => setDraft((d) => ({ ...d, deliveryToBuyer: e.target.checked }))}
+                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-[#D4AF37] focus:ring-[#D4AF37] focus:ring-offset-0"
+                  />
+                  <span className="text-xs text-white/80 font-medium">Livrer le produit au client</span>
+                </label>
+                {draft.deliveryToBuyer && (
+                  <div className="ml-6 space-y-2">
+                    <label className="block">
+                      <span className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black">Adresse client</span>
+                      <input
+                        value={draft.deliveryToBuyerAddress}
+                        onChange={(e) => setDraft((d) => ({ ...d, deliveryToBuyerAddress: e.target.value }))}
+                        placeholder="Ex: Almadies, Dakar…"
+                        className="mt-2 w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/40 transition-all text-sm placeholder:text-white/20"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black flex items-center gap-2">
+                        <Sparkles size={12} className="text-[#D4AF37]/80" /> Distance (km)
+                      </span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={200}
+                        value={draft.deliveryToBuyerDistanceKm}
+                        onChange={(e) => setDraft((d) => ({ ...d, deliveryToBuyerDistanceKm: Number(e.target.value || 0) }))}
+                        className="mt-2 w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/40 transition-all text-sm"
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {/* Livraison au tailleur (tissu) */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={draft.deliveryToSeller}
+                    onChange={(e) => setDraft((d) => ({ ...d, deliveryToSeller: e.target.checked }))}
+                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-[#D4AF37] focus:ring-[#D4AF37] focus:ring-offset-0"
+                  />
+                  <span className="text-xs text-white/80 font-medium">Livrer le tissu au tailleur</span>
+                </label>
+                {draft.deliveryToSeller && (
+                  <div className="ml-6 space-y-2">
+                    <label className="block">
+                      <span className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black">Adresse tailleur</span>
+                      <input
+                        value={draft.deliveryToSellerAddress}
+                        onChange={(e) => setDraft((d) => ({ ...d, deliveryToSellerAddress: e.target.value }))}
+                        placeholder="Ex: Médina, Dakar…"
+                        className="mt-2 w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/40 transition-all text-sm placeholder:text-white/20"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-[10px] text-white/40 uppercase tracking-[0.22em] font-black flex items-center gap-2">
+                        <Sparkles size={12} className="text-[#D4AF37]/80" /> Distance (km)
+                      </span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={200}
+                        value={draft.deliveryToSellerDistanceKm}
+                        onChange={(e) => setDraft((d) => ({ ...d, deliveryToSellerDistanceKm: Number(e.target.value || 0) }))}
+                        className="mt-2 w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#D4AF37]/40 transition-all text-sm"
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Produit */}
@@ -548,10 +665,12 @@ export default function OrdersNewPage() {
             <span>Produit</span>
             <span className="font-semibold text-white/90">{formatFCFA(draft.productPrice)}</span>
           </div>
-          <div className="flex items-center justify-between text-white/70">
-            <span>Livraison</span>
-            <span className="font-semibold text-white/90">{formatFCFA(shippingPrice)}</span>
-          </div>
+          {draft.requiresDelivery && (
+            <div className="flex items-center justify-between text-white/70">
+              <span>Livraison</span>
+              <span className="font-semibold text-white/90">{formatFCFA(shippingPrice)}</span>
+            </div>
+          )}
           <div className="pt-2 mt-2 border-t border-[#D4AF37]/20 flex items-center justify-between">
             <span className="text-[10px] uppercase tracking-[0.22em] font-black text-white/40">Total</span>
             <span className="text-lg font-serif text-[#D4AF37] font-bold">{formatFCFA(totalPrice)}</span>

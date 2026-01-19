@@ -21,6 +21,9 @@ export type {
 export { AdminUserService } from './AdminUserService'
 export type { AdminUser } from './AdminUserService'
 
+// Export du service de rattachement automatique
+export { UserAttributionService } from './UserAttributionService'
+
 /**
  * Service Profile - Gestion des profils utilisateurs
  */
@@ -78,8 +81,27 @@ export class ProfileService {
 export class PostService {
   /**
    * Créer un post avec métadonnées ML
+   * @param postData Données du post (user_id OU phone_number requis)
+   * @param phoneNumber Numéro de téléphone si l'utilisateur n'est pas membre (optionnel)
+   * @param userType Type d'utilisateur si non-membre ('TAILLEUR' ou 'CLIENT')
    */
-  static async create(postData: Partial<Post>): Promise<Post> {
+  static async create(
+    postData: Partial<Post> & { phone_number?: string },
+    phoneNumber?: string,
+    userType?: 'TAILLEUR' | 'CLIENT'
+  ): Promise<Post> {
+    // Si un numéro de téléphone est fourni et pas de user_id, enregistrer comme non-membre
+    if (phoneNumber && !postData.user_id) {
+      // Enregistrer le numéro dans pending_users si userType est fourni
+      if (userType) {
+        const { UserAttributionService } = await import('./UserAttributionService')
+        await UserAttributionService.registerPendingUser(phoneNumber, userType)
+      }
+      
+      // Ajouter le numéro de téléphone aux données du post
+      postData.phone_number = phoneNumber
+    }
+
     const { data, error } = await supabase
       .from('posts')
       .insert(postData)
@@ -132,9 +154,52 @@ export class PostService {
 export class OrderService {
   /**
    * Créer une commande avec calcul automatique des prix
-   * @ai-context Calcul Yango : 500 FCFA + 100 FCFA/km + 15%
+   * @param orderData Données de la commande (buyer_id/seller_id OU buyer_phone/seller_phone requis)
+   * @param buyerPhone Numéro de téléphone de l'acheteur si non-membre (optionnel)
+   * @param sellerPhone Numéro de téléphone du vendeur si non-membre (optionnel)
+   * @param buyerType Type d'utilisateur acheteur si non-membre ('TAILLEUR' ou 'CLIENT')
+   * @param sellerType Type d'utilisateur vendeur si non-membre ('TAILLEUR' ou 'CLIENT')
+   * @ai-context Calcul Yango : 1500 FCFA + 100 FCFA/km + 15% (livraison optionnelle et bidirectionnelle)
    */
-  static async create(orderData: Partial<Order>): Promise<Order> {
+  static async create(
+    orderData: Partial<Order> & { 
+      buyer_phone?: string
+      seller_phone?: string
+      requires_delivery?: boolean
+      delivery_type?: 'product_delivery' | 'fabric_delivery' | 'both' | null
+    },
+    buyerPhone?: string,
+    sellerPhone?: string,
+    buyerType?: 'TAILLEUR' | 'CLIENT',
+    sellerType?: 'TAILLEUR' | 'CLIENT'
+  ): Promise<Order> {
+    const { UserAttributionService } = await import('./UserAttributionService')
+
+    // Si un numéro de téléphone acheteur est fourni et pas de buyer_id, enregistrer comme non-membre
+    if (buyerPhone && !orderData.buyer_id) {
+      if (buyerType) {
+        await UserAttributionService.registerPendingUser(buyerPhone, buyerType)
+      }
+      orderData.buyer_phone = buyerPhone
+    }
+
+    // Si un numéro de téléphone vendeur est fourni et pas de seller_id, enregistrer comme non-membre
+    if (sellerPhone && !orderData.seller_id) {
+      if (sellerType) {
+        await UserAttributionService.registerPendingUser(sellerPhone, sellerType)
+      }
+      orderData.seller_phone = sellerPhone
+    }
+
+    // Calculer le shipping_price si la livraison est requise
+    // Le trigger SQL calculera automatiquement, mais on peut aussi le faire ici pour validation
+    if (!orderData.requires_delivery) {
+      orderData.shipping_price = 0
+    }
+
+    // Calculer le total_price
+    orderData.total_price = orderData.product_price + (orderData.shipping_price || 0)
+
     const { data, error } = await supabase
       .from('orders')
       .insert(orderData)
@@ -147,24 +212,61 @@ export class OrderService {
 
   /**
    * Valider une livraison avec code
+   * @param orderId ID de la commande
+   * @param validationCode Code de validation
+   * @param deliveryDirection Direction de la livraison ('buyer' ou 'seller')
    */
-  static async validateDelivery(orderId: string, validationCode: string): Promise<boolean> {
+  static async validateDelivery(
+    orderId: string, 
+    validationCode: string,
+    deliveryDirection: 'buyer' | 'seller' = 'buyer'
+  ): Promise<boolean> {
     const { data: order } = await supabase
       .from('orders')
-      .select('validation_code, status')
+      .select('delivery_to_buyer_validation_code, delivery_to_seller_validation_code, status, delivery_type')
       .eq('id', orderId)
       .single()
 
-    if (!order || order.validation_code !== validationCode) {
+    if (!order) {
       return false
+    }
+
+    // Vérifier le code selon la direction
+    const expectedCode = deliveryDirection === 'buyer' 
+      ? order.delivery_to_buyer_validation_code 
+      : order.delivery_to_seller_validation_code
+
+    if (expectedCode !== validationCode) {
+      return false
+    }
+
+    // Mettre à jour le statut
+    // Si les deux livraisons sont requises, on vérifie si l'autre est déjà livrée
+    const updateData: any = {
+      delivered_at: new Date().toISOString(),
+    }
+
+    // Si c'est la livraison au client et que c'est la seule, ou si les deux sont livrées
+    if (deliveryDirection === 'buyer') {
+      if (order.delivery_type === 'product_delivery' || 
+          (order.delivery_type === 'both' && order.status === 'in_delivery')) {
+        updateData.status = 'delivered'
+      } else if (order.delivery_type === 'both') {
+        updateData.status = 'in_delivery' // En attente de la livraison du tissu
+      }
+    } else {
+      // Livraison au tailleur (tissu)
+      if (order.delivery_type === 'fabric_delivery' || 
+          (order.delivery_type === 'both' && order.status === 'in_delivery')) {
+        updateData.status = 'delivered'
+      } else if (order.delivery_type === 'both') {
+        updateData.status = 'in_delivery' // En attente de la livraison du produit
+      }
     }
 
     await supabase
       .from('orders')
-      .update({
-        status: 'delivered',
-        delivered_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', orderId)
 
     return true

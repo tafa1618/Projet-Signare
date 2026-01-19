@@ -175,6 +175,10 @@ await verifyOTP('+221771234567', '123456')
 ❌ Pas de Google Login  
 ❌ Pas d'email/password
 
+### Rattachement Automatique
+
+✅ Lors de l'inscription, l'historique (posts, commandes) créé avec le même numéro de téléphone est automatiquement rattaché au compte. Voir [Système de Rattachement Automatique](#système-de-rattachement-automatique-pour-non-membres) ci-dessous.
+
 ## 🎯 Fonctionnalités
 
 ### Légende des Statuts
@@ -208,6 +212,52 @@ await verifyOTP('+221771234567', '123456')
 
 - **SIGNARE** : Référence aux femmes
 - **NDANANE** : Référence aux hommes
+
+### Système de Rattachement Automatique pour Non-Membres
+
+✅ **Rattachement automatique de l'historique lors de l'inscription**
+
+Les tailleurs et clients peuvent publier des posts ou passer des commandes **sans être encore membres** de l'application. Leur numéro de téléphone est enregistré, et lorsqu'ils s'inscrivent plus tard, leur historique (posts, commandes) leur est **automatiquement rattaché**.
+
+#### Fonctionnement
+
+1. **Publication/Commande par Non-Membre** :
+   - Le numéro de téléphone est enregistré dans `pending_users`
+   - Le post/commande est créé avec `phone_number` au lieu de `user_id`
+
+2. **Inscription de l'Utilisateur** :
+   - Un trigger SQL détecte automatiquement les données en attente
+   - Tous les posts et commandes sont rattachés au nouveau compte
+   - L'entrée dans `pending_users` est supprimée
+
+#### Utilisation API
+
+**Créer un post (membre connecté) :**
+```typescript
+POST /api/posts
+{
+  "image_url": "https://...",
+  "caption": "Mon nouveau boubou",
+  "garment_type": "boubou",
+  "complexity": "moyen"
+  // user_id automatiquement récupéré depuis la session
+}
+```
+
+**Créer un post (non-membre) :**
+```typescript
+POST /api/posts
+{
+  "image_url": "https://...",
+  "caption": "Mon nouveau boubou",
+  "garment_type": "boubou",
+  "complexity": "moyen",
+  "phone_number": "+221771234567",
+  "user_type": "TAILLEUR" // ou "CLIENT"
+}
+```
+
+**Documentation complète :** [`docs/PENDING_USERS_ATTRIBUTION.md`](docs/PENDING_USERS_ATTRIBUTION.md)
 
 ## 👨‍💼 Dashboard Admin
 
