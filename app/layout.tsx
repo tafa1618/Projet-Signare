@@ -1,3 +1,4 @@
+import { DesktopSidebar } from '@/app/components/DesktopSidebar'
 import type { Metadata } from 'next'
 import './globals.css'
 import BottomNav from '@/frontend/components/layout/BottomNav'
@@ -28,18 +29,28 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr" className={`dark ${fontSans.variable} ${fontSerif.variable} overflow-x-hidden`}>
-      <body className="m-0 p-0 overflow-x-hidden" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
-        {/* HEADER FIXE */}
-        <Header />
-
-        {/* CONTENU SCROLLABLE */}
-        <div className="min-h-screen pb-20 pt-16">
-          {children}
+    <html lang="fr" className={`dark ${fontSans.variable} ${fontSerif.variable}`}>
+      <body className="m-0 p-0 bg-[#0A0A0A] text-white" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
+        {/* HEADER FIXE (Mobile Only) */}
+        <div className="lg:hidden">
+          <Header />
         </div>
 
-        {/* NAVIGATION FIXE */}
-        <BottomNav />
+        {/* LAYOUT PRINCIPAL */}
+        <div className="flex justify-center min-h-screen">
+          {/* Sidebar Gauche (Desktop global) */}
+          <DesktopSidebar />
+
+          {/* Contenu de la page */}
+          <main className="flex-1 max-w-[1000px] w-full min-h-screen">
+            {children}
+          </main>
+        </div>
+
+        {/* NAVIGATION FIXE (Mobile Only) */}
+        <div className="lg:hidden">
+          <BottomNav />
+        </div>
       </body>
     </html>
   )
