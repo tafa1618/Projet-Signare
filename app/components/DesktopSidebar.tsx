@@ -18,6 +18,9 @@ import { cn } from '@/shared/lib/utils'
 export function DesktopSidebar() {
     const pathname = usePathname()
 
+    // Hide sidebar on welcome page
+    if (pathname === '/welcome') return null
+
     return (
         <aside className="hidden lg:flex w-[275px] flex-col sticky top-0 h-screen overflow-y-auto no-scrollbar border-r border-white/5 pr-4 pt-4 pb-8 flex-shrink-0">
             <div className="mb-4 pl-3">

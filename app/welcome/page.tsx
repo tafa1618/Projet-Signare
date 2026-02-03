@@ -11,7 +11,7 @@ export default function WelcomePage() {
       {/* Image de fond avec overlay */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&h=1600&fit=crop"
+          src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=1200&h=1600&fit=crop"
           alt="SIGNARE - Haute Couture Sénégalaise"
           fill
           className="object-cover"
@@ -32,13 +32,13 @@ export default function WelcomePage() {
           className="text-center mb-8"
         >
           <Sparkles className="w-12 h-12 text-[#D4AF37] mx-auto mb-6 drop-shadow-[0_0_20px_rgba(212,175,55,0.6)]" />
-          
+
           <h1 className="text-6xl font-serif text-[#D4AF37] tracking-[0.2em] mb-4 drop-shadow-[0_0_30px_rgba(212,175,55,0.4)]">
             SIGNARE
           </h1>
-          
+
           <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mb-6" />
-          
+
           <p className="text-white/90 text-base font-light tracking-wide leading-relaxed mb-2">
             L'art de la haute couture sénégalaise à votre portée.
           </p>
