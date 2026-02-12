@@ -95,9 +95,9 @@ export default function ExplorePage() {
     }, [query, activeTag])
 
     return (
-        <div className="bg-[#0A0A0A] min-h-screen text-white pb-20">
+        <div className="bg-[#0A0A0A] min-h-screen text-white pb-20 w-full max-w-[100vw] overflow-x-hidden">
             {/* HEADER RECHERCHE */}
-            <div className="sticky top-0 z-40 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-[#D4AF37]/10 px-4 pt-6 pb-6">
+            <div className="sticky top-0 z-40 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-[#D4AF37]/10 px-4 pt-6 pb-6 w-full">
                 <h1 className="text-2xl font-serif font-bold text-[#D4AF37] mb-6 tracking-wider text-center drop-shadow-md">EXPLORER</h1>
 
                 <div className="relative max-w-2xl mx-auto">

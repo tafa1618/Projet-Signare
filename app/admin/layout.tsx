@@ -1,12 +1,13 @@
 /**
  * ADMIN - Layout du dashboard admin
  * @ai-context Layout avec sidebar dynamique selon les permissions
+ * @security Returns 404 for non-admin users to hide admin panel existence
  */
 
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { useAuth } from '@/frontend/hooks/useAuth'
 import { getUserRole } from '@/lib/auth/authorization'
 import AdminSidebar from '@/components/admin/AdminSidebar'
@@ -18,27 +19,31 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const { user, isLoading } = useAuth()
-  const router = useRouter()
-  const [isChecking, setIsChecking] = useState(true)
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
 
   useEffect(() => {
     if (!isLoading) {
+      // User not logged in = 404 (hide admin existence)
       if (!user) {
-        router.push('/login?redirect=/admin')
+        setIsAuthorized(false)
         return
       }
 
+      // Check admin role
       const role = getUserRole(user)
       if (!role) {
-        router.push('/403')
+        // Not an admin = 404 (hide admin existence)
+        setIsAuthorized(false)
         return
       }
 
-      setIsChecking(false)
+      // User is authorized
+      setIsAuthorized(true)
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading])
 
-  if (isLoading || isChecking) {
+  // Show loading state while checking
+  if (isLoading || isAuthorized === null) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <div className="text-center">
@@ -49,13 +54,15 @@ export default function AdminLayout({
     )
   }
 
-  if (!user) {
-    return null
+  // SECURITY: Return 404 for unauthorized users
+  // This hides the existence of the admin panel
+  if (!isAuthorized || !user) {
+    notFound()
   }
 
   const role = getUserRole(user)
   if (!role) {
-    return null
+    notFound()
   }
 
   return (
@@ -78,3 +85,4 @@ export default function AdminLayout({
     </div>
   )
 }
+

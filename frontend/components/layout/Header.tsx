@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { 
-  Sparkles, 
-  Search, 
-  Store, 
-  ShoppingCart, 
-  MessageCircle, 
-  Plus, 
+import Image from 'next/image'
+import {
+  Sparkles,
+  Search,
+  Store,
+  ShoppingCart,
+  MessageCircle,
+  Plus,
   Menu,
   LogOut
 } from 'lucide-react'
@@ -33,19 +34,19 @@ export default function Header() {
 
   // Ne pas afficher le header sur certaines pages
   const hideHeader = pathname === '/welcome' || pathname === '/login' || pathname === '/register' || pathname === '/onboarding'
-  
+
   if (hideHeader) return null
 
   // Logique de scroll pour le header (comme le footer)
   useEffect(() => {
     if (typeof window === 'undefined') return
-    
+
     let scrollTimeout: NodeJS.Timeout
     let touchTimeout: NodeJS.Timeout
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY
-      
+
       // Cacher si on scroll vers le bas (plus de 50px)
       if (currentScrollY > lastScrollY && currentScrollY > 50) {
         setHeaderVisible(false)
@@ -58,7 +59,7 @@ export default function Header() {
         // Afficher si on scroll vers le haut ou si on est en haut
         setHeaderVisible(true)
       }
-      
+
       setLastScrollY(currentScrollY)
     }
 
@@ -123,13 +124,16 @@ export default function Header() {
             <div className="max-w-2xl mx-auto">
               {/* Top Bar */}
               <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3">
-                <Link href="/" className="flex items-center gap-2 sm:gap-3 min-w-0 hover:opacity-80 transition-opacity">
-                  <div className="bg-[#D4AF37] p-1 sm:p-1.5 rounded-lg shadow-[0_0_15px_rgba(212,175,55,0.4)] flex-shrink-0">
-                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#0A0A0A]" />
-                  </div>
-                  <h1 className="text-lg sm:text-xl font-serif text-[#D4AF37] tracking-[0.15em] sm:tracking-[0.2em] truncate">SIGNARE</h1>
+                <Link href="/" className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden border border-[#D4AF37]/50 shadow-[0_0_15px_rgba(212,175,55,0.3)] bg-white hover:opacity-80 transition-opacity flex-shrink-0">
+                  <Image
+                    src="/logo.png"
+                    alt="SIGNARE"
+                    fill
+                    className="object-cover scale-150 object-[center_35%]"
+                    priority
+                  />
                 </Link>
-                
+
                 {/* Desktop: Tous les boutons visibles */}
                 <div className="hidden md:flex items-center gap-2">
                   {/* Search Button */}
@@ -142,7 +146,7 @@ export default function Header() {
                   >
                     <Search className="w-5 h-5" />
                   </motion.button>
-                  
+
                   {/* Shop */}
                   <Link href="/shop">
                     <motion.button
@@ -154,7 +158,7 @@ export default function Header() {
                       <Store className="w-5 h-5" />
                     </motion.button>
                   </Link>
-                  
+
                   {/* Panier */}
                   <div className="relative">
                     <motion.button
@@ -174,7 +178,7 @@ export default function Header() {
                     </motion.button>
                     {cartOpen && <CartDropdown isOpen={cartOpen} onClose={() => setCartOpen(false)} />}
                   </div>
-                  
+
                   {/* Messages */}
                   <Link href="/messages">
                     <motion.button
@@ -187,7 +191,7 @@ export default function Header() {
                       <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
                     </motion.button>
                   </Link>
-                  
+
                   {/* Avatar Profil */}
                   <Link href="/profil">
                     <motion.button
@@ -201,7 +205,7 @@ export default function Header() {
                       </span>
                     </motion.button>
                   </Link>
-                  
+
                   {/* Publish */}
                   <Link href="/publish">
                     <motion.button
@@ -214,7 +218,7 @@ export default function Header() {
                     </motion.button>
                   </Link>
                 </div>
-                
+
                 {/* Mobile: Boutons essentiels + Menu Hamburger */}
                 <div className="flex md:hidden items-center gap-1.5">
                   {/* Publish - Toujours visible */}
@@ -228,7 +232,7 @@ export default function Header() {
                       <Plus className="w-4 h-4 text-[#0A0A0A]" strokeWidth={3} />
                     </motion.button>
                   </Link>
-                  
+
                   {/* Search Button - Visible à côté du + */}
                   <motion.button
                     whileHover={{ scale: 1.1 }}
@@ -240,7 +244,7 @@ export default function Header() {
                   >
                     <Search className="w-5 h-5" />
                   </motion.button>
-                  
+
                   {/* Avatar Profil - Toujours visible */}
                   <Link href="/profil">
                     <motion.button
@@ -254,7 +258,7 @@ export default function Header() {
                       </span>
                     </motion.button>
                   </Link>
-                  
+
                   {/* Menu Hamburger */}
                   <motion.button
                     whileTap={{ scale: 0.95 }}
@@ -267,7 +271,7 @@ export default function Header() {
                   </motion.button>
                 </div>
               </div>
-              
+
               {/* Menu Hamburger Mobile */}
               {menuOpen && (
                 <motion.div
@@ -285,7 +289,7 @@ export default function Header() {
                       <Store className="w-5 h-5 text-[#D4AF37]" />
                       <span className="text-sm font-semibold text-white">Boutique</span>
                     </Link>
-                    
+
                     <motion.button
                       onClick={() => {
                         setCartOpen(true)
@@ -299,7 +303,7 @@ export default function Header() {
                         <span className="absolute top-2 right-2 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
                       )}
                     </motion.button>
-                    
+
                     <Link
                       href="/messages"
                       onClick={() => setMenuOpen(false)}
@@ -309,7 +313,7 @@ export default function Header() {
                       <span className="text-sm font-semibold text-white">Messages</span>
                       <span className="absolute top-2 right-2 w-2 h-2 bg-[#D4AF37] rounded-full border border-[#0A0A0A]" />
                     </Link>
-                    
+
                     {user && (
                       <motion.button
                         onClick={() => {

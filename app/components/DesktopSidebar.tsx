@@ -23,9 +23,15 @@ export function DesktopSidebar() {
 
     return (
         <aside className="hidden lg:flex w-[275px] flex-col sticky top-0 h-screen overflow-y-auto no-scrollbar border-r border-white/5 pr-4 pt-4 pb-8 flex-shrink-0">
-            <div className="mb-4 pl-3">
-                <Link href="/" className="inline-block">
-                    <h1 className="font-serif text-2xl font-bold tracking-widest text-[#D4AF37]">SIGNARE</h1>
+            <div className="mb-6 pl-2 flex justify-center lg:justify-start">
+                <Link href="/" className="relative w-12 h-12 rounded-full overflow-hidden border border-[#D4AF37]/50 shadow-[0_0_15px_rgba(212,175,55,0.3)] bg-white">
+                    <Image
+                        src="/logo.png"
+                        alt="SIGNARE"
+                        fill
+                        className="object-cover scale-150 object-[center_35%]"
+                        priority
+                    />
                 </Link>
             </div>
 

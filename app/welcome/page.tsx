@@ -31,11 +31,15 @@ export default function WelcomePage() {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-8"
         >
-          <Sparkles className="w-12 h-12 text-[#D4AF37] mx-auto mb-6 drop-shadow-[0_0_20px_rgba(212,175,55,0.6)]" />
-
-          <h1 className="text-6xl font-serif text-[#D4AF37] tracking-[0.2em] mb-4 drop-shadow-[0_0_30px_rgba(212,175,55,0.4)]">
-            SIGNARE
-          </h1>
+          <div className="relative w-64 h-64 mx-auto mb-8">
+            <Image
+              src="/logo.png"
+              alt="SIGNARE"
+              fill
+              className="object-contain drop-shadow-[0_0_30px_rgba(212,175,55,0.4)]"
+              priority
+            />
+          </div>
 
           <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mb-6" />
 

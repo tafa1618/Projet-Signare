@@ -66,6 +66,30 @@ export default async function AdminDashboardPage() {
         </h2>
         <OrdersChart data={chartData} />
       </div>
+
+      {/* Agent Command Center Link */}
+      <a href="/admin/agents" className="block">
+        <div className="bg-gradient-to-r from-[#D4AF37]/10 to-purple-500/10 border border-[#D4AF37]/30 rounded-lg p-6 hover:border-[#D4AF37]/60 transition-all group cursor-pointer">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#D4AF37] to-purple-500 flex items-center justify-center text-2xl">
+                🤖
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-white group-hover:text-[#D4AF37] transition-colors">
+                  Agent Command Center
+                </h2>
+                <p className="text-white/60 text-sm">
+                  Gérer les agents IA, valider les Twins, voir les insights Growth
+                </p>
+              </div>
+            </div>
+            <div className="text-[#D4AF37] text-2xl group-hover:translate-x-2 transition-transform">
+              →
+            </div>
+          </div>
+        </div>
+      </a>
     </div>
   )
 }

@@ -27,6 +27,8 @@ import Link from 'next/link'
 import { cn } from '@/shared/lib/utils'
 import { logMLInteraction } from '@/lib/logger'
 import { mockPosts } from '@/lib/mocks'
+import { HeroSection } from '@/app/components/home/HeroSection'
+import { SeasonalCollections } from '@/app/components/home/SeasonalCollections'
 
 // --- Types ---
 export type PostType = 'tailor' | 'client'
@@ -565,6 +567,7 @@ export default function Home() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [hasMore, setHasMore] = useState(true)
+  const [activeTab, setActiveTab] = useState<'pour-vous' | 'abonnements' | null>(null)
 
   const loadMorePosts = useCallback(async () => {
     setLoading(true)
@@ -644,6 +647,17 @@ export default function Home() {
 
         {/* Main Feed - Center */}
         <section className="flex-1 w-full max-w-[600px] border-r border-white/5 mx-auto lg:mx-0 min-h-screen">
+
+          {/* Brand Pivot Components */}
+          {!activeTab && (
+            <>
+              <HeroSection />
+              <SeasonalCollections />
+              <div className="sticky top-0 z-30 bg-[#0A0A0A]/95 backdrop-blur-xl border-y border-white/5 py-3 px-4 flex items-center justify-between">
+                <h3 className="text-[#D4AF37] font-serif font-bold text-lg">La Communauté Signare</h3>
+              </div>
+            </>
+          )}
 
 
 
@@ -731,15 +745,15 @@ export default function Home() {
         <aside className="hidden xl:flex w-[350px] flex-col pl-6 pt-4 sticky top-0 h-screen gap-6 overflow-y-auto no-scrollbar pb-10">
 
           {/* Search Bar */}
-          <div className="sticky top-0 bg-black z-20 pb-2">
+          <div className="sticky top-0 bg-[#0A0A0A] z-20 pb-4 pt-2">
             <div className="relative group">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-[#D4AF37] transition-colors">
-                <Search size={18} />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-[#D4AF37] transition-colors z-10 pointer-events-none">
+                <Search size={20} />
               </div>
               <input
                 type="text"
                 placeholder="Chercher sur Signare"
-                className="w-full bg-[#202327] border-none rounded-full py-3 pl-12 pr-4 text-sm text-white placeholder-white/40 focus:bg-black focus:ring-1 focus:ring-[#D4AF37] transition-all"
+                className="w-full bg-[#202327]/80 backdrop-blur-md border border-white/5 rounded-full py-3.5 pl-14 pr-4 text-sm text-white placeholder-white/40 focus:bg-black focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)] focus:shadow-[0_4px_25px_rgba(212,175,55,0.15)]"
               />
             </div>
           </div>
