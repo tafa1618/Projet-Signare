@@ -330,28 +330,28 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-[#0A0A0A] text-white pb-24 overflow-x-hidden">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-[#D4AF37]/10">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 grid grid-cols-[auto_1fr_auto] items-center gap-4">
           <button
             onClick={() => router.back()}
             className="flex items-center gap-2 text-[#D4AF37] hover:text-[#D4AF37]/80 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-black uppercase tracking-[0.18em]">Retour</span>
+            <span className="text-sm font-black uppercase tracking-[0.18em] hidden sm:inline">Retour</span>
           </button>
-          <h1 className="text-lg font-serif text-[#D4AF37] font-bold">Modifier mon profil</h1>
-          <div className="w-20" /> {/* Spacer pour centrer le titre */}
+          <h1 className="text-lg font-serif text-[#D4AF37] font-bold text-center truncate">Modifier profil</h1>
+          <div className="w-5" /> {/* Empty div to balance grid if needed, or just left empty */}
         </div>
       </div>
 
       {/* Tabs - Masquer "Mensurations" pour les tailleurs */}
       {!isTailor && (
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 mt-6">
-          <div className="flex gap-2 border-b border-[#D4AF37]/20">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 mt-6 w-full overflow-x-auto no-scrollbar">
+          <div className="flex gap-2 border-b border-[#D4AF37]/20 min-w-max">
             <button
               onClick={() => setActiveTab('profile')}
               className={`flex-1 py-3 text-sm font-black uppercase tracking-[0.18em] transition-colors ${activeTab === 'profile'
-                  ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]'
-                  : 'text-white/50 hover:text-white/70'
+                ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]'
+                : 'text-white/50 hover:text-white/70'
                 }`}
             >
               Profil
@@ -359,8 +359,8 @@ export default function SettingsPage() {
             <button
               onClick={() => setActiveTab('measurements')}
               className={`flex-1 py-3 text-sm font-black uppercase tracking-[0.18em] transition-colors ${activeTab === 'measurements'
-                  ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]'
-                  : 'text-white/50 hover:text-white/70'
+                ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]'
+                : 'text-white/50 hover:text-white/70'
                 }`}
             >
               Mensurations
@@ -796,8 +796,11 @@ export default function SettingsPage() {
           </>
         )}
 
-        {/* Save Button */}
-        <div className="sticky bottom-0 bg-[#0A0A0A]/95 backdrop-blur-xl border-t border-[#D4AF37]/10 py-4 -mx-4 sm:-mx-6 px-4 sm:px-6 mt-8">
+      </motion.div>
+
+      {/* Save Button (Fixed Footer) */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl border-t border-[#D4AF37]/10 py-4 px-4 sm:px-6">
+        <div className="max-w-2xl mx-auto">
           <button
             onClick={isTailor || activeTab === 'profile' ? handleSaveProfile : handleSaveMeasurements}
             disabled={isSaving || saveSuccess}
@@ -821,7 +824,7 @@ export default function SettingsPage() {
             )}
           </button>
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }
