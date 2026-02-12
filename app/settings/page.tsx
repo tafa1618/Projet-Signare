@@ -79,12 +79,12 @@ export default function SettingsPage() {
   const { user } = useAuth()
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
-  
+
   // Détecter le type d'utilisateur
   const currentUserPhone = user?.phone || user?.user_metadata?.phone || null
   const userType = currentUserPhone ? PHONE_TO_USER_TYPE[currentUserPhone] || 'client' : 'client'
   const isTailor = userType === 'tailleur'
-  
+
   // Onglets : seulement "Profil" pour les tailleurs, "Profil" et "Mensurations" pour les clients
   const [activeTab, setActiveTab] = useState<'profile' | 'measurements'>('profile')
 
@@ -111,7 +111,7 @@ export default function SettingsPage() {
     experienceYears: null as number | null,
     about: '',
   })
-  
+
   const [specialtyInput, setSpecialtyInput] = useState('')
   const [certificationInput, setCertificationInput] = useState('')
 
@@ -134,7 +134,7 @@ export default function SettingsPage() {
     try {
       // TODO: Appel API pour sauvegarder le profil
       await new Promise(resolve => setTimeout(resolve, 1000)) // Simulation
-      
+
       logMLInteraction({
         user_id: MOCK_CURRENT_PROFILE.id,
         post_id: null,
@@ -164,7 +164,7 @@ export default function SettingsPage() {
     try {
       // TODO: Appel API pour sauvegarder les mensurations
       await new Promise(resolve => setTimeout(resolve, 1000)) // Simulation
-      
+
       logMLInteraction({
         user_id: MOCK_CURRENT_PROFILE.id,
         post_id: null,
@@ -202,11 +202,11 @@ export default function SettingsPage() {
           },
         }
       )
-      
+
       if (!response.ok) throw new Error('Erreur lors de la récupération de l\'adresse')
-      
+
       const data = await response.json()
-      
+
       // Construction de l'adresse à partir des données Nominatim
       const addressParts = []
       if (data.address) {
@@ -220,8 +220,8 @@ export default function SettingsPage() {
         }
         if (data.address.country) addressParts.push(data.address.country)
       }
-      
-      const address = addressParts.length > 0 
+
+      const address = addressParts.length > 0
         ? addressParts.join(', ')
         : data.display_name || ''
 
@@ -231,7 +231,7 @@ export default function SettingsPage() {
         latitude: lat,
         longitude: lng,
       })
-      
+
       logMLInteraction({
         user_id: MOCK_CURRENT_PROFILE.id,
         post_id: null,
@@ -255,7 +255,7 @@ export default function SettingsPage() {
     const userPhone = user?.phone || user?.user_metadata?.phone || null
     const detectedUserType = userPhone ? PHONE_TO_USER_TYPE[userPhone] || 'client' : 'client'
     const detectedIsTailor = detectedUserType === 'tailleur'
-    
+
     if (detectedIsTailor && !profile.workshopName) {
       setProfile(prev => ({
         ...prev,
@@ -327,7 +327,7 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white pb-24">
+    <div className="min-h-screen bg-[#0A0A0A] text-white pb-24 overflow-x-hidden">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-[#D4AF37]/10">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -349,21 +349,19 @@ export default function SettingsPage() {
           <div className="flex gap-2 border-b border-[#D4AF37]/20">
             <button
               onClick={() => setActiveTab('profile')}
-              className={`flex-1 py-3 text-sm font-black uppercase tracking-[0.18em] transition-colors ${
-                activeTab === 'profile'
+              className={`flex-1 py-3 text-sm font-black uppercase tracking-[0.18em] transition-colors ${activeTab === 'profile'
                   ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]'
                   : 'text-white/50 hover:text-white/70'
-              }`}
+                }`}
             >
               Profil
             </button>
             <button
               onClick={() => setActiveTab('measurements')}
-              className={`flex-1 py-3 text-sm font-black uppercase tracking-[0.18em] transition-colors ${
-                activeTab === 'measurements'
+              className={`flex-1 py-3 text-sm font-black uppercase tracking-[0.18em] transition-colors ${activeTab === 'measurements'
                   ? 'text-[#D4AF37] border-b-2 border-[#D4AF37]'
                   : 'text-white/50 hover:text-white/70'
-              }`}
+                }`}
             >
               Mensurations
             </button>
