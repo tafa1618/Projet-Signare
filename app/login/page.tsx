@@ -6,13 +6,23 @@ import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Phone, ArrowRight, Sparkles, Loader2 } from 'lucide-react'
-import { signInWithPhone } from '@/backend/lib/supabase'
+import { Phone, ArrowRight, Sparkles, Loader2, ChevronDown } from 'lucide-react'
+import { signInWithPhone, verifyOTP } from '@/backend/lib/supabase'
 import { logError } from '@/lib/logger'
+
+const COUNTRY_CODES = [
+  { code: '+221', flag: '🇸🇳', label: 'SN' },
+  { code: '+33',  flag: '🇫🇷', label: 'FR' },
+  { code: '+39',  flag: '🇮🇹', label: 'IT' },
+  { code: '+34',  flag: '🇪🇸', label: 'ES' },
+  { code: '+1',   flag: '🇺🇸', label: 'US' },
+  { code: '+44',  flag: '🇬🇧', label: 'UK' },
+]
 
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [countryCode, setCountryCode] = useState('+221')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [isFocused, setIsFocused] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -20,44 +30,25 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false)
   const [otpCode, setOtpCode] = useState('')
 
+  const fullPhone = `${countryCode}${phoneNumber.replace(/^0/, '')}`
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
 
-    // Validation : uniquement téléphone (selon .cursorrules section 2)
-    if (!phoneNumber || !phoneNumber.match(/^\+?[0-9]{9,15}$/)) {
+    if (!phoneNumber || !phoneNumber.match(/^[0-9]{7,12}$/)) {
       setError('Veuillez entrer un numéro de téléphone valide')
       return
     }
 
     setIsLoading(true)
-
     try {
-      // En mode développement, simuler l'envoi d'OTP pour les numéros mockés
-      const normalizedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`
-      const mockPhones = [
-        '+771111111', '771111111', 
-        '+772222222', '772222222',
-        '+781110455', '781110455' // SUPER_ADMIN
-      ]
-      
-      if (mockPhones.includes(normalizedPhone) || mockPhones.includes(phoneNumber)) {
-        // Simuler l'envoi d'OTP (pas besoin d'appeler Supabase)
-        setOtpSent(true)
-        setIsLoading(false)
-        return
-      }
-
-      // ✅ Authentification via Supabase OTP (sécurisé) pour les autres numéros
-      const { data, error: signInError } = await signInWithPhone(phoneNumber)
-
+      const { error: signInError } = await signInWithPhone(fullPhone)
       if (signInError) {
-        setError('Erreur lors de l\'envoi du code. Veuillez réessayer.')
+        setError("Erreur lors de l'envoi du code. Veuillez réessayer.")
         logError(signInError, 'Phone sign-in')
         return
       }
-
-      // Code OTP envoyé avec succès
       setOtpSent(true)
     } catch (err) {
       setError('Une erreur est survenue. Veuillez réessayer.')
@@ -77,40 +68,15 @@ export default function LoginPage() {
     }
 
     setIsLoading(true)
-
     try {
-      // En mode développement, simuler l'authentification pour les numéros mockés
-      const normalizedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`
-      const mockPhones = [
-        '+771111111', '771111111', 
-        '+772222222', '772222222',
-        '+781110455', '781110455' // SUPER_ADMIN
-      ]
-      
-      if (mockPhones.includes(normalizedPhone) || mockPhones.includes(phoneNumber)) {
-        // Stocker le numéro dans localStorage pour le mock auth
-        localStorage.setItem('mock_auth_phone', normalizedPhone.startsWith('+') ? normalizedPhone : `+${normalizedPhone}`)
-        
-        // Recharger la page pour que useAuth détecte le changement
-        const next = searchParams.get('next')
-        if (next) {
-          window.location.href = next
-          return
-        }
-        window.location.href = '/'
+      const { error: verifyError } = await verifyOTP(fullPhone, otpCode)
+      if (verifyError) {
+        setError('Code invalide ou expiré. Veuillez réessayer.')
+        logError(verifyError, 'OTP verification')
         return
       }
-
-      // TODO: Implémenter verifyOTP depuis backend/lib/supabase pour la production
-      // const { data, error } = await verifyOTP(phoneNumber, otpCode)
-      
-      // Intention sauvegardée (ex: repost) + redirection
       const next = searchParams.get('next')
-      if (next) {
-        router.push(next)
-        return
-      }
-      router.push('/')
+      router.push(next ?? '/')
     } catch (err) {
       setError('Code invalide. Veuillez réessayer.')
       logError(err, 'OTP verification')
@@ -179,22 +145,40 @@ export default function LoginPage() {
             <label className="block text-white/70 text-xs tracking-widest uppercase mb-3">
               Numéro de Téléphone
             </label>
-            
-            <div className="relative">
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                placeholder="+221 77 123 45 67"
-                disabled={otpSent || isLoading}
-                className="w-full bg-transparent text-white text-lg py-3 px-1 border-b-2 border-white/20 focus:border-[#D4AF37] outline-none transition-all duration-300 placeholder:text-white/30 disabled:opacity-50"
-              />
-              
-              {/* Icône téléphone */}
-              <div className="absolute right-0 top-1/2 -translate-y-1/2">
-                <Phone className="w-5 h-5 text-[#D4AF37]/50" />
+
+            <div className="flex items-end gap-3">
+              {/* Sélecteur code pays */}
+              <div className="relative flex-shrink-0">
+                <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  disabled={otpSent || isLoading}
+                  className="appearance-none bg-transparent text-white text-lg py-3 pr-6 border-b-2 border-white/20 outline-none transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                >
+                  {COUNTRY_CODES.map((c) => (
+                    <option key={c.code} value={c.code} className="bg-[#0A0A0A] text-white">
+                      {c.flag} {c.code}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 text-[#D4AF37]/50 pointer-events-none" />
+              </div>
+
+              {/* Input numéro */}
+              <div className="relative flex-1">
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder="77 123 45 67"
+                  disabled={otpSent || isLoading}
+                  className="w-full bg-transparent text-white text-lg py-3 px-1 border-b-2 border-white/20 focus:border-[#D4AF37] outline-none transition-all duration-300 placeholder:text-white/30 disabled:opacity-50"
+                />
+                <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                  <Phone className="w-5 h-5 text-[#D4AF37]/50" />
+                </div>
               </div>
             </div>
 

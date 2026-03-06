@@ -12,9 +12,9 @@ import { useAuth } from '@/frontend/hooks/useAuth'
 import Link from 'next/link'
 
 export default function AtelierPage() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
 
-  if (!user) {
+  if (!user || !profile) {
     return (
       <div className="min-h-screen bg-noir flex items-center justify-center p-6">
         <div className="text-center">
@@ -30,10 +30,7 @@ export default function AtelierPage() {
     )
   }
 
-  // Vérifier si l'utilisateur est un tailleur
-  const isTailor = user.id === 'tailor-772222222' || 
-                   (typeof user.phone === 'string' && (user.phone === '+772222222' || user.phone === '772222222')) ||
-                   (user.user_metadata?.phone && (user.user_metadata.phone === '+772222222' || user.user_metadata.phone === '772222222'))
+  const isTailor = profile.is_tailor && profile.tailor_status === 'verified'
 
   return (
     <div className="min-h-screen bg-noir pb-20">

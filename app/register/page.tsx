@@ -5,53 +5,107 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Phone, Mail, User as UserIcon, ArrowRight, Sparkles, Check, Calendar, Scissors } from 'lucide-react'
+import { Phone, User as UserIcon, ArrowRight, Sparkles, Check, Calendar, Scissors, ChevronDown, Loader2 } from 'lucide-react'
+import { signInWithPhone, verifyOTP, supabase } from '@/backend/lib/supabase'
+import { logError } from '@/lib/logger'
+
+const COUNTRY_CODES = [
+  { code: '+221', flag: '🇸🇳', label: 'SN' },
+  { code: '+33',  flag: '🇫🇷', label: 'FR' },
+  { code: '+39',  flag: '🇮🇹', label: 'IT' },
+  { code: '+34',  flag: '🇪🇸', label: 'ES' },
+  { code: '+1',   flag: '🇺🇸', label: 'US' },
+  { code: '+44',  flag: '🇬🇧', label: 'UK' },
+]
 
 export default function RegisterPage() {
   const router = useRouter()
-  const [phoneOrEmail, setPhoneOrEmail] = useState('')
+  const [step, setStep] = useState<'form' | 'otp'>('form')
+  const [countryCode, setCountryCode] = useState('+221')
+  const [phone, setPhone] = useState('')
   const [fullName, setFullName] = useState('')
   const [dateOfBirth, setDateOfBirth] = useState('')
   const [gender, setGender] = useState<'signare' | 'ndanane' | null>(null)
   const [isTailor, setIsTailor] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [isFocusedPhone, setIsFocusedPhone] = useState(false)
   const [isFocusedName, setIsFocusedName] = useState(false)
   const [isFocusedDate, setIsFocusedDate] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const fullPhone = `${countryCode}${phone.replace(/^0/, '')}`
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Calcul de l'âge pour ML (recommandations basées sur l'âge)
-    const age = dateOfBirth ? Math.floor((new Date().getTime() - new Date(dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null
-    
-    // Données ML-ready pour les recommandations dans le feed
-    const registrationData = {
-      phoneOrEmail,
-      fullName,
-      dateOfBirth,
-      age, // Calculé pour ML
-      gender, // 'signare' (femme) ou 'ndanane' (homme)
-      isTailor, // Booléen pour différencier les tailleurs
-      // Métadonnées ML pour recommandations
-      mlMetadata: {
-        age_group: age ? (age < 18 ? 'teen' : age < 25 ? 'young_adult' : age < 35 ? 'adult' : age < 50 ? 'mature' : 'senior') : null,
-        gender_preference: gender,
-        user_type: isTailor ? 'creator' : 'client',
-        registration_date: new Date().toISOString(),
-      }
+    setError(null)
+
+    if (!phone || !phone.match(/^[0-9]{7,12}$/)) {
+      setError('Veuillez entrer un numéro de téléphone valide')
+      return
     }
-    
-    // TODO: Implémenter la logique d'inscription avec Supabase
-    // Ces données seront stockées dans la table profiles avec les colonnes :
-    // - date_of_birth (DATE)
-    // - gender (TEXT: 'signare' | 'ndanane')
-    // - is_tailor (BOOLEAN)
-    // - age (INTEGER, calculé)
-    console.log('Inscription ML-ready:', registrationData)
-    
-    // Redirection vers le feed
-    router.push('/')
+
+    setIsLoading(true)
+    try {
+      const { error: signInError } = await signInWithPhone(fullPhone)
+      if (signInError) {
+        setError("Erreur lors de l'envoi du code. Veuillez réessayer.")
+        logError(signInError, 'Register sign-in')
+        return
+      }
+      setStep('otp')
+    } catch (err) {
+      setError('Une erreur est survenue. Veuillez réessayer.')
+      logError(err, 'Register')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+
+    if (!otpCode || otpCode.length !== 6) {
+      setError('Le code doit contenir 6 chiffres')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const { data, error: verifyError } = await verifyOTP(fullPhone, otpCode)
+      if (verifyError || !data.user) {
+        setError('Code invalide ou expiré. Veuillez réessayer.')
+        logError(verifyError, 'Register OTP verification')
+        return
+      }
+
+      // Créer le profil en Supabase
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: data.user.id,
+        phone: fullPhone,
+        full_name: fullName,
+        gender,
+        is_tailor: isTailor,
+        tailor_status: isTailor ? 'pending' : 'none',
+        is_digital_twin: false,
+      })
+
+      if (profileError) {
+        // Le profil existe peut-être déjà (re-inscription)
+        if (profileError.code !== '23505') {
+          logError(profileError, 'Profile creation')
+        }
+      }
+
+      router.push('/')
+    } catch (err) {
+      setError('Une erreur est survenue. Veuillez réessayer.')
+      logError(err, 'Register verify')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -101,7 +155,56 @@ export default function RegisterPage() {
           </p>
         </motion.div>
 
-        {/* Formulaire */}
+        {/* Étape OTP */}
+        {step === 'otp' && (
+          <motion.form
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            onSubmit={handleVerifyOTP}
+            className="space-y-8"
+          >
+            <p className="text-[#D4AF37] text-sm text-center">
+              Code envoyé au {fullPhone}
+            </p>
+
+            <div className="relative">
+              <label className="block text-white/70 text-xs tracking-widest uppercase mb-3">
+                Code de vérification (6 chiffres)
+              </label>
+              <input
+                type="text"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="123456"
+                maxLength={6}
+                autoFocus
+                className="w-full bg-transparent text-white text-2xl py-3 px-1 border-b-2 border-white/20 focus:border-[#D4AF37] outline-none transition-all duration-300 placeholder:text-white/30 text-center tracking-widest"
+              />
+            </div>
+
+            {error && (
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-400 text-sm text-center">
+                {error}
+              </motion.p>
+            )}
+
+            <motion.button
+              type="submit"
+              whileTap={{ scale: 0.98 }}
+              disabled={otpCode.length !== 6 || isLoading}
+              className="w-full bg-[#D4AF37] text-[#0A0A0A] font-bold text-sm tracking-widest uppercase py-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+            >
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>CRÉER MON COMPTE <ArrowRight className="w-5 h-5" /></>}
+            </motion.button>
+
+            <button type="button" onClick={() => setStep('form')} className="w-full text-white/40 text-sm hover:text-white/60 transition-colors">
+              Modifier mon numéro
+            </button>
+          </motion.form>
+        )}
+
+        {/* Formulaire principal */}
+        {step === 'form' && (
         <motion.form
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -114,7 +217,7 @@ export default function RegisterPage() {
             <label className="block text-white/70 text-xs tracking-widest uppercase mb-3">
               Nom Complet
             </label>
-            
+
             <div className="relative">
               <input
                 type="text"
@@ -125,14 +228,11 @@ export default function RegisterPage() {
                 placeholder="Fatou Diop"
                 className="w-full bg-transparent text-white text-lg py-3 px-1 border-b-2 border-white/20 focus:border-[#D4AF37] outline-none transition-all duration-300 placeholder:text-white/30"
               />
-              
-              {/* Icône */}
               <div className="absolute right-0 top-1/2 -translate-y-1/2">
                 <UserIcon className="w-5 h-5 text-[#D4AF37]/50" />
               </div>
             </div>
 
-            {/* Ligne animée */}
             <motion.div
               initial={{ scaleX: 0 }}
               animate={{ scaleX: isFocusedName ? 1 : 0 }}
@@ -141,34 +241,44 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Input Téléphone/Email */}
+          {/* Input Téléphone avec code pays */}
           <div className="relative">
             <label className="block text-white/70 text-xs tracking-widest uppercase mb-3">
-              Téléphone ou Email
+              Téléphone
             </label>
-            
-            <div className="relative">
-              <input
-                type="text"
-                value={phoneOrEmail}
-                onChange={(e) => setPhoneOrEmail(e.target.value)}
-                onFocus={() => setIsFocusedPhone(true)}
-                onBlur={() => setIsFocusedPhone(false)}
-                placeholder="+221 77 123 45 67"
-                className="w-full bg-transparent text-white text-lg py-3 px-1 border-b-2 border-white/20 focus:border-[#D4AF37] outline-none transition-all duration-300 placeholder:text-white/30"
-              />
-              
-              {/* Icône dynamique */}
-              <div className="absolute right-0 top-1/2 -translate-y-1/2">
-                {phoneOrEmail.includes('@') ? (
-                  <Mail className="w-5 h-5 text-[#D4AF37]/50" />
-                ) : (
+
+            <div className="flex items-end gap-3">
+              <div className="relative flex-shrink-0">
+                <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="appearance-none bg-transparent text-white text-lg py-3 pr-6 border-b-2 border-white/20 outline-none transition-all duration-300 cursor-pointer"
+                >
+                  {COUNTRY_CODES.map((c) => (
+                    <option key={c.code} value={c.code} className="bg-[#0A0A0A] text-white">
+                      {c.flag} {c.code}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 text-[#D4AF37]/50 pointer-events-none" />
+              </div>
+
+              <div className="relative flex-1">
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                  onFocus={() => setIsFocusedPhone(true)}
+                  onBlur={() => setIsFocusedPhone(false)}
+                  placeholder="77 123 45 67"
+                  className="w-full bg-transparent text-white text-lg py-3 px-1 border-b-2 border-white/20 focus:border-[#D4AF37] outline-none transition-all duration-300 placeholder:text-white/30"
+                />
+                <div className="absolute right-0 top-1/2 -translate-y-1/2">
                   <Phone className="w-5 h-5 text-[#D4AF37]/50" />
-                )}
+                </div>
               </div>
             </div>
 
-            {/* Ligne animée */}
             <motion.div
               initial={{ scaleX: 0 }}
               animate={{ scaleX: isFocusedPhone ? 1 : 0 }}
@@ -306,38 +416,38 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          {/* Bouton Créer le compte */}
+          {/* Message d'erreur */}
+          {error && (
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-400 text-sm text-center">
+              {error}
+            </motion.p>
+          )}
+
+          {/* Bouton Continuer */}
           <motion.button
             type="submit"
-            whileHover={{ 
-              scale: 1.02,
-              boxShadow: '0 0 40px rgba(212,175,55,0.6)',
-            }}
+            whileHover={{ scale: 1.02, boxShadow: '0 0 40px rgba(212,175,55,0.6)' }}
             whileTap={{ scale: 0.98 }}
-            disabled={!phoneOrEmail || !fullName || !dateOfBirth || !gender || !acceptTerms}
+            disabled={!phone || !fullName || !dateOfBirth || !gender || !acceptTerms || isLoading}
             className="w-full bg-[#D4AF37] text-[#0A0A0A] font-bold text-sm tracking-widest uppercase py-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
           >
-            {/* Effet de brillance */}
             <span className="relative z-10 flex items-center justify-center gap-3">
-              CRÉER MON COMPTE
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>CONTINUER <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" /></>
+              )}
             </span>
-            
-            {/* Effet glow animé */}
-            <motion.div
-              animate={{
-                x: ['0%', '200%'],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatDelay: 1,
-                ease: 'easeInOut',
-              }}
-              className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
-            />
+            {!isLoading && (
+              <motion.div
+                animate={{ x: ['0%', '200%'] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1, ease: 'easeInOut' }}
+                className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
+              />
+            )}
           </motion.button>
         </motion.form>
+        )}
 
         {/* Séparateur */}
         <div className="flex items-center gap-4 my-8">
