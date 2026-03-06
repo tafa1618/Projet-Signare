@@ -5,12 +5,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
-    Sparkles,
+    Home,
     Search,
+    Ruler,
+    ShoppingBag,
+    User,
     Bell,
     MessageSquare,
-    ShoppingCart,
-    CheckCircle2,
     MoreVertical
 } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
@@ -38,14 +39,15 @@ export function DesktopSidebar() {
             {/* Navigation */}
             <nav className="space-y-1 flex-1">
                 {[
-                    { label: 'Accueil', icon: Sparkles, href: '/' },
+                    { label: 'Accueil', icon: Home, href: '/' },
                     { label: 'Explorer', icon: Search, href: '/explore' },
-                    { label: 'Notifications', icon: Bell, href: '/notifications' },
+                    { label: 'Mesures', icon: Ruler, href: '/atelier/mesures' },
+                    { label: 'Commandes', icon: ShoppingBag, href: '/orders' },
                     { label: 'Messages', icon: MessageSquare, href: '/messages' },
-                    { label: 'Panier', icon: ShoppingCart, href: '/cart' },
-                    { label: 'Profil', icon: CheckCircle2, href: '/profile' },
+                    { label: 'Notifications', icon: Bell, href: '/notifications' },
+                    { label: 'Profil', icon: User, href: '/profile' },
                 ].map((item, i) => {
-                    const isActive = pathname === item.href
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                     return (
                         <Link key={i} href={item.href} className={cn("w-full flex items-center gap-5 px-4 py-3.5 rounded-full transition-all group", isActive ? "font-bold text-white bg-white/5" : "text-white/80 hover:bg-white/5 hover:text-white")}>
                             <item.icon size={26} className={cn("group-hover:scale-105 transition-transform", isActive ? "text-[#D4AF37]" : "text-white")} />
