@@ -135,23 +135,17 @@ export default function ManualMeasurementsWizard({
   const handleSubmit = async () => {
     setIsSubmitting(true)
     try {
-      // Convertir les données au format attendu par l'API
-      const payload = {
-        method: 'manual' as const,
-        measurements: {
-          chest: measurements.chest,
-          neck: measurements.neck,
-          waist: measurements.waist,
-          hips: measurements.hips,
-          shoulders: measurements.shoulders,
-          arm_length: measurements.arm_length,
-          thigh: measurements.thigh,
-          biceps: measurements.biceps,
-          leg_length: measurements.leg_length,
-        },
-      }
-
-      await submitManualMeasurements(payload)
+      await submitManualMeasurements({
+        chest: measurements.chest,
+        neck: measurements.neck,
+        waist: measurements.waist,
+        hips: measurements.hips,
+        shoulders: measurements.shoulders,
+        arm_length: measurements.arm_length,
+        thigh: measurements.thigh,
+        biceps: measurements.biceps,
+        leg_length: measurements.leg_length,
+      })
       onComplete()
     } catch (error) {
       console.error('Erreur lors de la soumission:', error)

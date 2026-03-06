@@ -75,7 +75,6 @@ export default function MesuresPage() {
           {method === 'scan' && (
             <ScanMeasurementsFlow
               key="scan"
-              userId={user.id}
               onComplete={() => {
                 setMethod('choice')
                 // TODO: Afficher un toast de succès

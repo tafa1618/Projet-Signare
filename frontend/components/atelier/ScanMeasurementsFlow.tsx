@@ -15,11 +15,9 @@ interface MediaFiles {
 }
 
 export default function ScanMeasurementsFlow({
-  userId,
   onComplete,
   onCancel,
 }: {
-  userId: string
   onComplete: () => void
   onCancel: () => void
 }) {
@@ -62,33 +60,17 @@ export default function ScanMeasurementsFlow({
   const handleSubmit = async () => {
     setIsProcessing(true)
     try {
-      // Upload des fichiers et récupération des URLs
-      const frontUrl = mediaFiles.front ? await uploadFile(mediaFiles.front) : null
-      const sideUrl = mediaFiles.side ? await uploadFile(mediaFiles.side) : null
-      const videoUrl = mediaFiles.video ? await uploadFile(mediaFiles.video) : null
-
       await submitScanMeasurements({
-        method: 'scan',
-        user_id: userId,
-        front_image_url: frontUrl || '',
-        side_image_url: sideUrl || undefined,
-        video_url: videoUrl || undefined,
-        is_paid: false, // TODO: Vérifier si c'est le premier scan
+        front: mediaFiles.front ?? undefined,
+        side: mediaFiles.side ?? undefined,
+        video: mediaFiles.video ?? undefined,
       })
-
       onComplete()
     } catch (error) {
       console.error('Erreur lors du scan:', error)
-      // TODO: Afficher un toast d'erreur
     } finally {
       setIsProcessing(false)
     }
-  }
-
-  const uploadFile = async (file: File): Promise<string> => {
-    // TODO: Implémenter l'upload vers Supabase Storage
-    // Pour l'instant, on retourne une URL mock
-    return `storage/temp/${file.name}`
   }
 
   return (

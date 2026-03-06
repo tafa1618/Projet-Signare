@@ -2,113 +2,78 @@
 
 import { useState } from 'react'
 
-const MEASUREMENTS_API_URL = process.env.NEXT_PUBLIC_MEASUREMENTS_API_URL || 'http://localhost:8003/api/v1'
-
 interface ManualMeasurementsPayload {
-  method: 'manual'
-  measurements: {
-    chest?: number | null
-    neck?: number | null
-    waist?: number | null
-    hips?: number | null
-    shoulders?: number | null
-    arm_length?: number | null
-    thigh?: number | null
-    biceps?: number | null
-    leg_length?: number | null
-  }
+  chest?: number | null
+  neck?: number | null
+  waist?: number | null
+  hips?: number | null
+  shoulders?: number | null
+  arm_length?: number | null
+  thigh?: number | null
+  biceps?: number | null
+  leg_length?: number | null
 }
 
 interface ScanMeasurementsPayload {
-  method: 'scan'
-  user_id: string
-  front_image_url: string
-  side_image_url?: string
-  video_url?: string
-  is_paid: boolean
-}
-
-interface MeasurementsResponse {
-  method: 'manual' | 'scan'
-  measurements: {
-    chest?: number
-    neck?: number
-    waist?: number
-    hips?: number
-    shoulders?: number
-    arm_length?: number
-    thigh?: number
-    biceps?: number
-    leg_length?: number
-  }
-  confidence: 'exact' | 'estimated'
-  precision_cm: string
-  version: number
-  disclaimer?: string
+  front?: File | null
+  side?: File | null
+  video?: File | null
 }
 
 export function useMeasurements() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const submitManualMeasurements = async (payload: ManualMeasurementsPayload): Promise<MeasurementsResponse> => {
+  const submitManualMeasurements = async (payload: ManualMeasurementsPayload) => {
     setIsLoading(true)
     setError(null)
 
     try {
-      const response = await fetch(`${MEASUREMENTS_API_URL}/measurements/manual`, {
+      const response = await fetch('/api/measurements/manual', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload.measurements),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Erreur inconnue' }))
-        throw new Error(errorData.detail || `Erreur ${response.status}`)
+        const err = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        throw new Error(err.error || `Erreur ${response.status}`)
       }
 
-      const data: MeasurementsResponse = await response.json()
-      return data
+      return await response.json()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la soumission des mesures'
-      setError(errorMessage)
+      const msg = err instanceof Error ? err.message : 'Erreur lors de la soumission des mesures'
+      setError(msg)
       throw err
     } finally {
       setIsLoading(false)
     }
   }
 
-  const submitScanMeasurements = async (payload: ScanMeasurementsPayload): Promise<MeasurementsResponse> => {
+  const submitScanMeasurements = async (payload: ScanMeasurementsPayload) => {
     setIsLoading(true)
     setError(null)
 
     try {
-      const response = await fetch(`${MEASUREMENTS_API_URL}/measurements/scan`, {
+      const formData = new FormData()
+      if (payload.front) formData.append('front', payload.front)
+      if (payload.side) formData.append('side', payload.side)
+      if (payload.video) formData.append('video', payload.video)
+
+      const response = await fetch('/api/measurements/scan', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: payload.user_id,
-          front_image_url: payload.front_image_url,
-          side_image_url: payload.side_image_url,
-          video_url: payload.video_url,
-          is_paid: payload.is_paid,
-        }),
+        body: formData,
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Erreur inconnue' }))
-        throw new Error(errorData.detail || `Erreur ${response.status}`)
+        const err = await response.json().catch(() => ({ error: 'Erreur inconnue' }))
+        throw new Error(err.error || `Erreur ${response.status}`)
       }
 
-      const data: MeasurementsResponse = await response.json()
-      return data
+      return await response.json()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du scan'
-      setError(errorMessage)
+      const msg = err instanceof Error ? err.message : 'Erreur lors du scan'
+      setError(msg)
       throw err
     } finally {
       setIsLoading(false)
@@ -122,4 +87,3 @@ export function useMeasurements() {
     error,
   }
 }
-
