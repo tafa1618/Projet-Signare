@@ -73,17 +73,17 @@ Dernière mise à jour : 2026-03-25
 - `[ ]` Étape 5 : confirmation → envoi à la conciergerie
 
 ### Interface admin conciergerie
-- `[ ]` Page `/admin/concierge`
-- `[ ]` Liste des demandes avec priorité
-- `[ ]` Vue détaillée : demande + mesures + tailleur ciblé
-- `[ ]` Formulaire de construction du brief
-- `[ ]` Envoi brief au tailleur
-- `[ ]` Gestion des statuts : `received → in_negotiation → brief_sent → accepted → in_production → ready → delivered`
+- `[x]` Page `/admin/concierge`
+- `[x]` Liste des demandes avec priorité
+- `[x]` Vue détaillée : demande + mesures + tailleur ciblé
+- `[x]` Formulaire de construction du brief
+- `[~]` Envoi brief au tailleur — brouillon sauvegardable, envoi réel (SMS/email) différé à Twilio
+- `[x]` Gestion des statuts : `received → in_negotiation → brief_sent → accepted → in_production → ready → delivered`
 
 ### Brief
-- `[ ]` Génération PDF (description + mesures + prix + délai)
-- `[ ]` Signature numérique client ("J'accepte")
-- `[ ]` Signature numérique tailleur ("J'accepte")
+- `[x]` Génération PDF (description + mesures + prix + délai)
+- `[x]` Signature numérique client ("J'accepte")
+- `[x]` Signature numérique tailleur ("J'accepte")
 
 ### Paiement
 - `[ ]` Brancher route `app/api/payments/initiate`
@@ -267,3 +267,16 @@ Ces éléments existent dans le code et sont fonctionnels ou quasi-fonctionnels.
     - Bouton d'action unique qui avance au statut suivant avec le bon libellé
   - `components/admin/AdminSidebar.tsx` — entrée "Conciergerie" ajoutée (icône ConciergeBell)
   - `app/admin/layout.tsx` — bypass dev ajouté (`NEXT_PUBLIC_DEV_ADMIN=true` dans `.env.local`)
+
+### 2026-03-25 — Session 3
+- **Page `/explore` — barre de recherche améliorée :**
+  - Glow doré animé au focus (`box-shadow` + `AnimatePresence`)
+  - Scale subtil (`1.01`) sur la `motion.div` englobante
+  - Icône Search qui passe au doré quand active ou avec du texte
+  - Bouton clear amélioré : cercle `bg-white/10` avec animation entrée/sortie (`scale: 0.7 → 1`)
+  - Background dynamique : fond plus clair + bordure `#D4AF37/50` au focus
+- **Sprint 3 — Brief PDF complet :**
+  - `frontend/components/brief/BriefDocument.tsx` — composant PDF `@react-pdf/renderer` (palette Signare, sections : tenue / instructions / mesures / tailleur / signatures)
+  - `app/admin/concierge/[id]/brief/page.tsx` — page brief avec canvas de signature (mouse + touch), vue signature existante avec bouton Modifier, toast de confirmation
+  - `app/api/brief/[id]/pdf/route.tsx` — route API GET qui génère le PDF via `renderToBuffer` et le renvoie en téléchargement
+  - `next.config.js` — `serverComponentsExternalPackages: ['@react-pdf/renderer']` ajouté

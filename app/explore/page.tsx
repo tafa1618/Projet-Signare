@@ -293,6 +293,7 @@ export default function ExplorePage() {
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all')
   const [reelIndex, setReelIndex] = useState<number | null>(null)
   const [seenReels, setSeenReels] = useState<Set<number>>(new Set())
+  const [searchFocused, setSearchFocused] = useState(false)
 
   const openReel = (index: number) => {
     setReelIndex(index)
@@ -330,21 +331,61 @@ export default function ExplorePage() {
         <h1 className="text-xl font-serif font-bold text-[#D4AF37] mb-4 tracking-widest text-center">EXPLORER</h1>
 
         {/* Barre de recherche */}
-        <div className="relative max-w-2xl mx-auto mb-4">
+        <motion.div
+          className="relative max-w-2xl mx-auto mb-4"
+          animate={searchFocused ? { scale: 1.01 } : { scale: 1 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {/* Glow doré derrière */}
+          <AnimatePresence>
+            {searchFocused && (
+              <motion.div
+                className="absolute inset-0 rounded-2xl pointer-events-none"
+                style={{ boxShadow: '0 0 0 1px rgba(212,175,55,0.5), 0 0 20px rgba(212,175,55,0.12)' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              />
+            )}
+          </AnimatePresence>
+
           <input
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
             placeholder="Rechercher un style, un tissu, un tailleur..."
-            className="w-full bg-[#1A1A1A]/80 border border-white/10 rounded-2xl py-3 pl-12 pr-10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37]/60 transition-colors"
+            className={cn(
+              'w-full rounded-2xl py-3 pl-12 pr-10 text-sm text-white placeholder:text-white/30 focus:outline-none transition-all duration-200',
+              searchFocused
+                ? 'bg-[#1E1E1E] border border-[#D4AF37]/50'
+                : 'bg-[#1A1A1A]/80 border border-white/10 hover:border-white/20'
+            )}
           />
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-          {query && (
-            <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white p-1 rounded-full transition-colors">
-              <X size={16} />
-            </button>
-          )}
-        </div>
+          <motion.div
+            className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+            animate={{ color: searchFocused || query ? '#D4AF37' : 'rgba(255,255,255,0.3)' }}
+            transition={{ duration: 0.2 }}
+          >
+            <Search size={18} />
+          </motion.div>
+          <AnimatePresence>
+            {query && (
+              <motion.button
+                onClick={() => setQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.7 }}
+                transition={{ duration: 0.15 }}
+              >
+                <X size={12} className="text-white/60" />
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Filtres tissu */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 max-w-2xl mx-auto">

@@ -60,6 +60,11 @@ export interface OrderRequest {
   // Brief
   briefNotes?: string
   briefSentAt?: string
+  // Signatures (base64 PNG)
+  clientSignature?: string
+  tailorSignature?: string
+  clientSignedAt?: string
+  tailorSignedAt?: string
 }
 
 const MOCK_REQUESTS: OrderRequest[] = [
@@ -273,6 +278,29 @@ export async function updateBriefNotes(
       // En prod, on ferait un lookup Supabase ici
     }
   }
+}
+
+export async function saveSignature(
+  id: string,
+  party: 'client' | 'tailor',
+  signatureDataUrl: string
+): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, 200))
+  const req = MOCK_REQUESTS.find(r => r.id === id)
+  if (req) {
+    if (party === 'client') {
+      req.clientSignature = signatureDataUrl
+      req.clientSignedAt = new Date().toISOString()
+    } else {
+      req.tailorSignature = signatureDataUrl
+      req.tailorSignedAt = new Date().toISOString()
+    }
+  }
+}
+
+export async function getOrderRequest(id: string): Promise<OrderRequest | null> {
+  await new Promise(resolve => setTimeout(resolve, 200))
+  return MOCK_REQUESTS.find(r => r.id === id) ?? null
 }
 
 /** Prochain statut dans le pipeline */
