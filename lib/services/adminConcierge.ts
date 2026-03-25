@@ -303,6 +303,59 @@ export async function getOrderRequest(id: string): Promise<OrderRequest | null> 
   return MOCK_REQUESTS.find(r => r.id === id) ?? null
 }
 
+export interface CreateOrderPayload {
+  tailorId?: string | null
+  tailorName?: string
+  tailorSpecialty?: string
+  postId?: string | null
+  garment_type: string
+  fabric_type?: string
+  occasion: string
+  color?: string
+  notes?: string
+  hasMeasurements: boolean
+  measurementsRef?: string
+  budget?: number
+  deadline?: string
+  priority: Priority
+}
+
+export async function createOrderRequest(payload: CreateOrderPayload): Promise<OrderRequest> {
+  await new Promise(resolve => setTimeout(resolve, 300))
+
+  const nextNum = MOCK_REQUESTS.length + 1
+  const ref = `DEM-${String(nextNum).padStart(3, '0')}`
+
+  const newRequest: OrderRequest = {
+    id: `req-${nextNum}`,
+    ref,
+    clientRef: `Client #${Math.floor(Math.random() * 50) + 150}`,
+    createdAt: new Date().toISOString(),
+    status: 'received',
+    priority: payload.priority,
+    garment_type: payload.garment_type,
+    fabric_type: payload.fabric_type,
+    occasion: payload.occasion,
+    color: payload.color,
+    notes: payload.notes,
+    targetTailor: payload.tailorId
+      ? {
+          id: payload.tailorId,
+          name: payload.tailorName ?? 'Tailleur inconnu',
+          specialty: payload.tailorSpecialty ?? '',
+          phone: '',
+        }
+      : undefined,
+    hasMeasurements: payload.hasMeasurements,
+    measurementsRef: payload.measurementsRef,
+    budget: payload.budget,
+    deadline: payload.deadline,
+  }
+
+  MOCK_REQUESTS.unshift(newRequest)
+  return newRequest
+}
+
 /** Prochain statut dans le pipeline */
 export function nextStatus(current: ConciergeStatus): ConciergeStatus | null {
   const pipeline: ConciergeStatus[] = [

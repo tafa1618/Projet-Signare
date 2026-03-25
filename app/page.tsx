@@ -257,6 +257,7 @@ const PostActions = ({ post, onLike, onSave, onRepost, openCommentModal }: any) 
 )
 
 const UnifiedPostCard = ({ post, ...actions }: any) => {
+  const router = useRouter()
   const trackRef = useTrackPostVisibility({
     post_id: post.id,
     interaction_type: 'post_view',
@@ -335,11 +336,20 @@ const UnifiedPostCard = ({ post, ...actions }: any) => {
       {post.type === 'tailor' && (
         <div className="px-4 pb-4 pt-0">
           <button
-            onClick={(e) => { e.stopPropagation(); /* TODO: handle contact logic */ }}
+            onClick={(e) => {
+              e.stopPropagation()
+              const params = new URLSearchParams()
+              if (post.id) params.set('postId', post.id)
+              if (post.user?.id) params.set('tailorId', post.user.id)
+              if (post.user?.name) params.set('tailorName', encodeURIComponent(post.user.name))
+              if (post.user?.specialty) params.set('tailorSpecialty', encodeURIComponent(post.user.specialty))
+              if (post.garment_type) params.set('garmentType', encodeURIComponent(post.garment_type))
+              router.push(`/commander?${params.toString()}`)
+            }}
             className="w-full py-2.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-bold uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all flex items-center justify-center gap-2 group"
           >
             <MessageCircle size={14} className="group-hover:stroke-black" />
-            <span>Contacter l'atelier</span>
+            <span>Contacter l&apos;atelier</span>
           </button>
         </div>
       )}

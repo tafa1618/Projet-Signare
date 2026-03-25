@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Search, X, Heart, Bookmark, ChevronLeft, ChevronRight, Scissors } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { mockPosts, mockReels, type Reel } from '@/lib/mocks'
@@ -60,6 +61,7 @@ function ReelModal({
   initialIndex: number
   onClose: () => void
 }) {
+  const router = useRouter()
   const reducedMotion = useReducedMotion()
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [progress, setProgress] = useState(0)
@@ -183,7 +185,15 @@ function ReelModal({
               <p className="text-white text-sm leading-snug line-clamp-3">{reel.caption}</p>
               <button
                 className="mt-3 bg-[#D4AF37] text-black text-xs font-bold px-4 py-2 rounded-full pointer-events-auto active:scale-95 transition-transform"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const params = new URLSearchParams()
+                  if (reel.user.id) params.set('tailorId', reel.user.id)
+                  params.set('tailorName', encodeURIComponent(reel.user.name))
+                  if (reel.user.role) params.set('tailorSpecialty', encodeURIComponent(reel.user.role))
+                  if (reel.garment_type) params.set('garmentType', encodeURIComponent(reel.garment_type))
+                  router.push(`/commander?${params.toString()}`)
+                }}
               >
                 Commander ce style
               </button>
