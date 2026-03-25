@@ -41,6 +41,9 @@ export enum Permission {
   
   // Dashboard global
   VIEW_DASHBOARD = 'VIEW_DASHBOARD',
+
+  // Conciergerie
+  MANAGE_CONCIERGE = 'MANAGE_CONCIERGE',
 }
 
 /**
@@ -62,12 +65,15 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.MANAGE_ROLES,
     Permission.CREATE_ACCOUNTS,
     Permission.VIEW_DASHBOARD,
+    Permission.MANAGE_CONCIERGE,
   ],
   
   [Role.RESPONSABLE_COMMERCIAL]: [
     Permission.VIEW_TAILORS,
     Permission.MANAGE_TAILORS,
     Permission.VIEW_TAILOR_STATS,
+    Permission.MANAGE_CONCIERGE,
+    Permission.VIEW_DASHBOARD,
   ],
   
   [Role.BUSINESS_DEVELOPER]: [
@@ -99,4 +105,4 @@ export function roleHasPermission(role: Role, permission: Permission): boolean {
 /**
  * Numéro de téléphone du SUPER_ADMIN
  */
-export const SUPER_ADMIN_PHONE = '+781110455'
+export const SUPER_ADMIN_PHONE = '+221781110455'

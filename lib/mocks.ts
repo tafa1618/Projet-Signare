@@ -1,5 +1,114 @@
 import { Post } from '@/app/page';
 
+export interface Reel {
+  id: number
+  user: { name: string; avatar: string; role: string; isVerified: boolean }
+  mediaUrl: string
+  mediaType: 'image' | 'video'
+  caption: string
+  garment_type: string
+  fabric_type?: string
+  duration: number
+  likes: number
+  isSeen: boolean
+}
+
+export const mockReels: Reel[] = [
+  {
+    id: 1,
+    user: { name: 'Atelier Fatou', avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&h=100&fit=crop&q=80', role: 'Tailleur', isVerified: true },
+    mediaUrl: 'https://images.unsplash.com/photo-1594938291221-94f18dd5e26c?w=600&h=900&fit=crop&q=80',
+    mediaType: 'image',
+    caption: 'Boubou Royale — broderie 40h, basin riche exclusif. Nouvelle collection Tabaski.',
+    garment_type: 'Boubou',
+    fabric_type: 'Basin Riche',
+    duration: 6,
+    likes: 1204,
+    isSeen: false,
+  },
+  {
+    id: 2,
+    user: { name: 'Mariama D.', avatar: 'https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=100&h=100&fit=crop&q=80', role: 'Look', isVerified: false },
+    mediaUrl: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&h=900&fit=crop&q=80',
+    mediaType: 'image',
+    caption: 'Ma tenue de mariage par @MaisonNdèye. La coupe est juste parfaite.',
+    garment_type: 'Robe Wax',
+    duration: 5,
+    likes: 873,
+    isSeen: false,
+  },
+  {
+    id: 3,
+    user: { name: 'Atelier Téranga', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80', role: 'Tailleur', isVerified: true },
+    mediaUrl: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&h=900&fit=crop&q=80',
+    mediaType: 'image',
+    caption: 'Kaftan soie premium — lumière, fluidité, détails couture. Disponible sur commande.',
+    garment_type: 'Kaftan',
+    fabric_type: 'Soie',
+    duration: 7,
+    likes: 2310,
+    isSeen: false,
+  },
+  {
+    id: 4,
+    user: { name: 'Khadija Sy', avatar: 'https://images.unsplash.com/photo-1563178406-4cdc2923acbc?w=100&h=100&fit=crop&q=80', role: 'Look', isVerified: true },
+    mediaUrl: 'https://images.unsplash.com/photo-1620655474668-c11ad124c6fc?w=600&h=900&fit=crop&q=80',
+    mediaType: 'image',
+    caption: 'Le chic sénégalais au quotidien. Toujours fidèle à @AtelierFatou.',
+    garment_type: 'Kaftan de Soirée',
+    duration: 4,
+    likes: 3567,
+    isSeen: true,
+  },
+  {
+    id: 5,
+    user: { name: 'Maison Ndèye', avatar: 'https://images.unsplash.com/photo-1589571894960-20bbe2815d22?w=100&h=100&fit=crop&q=80', role: 'Tailleur', isVerified: true },
+    mediaUrl: 'https://images.unsplash.com/photo-1607525357879-11ba1886cb4f?w=600&h=900&fit=crop&q=80',
+    mediaType: 'image',
+    caption: 'Robe wax couture — tombé parfait, finitions main. Ceinture signature.',
+    garment_type: 'Robe Wax',
+    fabric_type: 'Wax Premium',
+    duration: 5,
+    likes: 918,
+    isSeen: true,
+  },
+  {
+    id: 6,
+    user: { name: 'Awa Ndiaye', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&q=80', role: 'Look', isVerified: false },
+    mediaUrl: 'https://images.unsplash.com/photo-1548142340-97e3cb7d206c?w=600&h=900&fit=crop&q=80',
+    mediaType: 'image',
+    caption: 'Tenue Tabaski. Broderies fines, coupe impeccable. Merci @CoutureAminata.',
+    garment_type: 'Boubou',
+    duration: 4,
+    likes: 654,
+    isSeen: false,
+  },
+  {
+    id: 7,
+    user: { name: 'Elegant Coutures', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&q=80', role: 'Tailleur', isVerified: true },
+    mediaUrl: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=900&fit=crop&q=80',
+    mediaType: 'image',
+    caption: 'Collection Mariage. Chaque perle posée à la main. Pour le plus beau jour.',
+    garment_type: 'Robe de Mariée',
+    fabric_type: 'Dentelle & Soie',
+    duration: 6,
+    likes: 2891,
+    isSeen: false,
+  },
+  {
+    id: 8,
+    user: { name: 'Studio Dakar Luxe', avatar: 'https://images.unsplash.com/photo-1522512115668-c09775d6f424?w=100&h=100&fit=crop&q=80', role: 'Tailleur', isVerified: true },
+    mediaUrl: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=600&h=900&fit=crop&q=80',
+    mediaType: 'image',
+    caption: 'Ensemble lin texturé — coupe moderne, détails discrets en or. Le luxe au masculin.',
+    garment_type: 'Ensemble',
+    fabric_type: 'Lin',
+    duration: 5,
+    likes: 740,
+    isSeen: false,
+  },
+]
+
 export const mockPosts: Post[] = [
   {
     id: 1,

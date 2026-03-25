@@ -1,7 +1,7 @@
 # PROGRESS.md — Signare
 
 Suivi d'avancement du MVP. Mettre à jour après chaque session de travail.
-Dernière mise à jour : 2026-03-06
+Dernière mise à jour : 2026-03-25
 
 ---
 
@@ -242,3 +242,28 @@ Ces éléments existent dans le code et sont fonctionnels ou quasi-fonctionnels.
   - Créer bucket Storage `measurements-photos` dans Supabase
   - Configurer Twilio dans Supabase Authentication settings
   - Vérifier variables d'env `.env.local` : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+### 2026-03-25 — Session 2
+- Audit complet de l'état du projet (sprints 1-5)
+- **Page `/explore` refondée :**
+  - `lib/mocks.ts` — ajout `mockReels` (8 items, type `Reel` exporté)
+  - `app/explore/page.tsx` — réécriture complète :
+    - Barre Reels scrollable horizontalement (style WhatsApp status) : anneau doré = non-vu, gris = vu
+    - Modal Reels plein écran : barres de progression par segment, avancement automatique, tap gauche/droite pour naviguer, actions like/sauvegarder, bouton "Commander ce style"
+    - Filtres tissu/style : Tout / Basin / Wax / Soie / Kaftan / Boubou / Mariage / Lin
+    - Toggle source : Tout / Tailleurs / Clients
+    - Grille masonry Pinterest (`columns-2 md:columns-3`) avec hauteurs alternées (4/5 tailleurs, 3/4 clients)
+    - Algo fuzzy search conservé, combiné avec les nouveaux filtres
+    - Animations Framer Motion avec `useReducedMotion()`
+- **Sprint 3 — Interface `/admin/concierge` créée :**
+  - `lib/auth/roles.ts` — ajout permission `MANAGE_CONCIERGE`, assignée à `SUPER_ADMIN` et `RESPONSABLE_COMMERCIAL`; correction `SUPER_ADMIN_PHONE` → `+221781110455`
+  - `lib/auth/authorization.ts` — check numéro admin corrigé (formats +221781110455 / 781110455)
+  - `lib/services/adminConcierge.ts` — service mock avec 8 demandes, types `OrderRequest` / `ConciergeStatus` / `Priority`, helpers `nextStatus` / `nextStatusLabel`
+  - `app/admin/concierge/page.tsx` — workspace conciergerie complet :
+    - Layout 2 colonnes : liste des demandes (gauche) + détail (droite), responsive mobile
+    - Filtres par statut en haut de la liste
+    - Pipeline visuel 7 étapes (reçue → livrée) avec icônes et progression
+    - Panneau détail : tenue, budget/deadline, mesures (alerte si absentes), tailleur assigné, zone brief
+    - Bouton d'action unique qui avance au statut suivant avec le bon libellé
+  - `components/admin/AdminSidebar.tsx` — entrée "Conciergerie" ajoutée (icône ConciergeBell)
+  - `app/admin/layout.tsx` — bypass dev ajouté (`NEXT_PUBLIC_DEV_ADMIN=true` dans `.env.local`)

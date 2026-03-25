@@ -29,7 +29,7 @@ export function getUserRole(user: User | null): Role | null {
 
   // SUPER_ADMIN identifié par numéro de téléphone (pour développement)
   const phone = user.phone || user.user_metadata?.phone
-  if (phone === SUPER_ADMIN_PHONE || phone === '781110455') {
+  if (phone === SUPER_ADMIN_PHONE || phone === '+221781110455' || phone === '221781110455' || phone === '781110455') {
     return Role.SUPER_ADMIN
   }
 

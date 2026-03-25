@@ -23,6 +23,7 @@ import {
   X,
   LogOut,
   Shield,
+  ConciergeBell,
 } from 'lucide-react'
 import { useAuth } from '@/frontend/hooks/useAuth'
 
@@ -51,6 +52,12 @@ const MENU_ITEMS: MenuItem[] = [
     href: '/admin/users/admins',
     icon: Shield,
     permission: Permission.CREATE_ACCOUNTS,
+  },
+  {
+    label: 'Conciergerie',
+    href: '/admin/concierge',
+    icon: ConciergeBell,
+    permission: Permission.MANAGE_CONCIERGE,
   },
   {
     label: 'Commandes',

@@ -10,6 +10,17 @@ import { useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import { useAuth } from '@/frontend/hooks/useAuth'
 import { getUserRole } from '@/lib/auth/authorization'
+import { Role } from '@/lib/auth/roles'
+import type { User } from '@supabase/supabase-js'
+
+const DEV_ADMIN_USER = {
+  id: 'dev-admin',
+  phone: '+221781110455',
+  user_metadata: { name: 'Dev Admin' },
+  app_metadata: {},
+  aud: 'authenticated',
+  created_at: '',
+} as unknown as User
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import AdminHeader from '@/components/admin/AdminHeader'
 
@@ -22,6 +33,12 @@ export default function AdminLayout({
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
 
   useEffect(() => {
+    // Dev bypass : accès direct sans auth (NEXT_PUBLIC_DEV_ADMIN=true dans .env.local)
+    if (process.env.NEXT_PUBLIC_DEV_ADMIN === 'true') {
+      setIsAuthorized(true)
+      return
+    }
+
     if (!isLoading) {
       // User not logged in = 404 (hide admin existence)
       if (!user) {
@@ -56,11 +73,13 @@ export default function AdminLayout({
 
   // SECURITY: Return 404 for unauthorized users
   // This hides the existence of the admin panel
-  if (!isAuthorized || !user) {
+  const isDev = process.env.NEXT_PUBLIC_DEV_ADMIN === 'true'
+  if (!isAuthorized || (!user && !isDev)) {
     notFound()
   }
 
-  const role = getUserRole(user)
+  const effectiveUser = isDev && !user ? DEV_ADMIN_USER : user!
+  const role = isDev && !user ? Role.SUPER_ADMIN : getUserRole(user)
   if (!role) {
     notFound()
   }
@@ -68,12 +87,12 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex overflow-hidden">
       {/* Sidebar */}
-      <AdminSidebar user={user} role={role} />
+      <AdminSidebar user={effectiveUser} role={role} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
-        <AdminHeader user={user} role={role} />
+        <AdminHeader user={effectiveUser} role={role} />
 
         {/* Page Content */}
         <main className="flex-1 p-6 overflow-y-auto overflow-x-hidden">
